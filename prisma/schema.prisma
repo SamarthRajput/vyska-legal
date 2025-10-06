@@ -4,6 +4,14 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// pnpm dlx prisma generate       # Generate Prisma Client after schema changes
+// pnpm dlx prisma db push        # Push schema changes to DB (dev, non-destructive)
+// pnpm dlx prisma migrate dev    # Create & apply migration for schema changes
+// pnpm dlx prisma migrate reset  # Reset DB: drop, recreate, reapply migrations (dev only)
+// pnpm dlx prisma studio         # Open Prisma GUI to view/manage DB
+// pnpm dlx prisma format         # Format schema.prisma
+// pnpm dlx prisma db pull        # Pull existing DB schema into prisma file
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,9 +22,76 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String?
-  email     String   @unique
-  profilePic String
-  createdAt DateTime @default(now())
+  id              String        @id @default(cuid())
+  clerkId         String        @unique
+  name            String
+  email           String        @unique
+  role            UserRole      @default(USER)
+  profilePicture  String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  blogs           Blog[]
+  appointments    Appointment[]
+  researchUploads Research[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model Blog {
+  id        String     @id @default(cuid())
+  title     String
+  content   String
+  status    BlogStatus @default(PENDING)
+  author    User       @relation(fields: [authorId], references: [id])
+  authorId  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+enum BlogStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       Float?
+  iconUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Research {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  fileUrl      String
+  uploadedBy   User?    @relation(fields: [userId], references: [id])
+  uploadedById String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userId       String?
+}
+
+model Appointment {
+  id        String            @id @default(cuid())
+  user      User              @relation(fields: [userId], references: [id])
+  userId    String
+  date      DateTime
+  timeSlot  String
+  status    AppointmentStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
 }
