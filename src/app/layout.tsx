@@ -32,7 +32,6 @@ export default function RootLayout({
       >
         <ClerkProvider>
           <Toaster />
-          <Navbar />
           {children}
         </ClerkProvider>
       </body>

@@ -21,7 +21,7 @@ const Homepage = () => {
             Explore Services
           </a>
           <a
-            href="/blog"
+            href="/blogs"
             className="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition"
           >
             Read Our Blog

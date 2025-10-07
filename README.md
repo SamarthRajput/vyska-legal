@@ -9,6 +9,7 @@ pnpm i
 
 | Command | Description |
 |----------|--------------|
+| `pnpm dev` | To run the project locally |
 | `pnpm dlx prisma generate` | Generate Prisma Client after schema changes |
 | `pnpm dlx prisma db push` | Push schema changes to the database (development, non-destructive) |
 | `pnpm dlx prisma migrate dev` | Create and apply a new migration for schema changes |
