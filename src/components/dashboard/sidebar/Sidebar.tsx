@@ -50,11 +50,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         >
           {!isCollapsed && (
             <>
-              <div className="w-10 h-10 flex items-center justify-center bg-sky-500 rounded-xl shadow-lg">
-                <PenTool className="w-6 h-6 text-white" />
-              </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-800">Promptly Blog</h1>
+                <h1 className="text-xl font-bold text-slate-800">Vyaska Legal</h1>
                 <p className="text-xs text-slate-500">
                   {isAdminRoute ? "Admin" : "User"} Dashboard
                 </p>
