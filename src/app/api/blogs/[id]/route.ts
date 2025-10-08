@@ -6,7 +6,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         const { id } = await params;
         const [blog, relevantBlogs, recentBlogs] = await Promise.all([
             prisma.blog.findUnique({
-                where: { id },
+                where: { id, status: 'APPROVED' },
                 include: {
                     author: {
                         select: {
@@ -20,6 +20,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
             prisma.blog.findMany({
                 where: {
                     id: { not: id },
+                    status: 'APPROVED'
                 },
                 include: {
                     author: {
@@ -34,7 +35,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
                 take: 6,
             }),
             prisma.blog.findMany({
-                where: { id: { not: id } },
+                where: {
+                    id: { not: id },
+                    status: 'APPROVED'
+                },
                 include: {
                     author: {
                         select: {

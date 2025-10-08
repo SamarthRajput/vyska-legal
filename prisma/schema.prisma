@@ -22,17 +22,18 @@ datasource db {
 }
 
 model User {
-  id              String        @id @default(cuid())
-  clerkId         String        @unique
-  name            String
-  email           String        @unique
-  role            UserRole      @default(USER)
-  profilePicture  String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  blogs           Blog[]
-  appointments    Appointment[]
-  researchUploads Research[]
+  id                 String        @id @default(cuid())
+  clerkId            String        @unique
+  name               String
+  email              String        @unique
+  role               UserRole      @default(USER)
+  profilePicture     String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  blogs              Blog[]
+  appointments       Appointment[]
+  researchUploads    Research[]
+  createdTeamMembers TeamMember[]  @relation("CreatedTeamMembers")
 }
 
 enum UserRole {
@@ -94,4 +95,17 @@ enum AppointmentStatus {
   PENDING
   CONFIRMED
   CANCELLED
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  name      String
+  role      String
+  biography String?
+  photoUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy   User?   @relation("CreatedTeamMembers", fields: [createdById], references: [id])
+  createdById String?
 }

@@ -1,4 +1,3 @@
-
 import { getUser } from "@/lib/getUser";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
@@ -47,6 +46,13 @@ export async function GET(request: NextRequest) {
         // Search by title/content
         const search = searchParams.get("search") || "";
 
+        // // mark all as approved // test
+        // const updateAll = await prisma.blog.updateMany({
+        //     where: { status: 'PENDING' },
+        //     data: { status: 'APPROVED' },
+        // });
+        // console.log(`Updated ${updateAll.count} blogs to APPROVED status`);
+        
         // Fetch blogs
         const blogs = await prisma.blog.findMany({
             where: {
@@ -54,6 +60,7 @@ export async function GET(request: NextRequest) {
                     { title: { contains: search, mode: "insensitive" } },
                     { content: { contains: search, mode: "insensitive" } },
                 ],
+                status: 'APPROVED'
             },
             include: {
                 author: {
@@ -78,6 +85,7 @@ export async function GET(request: NextRequest) {
                     { title: { contains: search, mode: "insensitive" } },
                     { content: { contains: search, mode: "insensitive" } },
                 ],
+                status: 'APPROVED'
             },
         });
 

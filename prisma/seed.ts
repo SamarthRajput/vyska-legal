@@ -8,27 +8,37 @@ const prisma = new PrismaClient()
 
 async function main() {
     // Create Users
-    const admin = await prisma.user.create({
-        data: {
-            name: 'Admin User',
-            email: 'rohit@gmail.com',
-            clerkId: 'clerk-admin-id',
-            role: 'ADMIN',
-            profilePicture: 'https://i.pravatar.cc/150?img=1',
-        },
-    })
-    console.log('Admin user created:', admin.email)
+    let admin = await prisma.user.findUnique({ where: { email: 'rohit@gmail.com' } });
+    if (!admin) {
+        admin = await prisma.user.create({
+            data: {
+                name: 'Admin User',
+                email: 'rohit@gmail.com',
+                clerkId: 'clerk-admin-id',
+                role: 'ADMIN',
+                profilePicture: 'https://i.pravatar.cc/150?img=1',
+            },
+        });
+        console.log('Admin user created:', admin.email);
+    } else {
+        console.log('Admin user already exists:', admin.email);
+    }
 
-    const user1 = await prisma.user.create({
-        data: {
-            name: 'John Doe',
-            email: 'john@example.com',
-            role: 'USER',
-            clerkId: 'clerk-user1-id',
-            profilePicture: 'https://i.pravatar.cc/150?img=2',
-        },
-    })
-    console.log('Regular user created:', user1.email)
+    let user1 = await prisma.user.findUnique({ where: { email: 'john@example.com' } });
+    if (!user1) {
+        user1 = await prisma.user.create({
+            data: {
+                name: 'John Doe',
+                email: 'john@example.com',
+                role: 'USER',
+                clerkId: 'clerk-user1-id',
+                profilePicture: 'https://i.pravatar.cc/150?img=2',
+            },
+        });
+        console.log('Regular user created:', user1.email);
+    } else {
+        console.log('Regular user already exists:', user1.email);
+    }
 
     // Create Blogs
     await prisma.blog.createMany({
@@ -83,7 +93,37 @@ async function main() {
             },
         ],
     })
+    // Create Team Members
+    await prisma.teamMember.createMany({
+        data: [
+            {
+                name: 'Adv. Rohan Mehta',
+                role: 'Senior Corporate Lawyer',
+                biography:
+                    'Rohan Mehta has over 12 years of experience specializing in corporate law, mergers, and acquisitions. He has represented numerous Fortune 500 companies in regulatory matters.',
+                photoUrl: 'https://imgs.search.brave.com/2920ZlfBVr3zNhET70QktLKyjB1Y000bhlKxDoqqKjU/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4u/cGl4YWJheS5jb20v/cGhvdG8vMjAxNy8w/Ny8xOC8yMy8yMy9n/cm91cC0yNTE3NDI4/XzY0MC5wbmc',
+                createdById: admin.id, // or null if not linked
+            },
+            {
+                name: 'Adv. Priya Sharma',
+                role: 'Intellectual Property Expert',
+                biography:
+                    'Priya Sharma focuses on intellectual property rights, patents, and trademarks. She has been instrumental in shaping IP policies for several startups.',
+                photoUrl: 'https://imgs.search.brave.com/wE1-b8ltCYbfQ4xSFlHHIAPUCzF3wAKKtPZ-7Od_kEc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/cHJlbWl1bS1wc2Qv/dXNlci1pY2VtYXR0/ZV8xNjE2NjktMjEx/LmpwZz9zZW10PWFp/c19oeWJyaWQmdz03/NDAmcT04MA',
+                createdById: admin.id,
+            },
+            {
+                name: 'Adv. Arjun Khanna',
+                role: 'Criminal Law Specialist',
+                biography:
+                    'With a decade of courtroom experience, Arjun Khanna is known for his strategic litigation skills and deep understanding of criminal jurisprudence.',
+                photoUrl: 'https://example.com/arjun-khanna.jpg',
+                createdById: admin.id,
+            },
+        ],
+    });
 
+    console.log('Team members created');
     // Create Appointments
     await prisma.appointment.createMany({
         data: [
