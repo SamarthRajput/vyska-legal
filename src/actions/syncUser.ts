@@ -48,10 +48,10 @@ export async function getCurrentUser() {
   if (!clerkUser) return null;
   
   // Fetch user from DB
-  // const updateAdmin = await prisma.user.updateMany({
-  //   where: { email: 'rohitkuyada@gmail.com' },
-  //   data: { role: UserRole.ADMIN },
-  // });
+  const updateAdmin = await prisma.user.updateMany({
+    where: { email: 'rohitkuyada@gmail.com' },
+    data: { role: UserRole.ADMIN },
+  });
   // console.log("Updated Admins: ", updateAdmin);
   const existing = await prisma.user.findUnique({
     where: { clerkId: clerkUser.id },

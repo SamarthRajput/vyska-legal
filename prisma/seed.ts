@@ -102,7 +102,7 @@ async function main() {
                 biography:
                     'Rohan Mehta has over 12 years of experience specializing in corporate law, mergers, and acquisitions. He has represented numerous Fortune 500 companies in regulatory matters.',
                 photoUrl: 'https://imgs.search.brave.com/2920ZlfBVr3zNhET70QktLKyjB1Y000bhlKxDoqqKjU/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4u/cGl4YWJheS5jb20v/cGhvdG8vMjAxNy8w/Ny8xOC8yMy8yMy9n/cm91cC0yNTE3NDI4/XzY0MC5wbmc',
-                createdById: admin.id, // or null if not linked
+                createdById: admin.id,
             },
             {
                 name: 'Adv. Priya Sharma',
@@ -124,24 +124,43 @@ async function main() {
     });
 
     console.log('Team members created');
-    // Create Appointments
+    const slot1 = await prisma.appointmentSlot.create({
+        data: {
+            date: new Date('2025-10-15T09:00:00Z'),
+            timeSlot: '09:00-09:30',
+            isBooked: false,
+        },
+    });
+
+    const slot2 = await prisma.appointmentSlot.create({
+        data: {
+            date: new Date('2025-10-16T11:00:00Z'),
+            timeSlot: '11:00-11:30',
+            isBooked: false,
+        },
+    });
+
+    // 2️⃣ Create appointments using the slot IDs
     await prisma.appointment.createMany({
         data: [
             {
-                userId: user1.id,
-                date: new Date('2025-10-15T09:00:00Z'),
-                timeSlot: '09:00-09:30',
+                userName: 'Rohit Kumar',
+                userEmail: 'rohit@example.com',
+                userPhone: '9876543210',
+                slotId: slot1.id,
                 status: 'CONFIRMED',
             },
             {
-                userId: user1.id,
-                date: new Date('2025-10-16T11:00:00Z'),
-                timeSlot: '11:00-11:30',
+                userName: 'Rohit Kumar',
+                userEmail: 'rohit@example.com',
+                userPhone: '9876543210',
+                slotId: slot2.id,
                 status: 'PENDING',
             },
         ],
-    })
+    });
 
+    console.log('Seed completed!');
     console.log('✅ Seed data created successfully!')
 }
 

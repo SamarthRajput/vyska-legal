@@ -80,17 +80,33 @@ model Research {
   userId       String?
 }
 
+// Appointment Slot Model
+model AppointmentSlot {
+  id          String        @id @default(cuid())
+  date        DateTime
+  timeSlot    String
+  isBooked    Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Appointment Appointment[]
+}
+
+// Appointment Model
 model Appointment {
   id        String            @id @default(cuid())
-  user      User              @relation(fields: [userId], references: [id])
-  userId    String
-  date      DateTime
-  timeSlot  String
+  userName  String
+  userEmail String
+  userPhone String?
+  slot      AppointmentSlot   @relation(fields: [slotId], references: [id])
+  slotId    String
   status    AppointmentStatus @default(PENDING)
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
+  User      User?             @relation(fields: [userId], references: [id])
+  userId    String?
 }
 
+// Appointment Status Enum
 enum AppointmentStatus {
   PENDING
   CONFIRMED
@@ -105,6 +121,12 @@ model TeamMember {
   photoUrl  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Optional social media links
+  linkedin  String?
+  twitter   String?
+  instagram String?
+  facebook  String?
 
   createdBy   User?   @relation("CreatedTeamMembers", fields: [createdById], references: [id])
   createdById String?
