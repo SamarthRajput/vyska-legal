@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+import getExcerpt from '@/lib/getExcerpt';
 import React from 'react'
 
 interface Pagination {
@@ -165,9 +166,11 @@ const AllBlogs = () => {
                                     {new Date(blog.createdAt).toLocaleDateString()}
                                 </span>
                             </div>
-                            <p className="text-gray-700 line-clamp-3 mb-2">{blog.content}</p>
+                            <p className="text-gray-700 line-clamp-3 mb-2">
+                                {getExcerpt(blog.content, 300)}
+                            </p>
                             <a
-                                href={`/blogs/${blog.id}`}
+                                href={`/blog/${blog.id}`}
                                 className="text-blue-600 hover:underline text-sm font-semibold self-end"
                                 title="Read more (not implemented)"
                             >

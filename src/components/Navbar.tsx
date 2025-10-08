@@ -44,14 +44,16 @@ export default function Navbar() {
 
                 <SignedIn>
                     <div className="flex items-center space-x-2">
-                        {user?.imageUrl && (
-                            <img
-                                src={user.imageUrl}
-                                alt={user.firstName || 'User'}
-                                className="w-8 h-8 rounded-full"
-                            />
-                        )}
-                        <span className="font-medium">{user?.firstName || ''}</span>
+                        <Link href="/user" prefetch={true} className="flex items-center space-x-2">
+                            {user?.imageUrl && (
+                                <img
+                                    src={user.imageUrl}
+                                    alt={user.firstName || 'User'}
+                                    className="w-8 h-8 rounded-full"
+                                />
+                            )}
+                            <span className="font-medium">{user?.firstName || ''}</span>
+                        </Link>
                         <SignOutButton>
                             <button className="ml-2 text-red-600 hover:text-red-800">Logout</button>
                         </SignOutButton>

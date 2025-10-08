@@ -8,11 +8,11 @@ export default async function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    
+
     const user = await getCurrentUser();
 
     // Check if user exists and is user 
-    if(!user || user.role !== 'USER'){
+    if (!user) {
         return <ShowError message="Access Denied. You must be signed in to view this page" ></ShowError>
     }
 
