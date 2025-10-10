@@ -1,6 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import getExcerpt from '@/lib/getExcerpt';
+import Link from 'next/link';
 import React from 'react'
 
 interface Pagination {
@@ -80,7 +82,7 @@ const AllBlogs = () => {
 
     // Skeleton loader for blog cards
     const BlogSkeleton = () => (
-        <div className="bg-white rounded-lg shadow p-6 flex flex-col gap-2 animate-pulse min-h-[220px]">
+        <div className="bg-white rounded-xl shadow-md p-5 flex flex-col gap-3 animate-pulse min-h-[220px] border border-gray-100">
             <div className="h-6 bg-gray-200 rounded w-2/3 mb-2"></div>
             <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 rounded-full bg-gray-300"></div>
@@ -94,33 +96,21 @@ const AllBlogs = () => {
     );
 
     return (
-        <main className="min-h-screen bg-gray-50 flex flex-col">
-            <section className="w-full bg-gradient-to-r from-blue-50 to-blue-100 py-8 px-4 mb-6 shadow-sm">
-                <div className="max-w-4xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl md:text-4xl font-extrabold text-blue-900 mb-1">All Blogs</h1>
-                        <p className="text-gray-600 text-sm md:text-base">
-                            {pagination ? (
-                                <>
-                                    Showing <span className="font-semibold">{blogs.length}</span> of <span className="font-semibold">{pagination.totalCount}</span> blogs
-                                    {search && <> for &quot;<span className="font-semibold">{search}</span>&quot;</>}
-                                </>
-                            ) : (
-                                <>Browse our latest articles and insights.</>
-                            )}
-                        </p>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                        <a
-                            href="/blog/write"
-                            className="hidden md:inline-block px-4 py-2 bg-blue-700 text-white rounded-lg font-semibold shadow hover:bg-blue-800 transition"
-                            aria-label="Create a new blog"
-                        >
-                            + Create Blog
-                        </a>
-                    </div>
-                </div>
-            </section>
+        <main className="bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen flex flex-col">
+            {/* <div className="h-15"></div> */}
+            <header className="text-center py-8 px-4">
+                <h1 className="text-4xl md:text-5xl font-extrabold text-blue-900 mb-2">Explore Our Blogs</h1>
+                <p className="text-gray-700 text-lg md:text-xl max-w-2xl mx-auto">
+                    Dive into articles, insights, and stories from our community and experts.
+                </p>
+                <Link
+                    href="/blog/write"
+                    className="mt-4 inline-block bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition font-semibold shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    aria-label="Create a new blog"
+                >
+                    Write a Blog
+                </Link>
+            </header>
             {/* Search Bar */}
             <form
                 onSubmit={handleSearchSubmit}
@@ -133,12 +123,12 @@ const AllBlogs = () => {
                     value={search}
                     onChange={handleSearchChange}
                     placeholder="Search blogs..."
-                    className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
+                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 w-full shadow-sm transition"
                     aria-label="Search input"
                 />
                 <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition w-full sm:w-auto"
+                    className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition w-full sm:w-auto font-semibold shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
                     aria-label="Submit search"
                 >
                     Search
@@ -147,7 +137,7 @@ const AllBlogs = () => {
             {/* Show current search term with cross button */}
             {search && (
                 <div className="flex items-center justify-center mb-4">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full mr-2 text-sm flex items-center">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full mr-2 text-sm flex items-center shadow">
                         <span className="mr-2">Searching for: <b>{search}</b></span>
                         <button
                             type="button"
@@ -162,23 +152,23 @@ const AllBlogs = () => {
             )}
             {/* Loading Skeletons */}
             {loading && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto w-full px-2">
                     {Array.from({ length: 3 }).map((_, i) => <BlogSkeleton key={i} />)}
                 </div>
             )}
             {error && <p className="text-red-500 text-center">{error}</p>}
             {!loading && !error && blogs.length === 0 && <p className="text-center text-gray-500">No blogs found.</p>}
             {!loading && !error && blogs.length > 0 && (
-                <section className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto w-full">
+                <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto w-full px-2">
                     {blogs.map(blog => (
                         <article
                             key={blog.id}
-                            className="bg-white rounded-xl shadow-lg p-8 flex flex-col gap-3 transition hover:shadow-2xl hover:-translate-y-1 border border-blue-50 hover:border-blue-200 group"
+                            className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-3 transition hover:shadow-xl hover:-translate-y-1 border border-blue-100 hover:border-blue-300 group focus-within:shadow-lg"
                             tabIndex={0}
                             aria-label={`Blog: ${blog.title}`}
                         >
                             <header>
-                                <h2 className="text-2xl font-bold mb-2 text-blue-800 group-hover:underline">{blog.title}</h2>
+                                <h2 className="text-xl md:text-2xl font-bold mb-2 text-blue-800 group-hover:underline">{blog.title}</h2>
                                 <div className="flex items-center gap-3 mb-2">
                                     {blog.author.profilePicture ? (
                                         <img
@@ -208,18 +198,18 @@ const AllBlogs = () => {
                                     </span>
                                 </div>
                             </header>
-                            <p className="text-gray-700 line-clamp-3 mb-2 transition-all px-1 py-1">
+                            <p className="text-gray-700 line-clamp-3 mb-2 transition-all px-1 py-1 text-base">
                                 {getExcerpt(blog.content, 300)}
                             </p>
                             <footer className="flex justify-between items-center mt-auto">
-                                <a
+                                <Link
                                     href={`/blog/${blog.id}`}
-                                    className="text-blue-600 hover:underline text-sm font-semibold"
+                                    className="text-blue-600 hover:underline text-sm font-semibold transition"
                                     title="Read more"
                                     aria-label={`Read more about ${blog.title}`}
                                 >
                                     Read More &rarr;
-                                </a>
+                                </Link>
                                 <span className="text-xs text-gray-400" title={`Last updated: ${new Date(blog.updatedAt).toLocaleString()}`}>
                                     Updated {new Date(blog.updatedAt).toLocaleDateString()}
                                 </span>
@@ -230,40 +220,85 @@ const AllBlogs = () => {
             )}
             {/* Pagination Controls */}
             {pagination && (
-                <nav className="flex flex-wrap justify-center items-center gap-4 mt-10" aria-label="Pagination">
-                    <button
-                        className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-blue-200 disabled:opacity-50 transition"
-                        disabled={!pagination.hasPrev}
-                        onClick={() => handlePageChange(page - 1)}
-                        aria-label="Previous page"
-                    >
-                        &larr; Prev
-                    </button>
-                    <span className="font-medium text-gray-700 px-3">
-                        Page <span className="text-blue-700">{pagination.page}</span> of <span className="text-blue-700">{pagination.totalPages}</span>
-                    </span>
-                    <button
-                        className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-blue-200 disabled:opacity-50 transition"
-                        disabled={!pagination.hasNext}
-                        onClick={() => handlePageChange(page + 1)}
-                        aria-label="Next page"
-                    >
-                        Next &rarr;
-                    </button>
+                <nav
+                    className="flex flex-col sm:flex-row justify-center items-center gap-6 mt-12 w-full px-2 py-4 bg-white/80 border border-blue-100 rounded-xl shadow-sm mx-auto max-w-3xl"
+                    aria-label="Pagination"
+                >
+                    <div className="flex items-center gap-2 text-gray-700 text-sm font-medium bg-blue-50 px-3 py-1 rounded-full shadow-inner">
+                        Showing <span className="font-bold text-blue-700">{(pagination.page - 1) * limit + 1}</span>
+                        -
+                        <span className="font-bold text-blue-700">{Math.min(pagination.page * limit, pagination.totalCount)}</span>
+                        of <span className="font-bold text-blue-700">{pagination.totalCount}</span> blogs
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            className="px-4 py-2 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 disabled:opacity-40 transition font-medium shadow-sm focus:ring-2 focus:ring-blue-300"
+                            disabled={!pagination.hasPrev}
+                            onClick={() => handlePageChange(page - 1)}
+                            aria-label="Previous page"
+                        >
+                            &larr; Prev
+                        </button>
+                        {/* Page numbers */}
+                        <span className="flex items-center gap-1">
+                            {Array.from({ length: pagination.totalPages }, (_, i) => (
+                                <button
+                                    key={i + 1}
+                                    onClick={() => handlePageChange(i + 1)}
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold transition border
+                                        ${pagination.page === i + 1
+                                            ? "bg-blue-600 text-white border-blue-600 shadow"
+                                            : "bg-white text-blue-700 border-blue-200 hover:bg-blue-100"}
+                                    `}
+                                    aria-current={pagination.page === i + 1 ? "page" : undefined}
+                                    aria-label={`Go to page ${i + 1}`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                        </span>
+                        <button
+                            className="px-4 py-2 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 disabled:opacity-40 transition font-medium shadow-sm focus:ring-2 focus:ring-blue-300"
+                            disabled={!pagination.hasNext}
+                            onClick={() => handlePageChange(page + 1)}
+                            aria-label="Next page"
+                        >
+                            Next &rarr;
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="limit-select" className="text-gray-600 text-sm font-medium">
+                            Blogs per page:
+                        </label>
+                        <select
+                            id="limit-select"
+                            value={limit}
+                            onChange={e => {
+                                setLimit(Number(e.target.value));
+                                setPage(1);
+                            }}
+                            className="rounded-lg border border-blue-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white shadow-sm"
+                            aria-label="Select number of blogs per page"
+                        >
+                            {[5, 10, 15, 20, 25].map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                        </select>
+                    </div>
                 </nav>
             )}
             {/* Mobile Create Blog Button */}
             <div className="fixed bottom-6 right-6 z-50 md:hidden">
-                <a
-                    href="/blog/create"
-                    className="bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center justify-center hover:bg-blue-800 transition"
+                <Link
+                    href="/blog/write"
+                    className="bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center justify-center hover:bg-blue-800 transition focus:outline-none focus:ring-2 focus:ring-blue-400"
                     aria-label="Create a new blog"
                     title="Create Blog"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                </a>
+                </Link>
             </div>
         </main>
     )

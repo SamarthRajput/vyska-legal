@@ -48,7 +48,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
             className="flex items-center space-x-3 p-2 hover:bg-slate-100 rounded-xl"
           >
             <img
-              src={loggedInUser.imageUrl}
+              src={loggedInUser.imageUrl || "/default-profile.png"}
               alt={loggedInUser.name}
               className="w-10 h-10 rounded-full object-cover"
             />
