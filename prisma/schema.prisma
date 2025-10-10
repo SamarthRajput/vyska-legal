@@ -1,17 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-// pnpm dlx prisma generate       # Generate Prisma Client after schema changes
-// pnpm dlx prisma db push        # Push schema changes to DB (dev, non-destructive)
-// pnpm dlx prisma migrate dev    # Create & apply migration for schema changes
-// pnpm dlx prisma migrate reset  # Reset DB: drop, recreate, reapply migrations (dev only)
-// pnpm dlx prisma studio         # Open Prisma GUI to view/manage DB
-// pnpm dlx prisma format         # Format schema.prisma
-// pnpm dlx prisma db pull        # Pull existing DB schema into prisma file
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -32,7 +21,7 @@ model User {
   updatedAt          DateTime      @updatedAt
   blogs              Blog[]
   appointments       Appointment[]
-  researchUploads    Research[]
+  researchPapers     Research[]    @relation("AdminResearchPapers")
   createdTeamMembers TeamMember[]  @relation("CreatedTeamMembers")
 }
 
@@ -74,15 +63,15 @@ model Research {
   id           String   @id @default(cuid())
   title        String
   description  String?
-  fileUrl      String
-  uploadedBy   User?    @relation(fields: [userId], references: [id])
-  uploadedById String?
+  content      String?  @db.Text
+  fileUrl      String?
+  thumbnailUrl String?
+  createdBy    User     @relation("AdminResearchPapers", fields: [createdById], references: [id])
+  createdById  String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  userId       String?
 }
 
-// Appointment Slot Model
 model AppointmentSlot {
   id          String        @id @default(cuid())
   date        DateTime
@@ -93,7 +82,6 @@ model AppointmentSlot {
   Appointment Appointment[]
 }
 
-// Appointment Model
 model Appointment {
   id        String            @id @default(cuid())
   userName  String
@@ -108,7 +96,6 @@ model Appointment {
   userId    String?
 }
 
-// Appointment Status Enum
 enum AppointmentStatus {
   PENDING
   CONFIRMED
@@ -124,7 +111,6 @@ model TeamMember {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Optional social media links
   linkedin  String?
   twitter   String?
   instagram String?

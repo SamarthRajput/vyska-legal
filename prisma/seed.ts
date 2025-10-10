@@ -76,23 +76,23 @@ async function main() {
         ],
     })
 
-    // Create Research
-    await prisma.research.createMany({
-        data: [
-            {
-                title: 'Corporate Law Whitepaper',
-                description: 'An in-depth analysis of corporate regulations.',
-                fileUrl: 'https://example.com/corporate-law.pdf',
-                uploadedById: admin.id,
-            },
-            {
-                title: 'Intellectual Property Research',
-                description: 'Study on recent trends in IP law.',
-                fileUrl: 'https://example.com/ip-research.pdf',
-                uploadedById: user1.id,
-            },
-        ],
-    })
+    // // Create Research
+    // await prisma.research.createMany({
+    //     data: [
+    //         {
+    //             title: 'Corporate Law Whitepaper',
+    //             description: 'An in-depth analysis of corporate regulations.',
+    //             fileUrl: 'https://example.com/corporate-law.pdf',
+    //             uploadedById: admin.id,
+    //         },
+    //         {
+    //             title: 'Intellectual Property Research',
+    //             description: 'Study on recent trends in IP law.',
+    //             fileUrl: 'https://example.com/ip-research.pdf',
+    //             uploadedById: user1.id,
+    //         },
+    //     ],
+    // })
     // Create Team Members
     await prisma.teamMember.createMany({
         data: [
