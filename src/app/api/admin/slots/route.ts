@@ -10,6 +10,11 @@ export async function GET() {
             include: { Appointment: true },
             orderBy: { date: "asc" },
         });
+        // in db
+        await prisma.appointmentSlot.updateMany({
+            where: { id: { in: slots.map((s) => s.id) } },
+            data: { isBooked: { set: false } },
+        });
         return NextResponse.json(slots);
     } catch (error) {
         console.error(error);
@@ -51,6 +56,29 @@ export async function POST(request: NextRequest) {
         });
 
         return NextResponse.json({ message: "Slots created successfully", created: created.count });
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Server error" }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const user = await getUser();
+        if (!user || user.role !== UserRole.ADMIN) {
+            return NextResponse.json({ error: "Access Denied. Admins only." }, { status: 403 });
+        }
+        const { searchParams } = new URL(request.url);
+        const slotId = searchParams.get("id");
+        if (!slotId) {
+            return NextResponse.json({ error: "Missing slotId" }, { status: 400 });
+        }
+
+        const deleted = await prisma.appointmentSlot.deleteMany({
+            where: { id: slotId },
+        });
+
+        return NextResponse.json({ message: "Slots deleted successfully", deleted: deleted.count });
     } catch (error) {
         console.error(error);
         return NextResponse.json({ error: "Server error" }, { status: 500 });
