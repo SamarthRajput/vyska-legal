@@ -180,6 +180,7 @@ export default function AppointmentAdmin() {
             })
             return
         }
+        toast.info("Creating slots...", { duration: 2000 })
         const res = await fetch("/api/admin/slots", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -191,6 +192,7 @@ export default function AppointmentAdmin() {
         })
         const data = await res.json()
         if (res.ok) {
+            toast.dismiss()
             toast.success("Slots created", {
                 description: `${data.created} new slot(s) added.`,
             })
@@ -300,8 +302,10 @@ export default function AppointmentAdmin() {
             })
             return
         }
+        toast.info("Deleting slot...", { duration: 2000 })
         const res = await fetch(`/api/admin/slots?id=${id}`, { method: "DELETE" })
         const data = await res.json().catch(() => ({}))
+        toast.dismiss()
         if (res.ok) {
             toast.success("Deleted", {
                 description: "Slot removed.",
@@ -411,7 +415,18 @@ export default function AppointmentAdmin() {
                             Generate slots
                         </Button>
                         <Button onClick={createSelected} variant="secondary" disabled={selected.size === 0}>
-                            Create selected ({selected.size})
+                            Create selected (
+                            {selected.size} slot{selected.size > 1 ? "s" : ""}
+                            {startDate && endDate && startDate !== endDate && selected.size > 0
+                                ? ` for ${Math.max(
+                                    0,
+                                    Math.ceil(
+                                        (new Date(endDate).getTime() - new Date(startDate).getTime()) /
+                                        (1000 * 60 * 60 * 24)
+                                    ) + 1
+                                )
+                                } days)`
+                                : ")"}
                         </Button>
                     </div>
 

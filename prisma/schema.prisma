@@ -1,6 +1,17 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// pnpm dlx prisma generate       # Generate Prisma Client after schema changes
+// pnpm dlx prisma db push        # Push schema changes to DB (dev, non-destructive)
+// pnpm dlx prisma migrate dev    # Create & apply migration for schema changes
+// pnpm dlx prisma migrate reset  # Reset DB: drop, recreate, reapply migrations (dev only)
+// pnpm dlx prisma studio         # Open Prisma GUI to view/manage DB
+// pnpm dlx prisma format         # Format schema.prisma
+// pnpm dlx prisma db pull        # Pull existing DB schema into prisma file
+
+// pnpm dlx prisma migrate dev --name init
+// pnpm run prisma:seed
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -23,6 +34,8 @@ model User {
   appointments       Appointment[]
   researchPapers     Research[]    @relation("AdminResearchPapers")
   createdTeamMembers TeamMember[]  @relation("CreatedTeamMembers")
+
+  repliedContacts Contact[] @relation("UserRepliedContacts")
 }
 
 enum UserRole {
@@ -118,4 +131,29 @@ model TeamMember {
 
   createdBy   User?   @relation("CreatedTeamMembers", fields: [createdById], references: [id])
   createdById String?
+}
+
+model Contact {
+  id          String  @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  subject     String
+  message     String  @db.Text
+  reply       String? @db.Text
+  repliedById String?
+  repliedBy   User?   @relation("UserRepliedContacts", fields: [repliedById], references: [id])
+
+  status    ContactStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum ContactStatus {
+  PENDING
+  RESOLVED
 }

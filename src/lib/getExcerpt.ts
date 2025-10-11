@@ -25,3 +25,8 @@ const getExcerpt = (content: string, wordCount: number = 20) => {
 };
 
 export default getExcerpt;
+
+export const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+};

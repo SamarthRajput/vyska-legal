@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import React from 'react'
 
 const Homepage = () => {
@@ -14,18 +15,18 @@ const Homepage = () => {
         </p>
 
         <div className="flex space-x-4">
-          <a
-            href="/services"
+          <Link
+            href="/research"
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
           >
-            Explore Services
-          </a>
-          <a
+            Explore Researchs
+          </Link>
+          <Link
             href="/blogs"
             className="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition"
           >
             Read Our Blog
-          </a>
+          </Link>
         </div>
       </div>
     </div>

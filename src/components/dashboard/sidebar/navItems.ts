@@ -95,13 +95,13 @@ export const adminNavItems = [
   {
     title: "Appointment Section",
     description: "Create slots, review availability, and manage bookings.",
-    href: "/admin/appointment",
+    href: "/admin/appointments",
     icon: MessageSquareWarning,
   },
   {
-    title: "System Settings",
-    description: "Configure platform-level preferences and integrations.",
-    href: "/admin/settings",
-    icon: Settings,
+    title: "Contact Us Messages",
+    description: "View and respond to messages submitted via the Contact Us form.",
+    href: "/admin/contact-us",
+    icon: MessageSquareWarning,
   },
 ];

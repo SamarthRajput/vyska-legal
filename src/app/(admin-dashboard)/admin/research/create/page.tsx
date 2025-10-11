@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { EditorSection } from '@/components/BlogEditor';
+import { toast } from 'sonner';
 
 export default function CreateResearchPage() {
   const router = useRouter();
@@ -75,11 +76,15 @@ export default function CreateResearchPage() {
       }
 
       const result = await response.json();
-      alert('Research paper created successfully!');
+      toast.success('Research paper created successfully!');
       router.push(`/research/${result.id}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error:', error);
-      alert(error.message || 'Failed to create research paper');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to create research paper'
+      );
     } finally {
       setLoading(false);
     }
