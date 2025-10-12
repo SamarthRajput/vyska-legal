@@ -73,6 +73,8 @@ export async function POST(req: NextRequest) {
         cloudinary.uploader.upload_stream(
           {
             resource_type: 'raw',
+            type: 'upload',
+            access_mode: 'public',
             folder: 'research-papers',
             format: 'pdf',
           },

@@ -75,6 +75,7 @@ export async function PUT(
         { status: 401 }
       );
     }
+    
     const existingUser = await getCurrentUser();
     if (!existingUser || existingUser.role !== UserRole.ADMIN) {
       return NextResponse.json(
@@ -82,20 +83,23 @@ export async function PUT(
         { status: 403 }
       );
     }
+    
     if (!userId) {
       console.error("User ID is required.");
       return NextResponse.json({ error: "User ID is required." }, { status: 400 });
     }
+    
     const body = await request.json();
-    const { siteRole } = body;
-    if (!siteRole || (siteRole !== "admin" && siteRole !== "user")) {
+    const { role } = body;
+    const normalizedRole = role?.toUpperCase();
+    
+    if (!normalizedRole || (normalizedRole !== "ADMIN" && normalizedRole !== "USER")) {
       return NextResponse.json(
-        { error: "Invalid siteRole. Must be 'admin' or 'user'." },
+        { error: "Invalid role. Must be 'ADMIN' or 'USER'." },
         { status: 400 }
       );
     }
 
-    // Validate user exists
     const userInfo = await prisma.user.findUnique({ where: { id: userId } });
     if (!userInfo) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
@@ -105,7 +109,7 @@ export async function PUT(
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
-        role: siteRole === "admin" ? UserRole.ADMIN : UserRole.USER,
+        role: normalizedRole === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
       },
     });
 
@@ -119,5 +123,77 @@ export async function PUT(
   } catch (err) {
     console.error(err);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
+  }
+}
+
+// DELETE user
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
+  try {
+    const params = await context.params;
+    const userId = params.id;
+
+    const clerkUser = await currentUser();
+    if (!clerkUser?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized, please log in." },
+        { status: 401 }
+      );
+    }
+    
+    const existingUser = await getCurrentUser();
+    if (!existingUser || existingUser.role !== UserRole.ADMIN) {
+      return NextResponse.json(
+        { error: "Access Denied. Admins only." },
+        { status: 403 }
+      );
+    }
+    
+    if (!userId) {
+      return NextResponse.json({ error: "User ID is required." }, { status: 400 });
+    }
+
+    // Prevent self-deletion
+    if (existingUser.id === userId) {
+      return NextResponse.json(
+        { error: "You cannot delete your own account." },
+        { status: 400 }
+      );
+    }
+
+    // Check if user exists
+    const userToDelete = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        blogs: true,
+        appointments: true,
+        researchPapers: true,
+        createdTeamMembers: true,
+        repliedContacts: true,
+      }
+    });
+
+    if (!userToDelete) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return NextResponse.json(
+      {
+        message: "User deleted successfully.",
+        deletedUserId: userId,
+      },
+      { status: 200 }
+    );
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    return NextResponse.json({ 
+      error: "Failed to delete user. They may have related data that needs to be handled first." 
+    }, { status: 500 });
   }
 }
