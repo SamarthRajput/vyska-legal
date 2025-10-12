@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import * as React from "react"
-import useSWR, { mutate } from "swr"
+import { mutate } from "swr"
 import { format, startOfWeek } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -23,6 +24,7 @@ import { Separator } from "@/components/ui/separator"
 import { Spinner } from "@/components/ui/spinner"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
+import Pagination from "../Pagination"
 
 type AppointmentStatus = "PENDING" | "CONFIRMED" | "CANCELLED"
 
@@ -37,7 +39,6 @@ interface Appointment {
     slotId: string
     userId: string | null
 }
-
 interface AppointmentSlot {
     id: string
     date: string
@@ -48,9 +49,6 @@ interface AppointmentSlot {
     Appointment: Appointment[]
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
-
-// Generate time ranges (e.g., 09:00-09:30) for a single day window
 function generateTimeRanges(start: string, end: string, durationMinutes: number) {
     const out: string[] = []
     const [sh, sm] = start.split(":").map(Number)
@@ -72,11 +70,27 @@ function generateTimeRanges(start: string, end: string, durationMinutes: number)
     return out
 }
 
-export default function AppointmentAdmin() {
-    // data
-    const { data: slots, isLoading } = useSWR<AppointmentSlot[]>("/api/admin/slots", fetcher)
+function TableSkeletonRows({ rows = 5, cols = 6 }: { rows?: number; cols?: number }) {
+    return (
+        <>
+            {Array.from({ length: rows }).map((_, i) => (
+                <TableRow key={i}>
+                    {Array.from({ length: cols }).map((_, j) => (
+                        <TableCell key={j}>
+                            <div className="h-4 w-full rounded bg-muted animate-pulse" />
+                        </TableCell>
+                    ))}
+                </TableRow>
+            ))}
+        </>
+    )
+}
 
-    // slot generation state
+export default function AppointmentAdmin() {
+    const [data, setData] = React.useState<{ slots: AppointmentSlot[] }>({ slots: [] })
+    const [isLoading, setIsLoading] = React.useState(true)
+    const [deletingId, setDeletingId] = React.useState<string | null>(null)
+    const [insertingId, setInsertingId] = React.useState<string | null>(null)
     const [startDate, setStartDate] = React.useState("")
     const [endDate, setEndDate] = React.useState("")
     const [duration, setDuration] = React.useState<number>(30)
@@ -84,26 +98,47 @@ export default function AppointmentAdmin() {
     const [dayEnd, setDayEnd] = React.useState("17:00")
     const [generated, setGenerated] = React.useState<string[]>([])
     const [selected, setSelected] = React.useState<Set<string>>(new Set())
-
-    // group/filter/selection state
     const [groupBy, setGroupBy] = React.useState<"date" | "week">("date")
     const [showFilter, setShowFilter] = React.useState<"all" | "booked" | "available">("all")
     const [selectedRows, setSelectedRows] = React.useState<Set<string>>(new Set())
-
-    // new state for time-based filter and pagination
     const [whenFilter, setWhenFilter] = React.useState<"all" | "upcoming" | "past">("all")
-    const [page, setPage] = React.useState(1)
-    const [pageSize, setPageSize] = React.useState(20)
-
+    const [pagination, setPagination] = React.useState({ page: 1, limit: 50, total: 0 })
     const [bookingSlot, setBookingSlot] = React.useState<AppointmentSlot | null>(null)
     const [userName, setUserName] = React.useState("")
     const [userEmail, setUserEmail] = React.useState("")
     const [userPhone, setUserPhone] = React.useState("")
+    const [actionLoading, setActionLoading] = React.useState(false)
 
-    const byId = React.useMemo(() => new Map((slots ?? []).map((s) => [s.id, s])), [slots])
+    const fetchData = async () => {
+        setIsLoading(true)
+        try {
+            const response = await fetch(`/api/admin/slots?page=${pagination.page}&limit=${pagination.limit}&when=${whenFilter}&show=${showFilter}`)
+            if (!response.ok) {
+                throw new Error("Failed to fetch slots")
+            }
+            const data = await response.json()
+            setData(data)
+            setPagination(data.pagination)
+        } catch (error: any) {
+            toast.error("Failed to fetch slots", {
+                description: error?.message || "An error occurred while fetching slots.",
+                action: {
+                    label: "Retry",
+                    onClick: fetchData,
+                },
+            })
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    React.useEffect(() => {
+        fetchData()
+    }, [pagination.page, pagination.limit, whenFilter, showFilter])
+
+    const byId = React.useMemo(() => new Map((data.slots ?? []).map((s) => [s.id, s])), [data.slots])
 
     const getSlotStartDate = (slot: AppointmentSlot) => {
-        // timeSlot format: "HH:MM-HH:MM"
         const [start] = slot.timeSlot.split("-")
         const [h, m] = start.split(":").map(Number)
         const d = new Date(slot.date)
@@ -111,38 +146,9 @@ export default function AppointmentAdmin() {
         return d
     }
 
-    const filteredSlots = React.useMemo(() => {
-        let arr = slots ?? []
-        if (showFilter === "booked") arr = arr.filter((s) => s.isBooked)
-        if (showFilter === "available") arr = arr.filter((s) => !s.isBooked)
-
-        if (whenFilter !== "all") {
-            const now = new Date()
-            if (whenFilter === "upcoming") {
-                arr = arr.filter((s) => getSlotStartDate(s) >= now)
-            } else if (whenFilter === "past") {
-                arr = arr.filter((s) => getSlotStartDate(s) < now)
-            }
-        }
-
-        // sort by date then time start
-        arr = [...arr].sort((a, b) => getSlotStartDate(a).getTime() - getSlotStartDate(b).getTime())
-        return arr
-    }, [slots, showFilter, whenFilter])
-
-    const totalCount = filteredSlots.length
-    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
-    const currentPage = Math.min(page, totalPages)
-    const startIndex = (currentPage - 1) * pageSize
-    const endIndex = startIndex + pageSize
-    const pageSlots = React.useMemo(
-        () => filteredSlots.slice(startIndex, endIndex),
-        [filteredSlots, startIndex, endIndex],
-    )
-
     const groupedPage = React.useMemo(() => {
         const map = new Map<string, { label: string; items: AppointmentSlot[] }>()
-        for (const s of pageSlots) {
+        for (const s of (data.slots ?? [])) {
             const d = new Date(s.date)
             if (groupBy === "date") {
                 const key = format(d, "PPP")
@@ -159,11 +165,11 @@ export default function AppointmentAdmin() {
             }
         }
         return Array.from(map.values())
-    }, [pageSlots, groupBy])
+    }, [groupBy, data.slots])
 
     React.useEffect(() => {
-        setPage(1)
-    }, [showFilter, whenFilter, groupBy, pageSize])
+        setPagination((p) => ({ ...p, page: 1 }))
+    }, [showFilter, whenFilter, groupBy, pagination.limit])
 
     const toggleSelect = (slot: string) => {
         setSelected((prev) => {
@@ -180,30 +186,39 @@ export default function AppointmentAdmin() {
             })
             return
         }
+        setActionLoading(true)
         toast.info("Creating slots...", { duration: 2000 })
-        const res = await fetch("/api/admin/slots", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                startDate,
-                endDate,
-                timeSlots: Array.from(selected),
-            }),
-        })
-        const data = await res.json()
-        if (res.ok) {
-            toast.dismiss()
-            toast.success("Slots created", {
-                description: `${data.created} new slot(s) added.`,
+        try {
+            const res = await fetch("/api/admin/slots", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    startDate,
+                    endDate,
+                    timeSlots: Array.from(selected),
+                }),
             })
-            setGenerated([])
-            setSelected(new Set())
-            setStartDate("")
-            setEndDate("")
-            mutate("/api/admin/slots")
-        } else {
+            const dataRes = await res.json()
+            setActionLoading(false)
+            if (res.ok) {
+                toast.dismiss()
+                toast.success("Slots created", {
+                    description: `${dataRes.created} new slot(s) added.`,
+                })
+                setGenerated([])
+                setSelected(new Set())
+                setStartDate("")
+                setEndDate("")
+                fetchData()
+            } else {
+                toast.error("Create failed", {
+                    description: dataRes.error || "Server error",
+                })
+            }
+        } catch (error: any) {
+            setActionLoading(false)
             toast.error("Create failed", {
-                description: data.error || "Server error",
+                description: error?.message || "Server error",
             })
         }
     }
@@ -215,76 +230,102 @@ export default function AppointmentAdmin() {
             })
             return
         }
-        const res = await fetch("/api/admin/appointments", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                userName,
-                userEmail,
-                userPhone,
-                slotId: bookingSlot.id,
-            }),
-        })
-        const data = await res.json()
-        if (res.ok) {
-            toast.success("Booked", {
-                description: "Appointment booked successfully.",
+        setActionLoading(true)
+        try {
+            const res = await fetch("/api/admin/appointments", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userName,
+                    userEmail,
+                    userPhone,
+                    slotId: bookingSlot.id,
+                }),
             })
-            setBookingSlot(null)
-            setUserName("")
-            setUserEmail("")
-            setUserPhone("")
-            mutate("/api/admin/slots")
-        } else {
+            const data = await res.json()
+            setActionLoading(false)
+            if (res.ok) {
+                toast.success("Booked", {
+                    description: "Appointment booked successfully.",
+                })
+                setBookingSlot(null)
+                setUserName("")
+                setUserEmail("")
+                setUserPhone("")
+                mutate("/api/admin/slots")
+            } else {
+                toast.error("Booking failed", {
+                    description: data.error || "Server error",
+                })
+            }
+        } catch (error: any) {
+            setActionLoading(false)
             toast.error("Booking failed", {
-                description: data.error || "Server error",
+                description: error?.message || "Server error",
             })
         }
     }
 
     const cancelAppointment = async (id: string) => {
-        const res = await fetch(`/api/admin/appointments?id=${id}`, { method: "DELETE" })
-        const data = await res.json()
-        if (res.ok) {
-            toast.success("Cancelled", {
-                description: "Appointment cancelled.",
-            })
-            mutate("/api/admin/slots")
-        } else {
+        setActionLoading(true)
+        try {
+            const res = await fetch(`/api/admin/appointments?id=${id}`, { method: "DELETE" })
+            const data = await res.json()
+            setActionLoading(false)
+            if (res.ok) {
+                toast.success("Cancelled", {
+                    description: "Appointment cancelled.",
+                })
+                mutate("/api/admin/slots")
+            } else {
+                toast.error("Cancel failed", {
+                    description: data.error || "Server error",
+                })
+            }
+        } catch (error: any) {
+            setActionLoading(false)
             toast.error("Cancel failed", {
-                description: data.error || "Server error",
+                description: error?.message || "Server error",
             })
         }
     }
 
     const updateStatus = async (id: string, status: AppointmentStatus, reason?: string) => {
-        const res = await fetch(`/api/admin/appointments`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ appointmentId: id, status, reason }),
-        })
-        const data = await res.json()
-        if (res.ok) {
-            toast.success("Updated", {
-                description: "Appointment updated successfully.",
+        setActionLoading(true)
+        try {
+            const res = await fetch(`/api/admin/appointments`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ appointmentId: id, status, reason }),
             })
-            if (status === "CANCELLED") {
-                toast.info("Cancelled Reason", {
-                    description: `Reason: ${reason || "No reason provided"}`,
-                    duration: 5000,
+            const data = await res.json()
+            setActionLoading(false)
+            if (res.ok) {
+                toast.success("Updated", {
+                    description: "Appointment updated successfully.",
+                })
+                if (status === "CANCELLED") {
+                    toast.info("Cancelled Reason", {
+                        description: `Reason: ${reason || "No reason provided"}`,
+                        duration: 5000,
+                    })
+                }
+                mutate("/api/admin/slots")
+            } else {
+                toast.error("Update failed", {
+                    description: data.error || "Server error",
                 })
             }
-            mutate("/api/admin/slots")
-        } else {
+        } catch (error: any) {
+            setActionLoading(false)
             toast.error("Update failed", {
-                description: data.error || "Server error",
+                description: error?.message || "Server error",
             })
         }
     }
 
     const toggleRow = (id: string) => {
         const slot = byId.get(id)
-        // Only allow selecting unbooked slots
         if (!slot || slot.isBooked) return
         setSelectedRows((prev) => {
             const next = new Set(prev)
@@ -302,46 +343,74 @@ export default function AppointmentAdmin() {
             })
             return
         }
-        toast.info("Deleting slot...", { duration: 2000 })
-        const res = await fetch(`/api/admin/slots?id=${id}`, { method: "DELETE" })
-        const data = await res.json().catch(() => ({}))
-        toast.dismiss()
-        if (res.ok) {
-            toast.success("Deleted", {
-                description: "Slot removed.",
-            })
-            setSelectedRows((prev) => {
-                const next = new Set(prev)
-                next.delete(id)
-                return next
-            })
-            mutate("/api/admin/slots")
-        } else {
+        try {
+            setActionLoading(true)
+            setDeletingId(id)
+            toast.info("Deleting slot...", { duration: 2000 })
+            const res = await fetch(`/api/admin/slots?id=${id}`, { method: "DELETE" })
+            const dataRes = await res.json().catch(() => ({}))
+            toast.dismiss()
+            setActionLoading(false)
+            if (res.ok) {
+                toast.success("Deleted", {
+                    description: "Slot removed.",
+                })
+                setData((prev) => ({
+                    ...prev,
+                    slots: prev.slots.filter((s) => s.id !== id)
+                }))
+                setSelectedRows((prev) => {
+                    const next = new Set(prev)
+                    next.delete(id)
+                    return next
+                })
+                fetchData()
+            } else {
+                toast.error("Delete failed", {
+                    description: dataRes.error || "Server error",
+                })
+            }
+        } catch (error: any) {
+            setActionLoading(false)
             toast.error("Delete failed", {
-                description: data.error || "Server error",
+                description: error?.message || "Server error",
             })
+        } finally {
+            setDeletingId(null)
         }
     }
 
     const deleteSelected = async () => {
         if (selectedRows.size === 0) return
-        const ids = Array.from(selectedRows)
+        setActionLoading(true)
         let deleted = 0
-        for (const id of ids) {
-            const slot = byId.get(id)
-            if (!slot || slot.isBooked) continue
-            const res = await fetch(`/api/admin/slots?id=${id}`, { method: "DELETE" })
-            if (res.ok) deleted++
+        try {
+            const ids = Array.from(selectedRows)
+            for (const id of ids) {
+                const slot = byId.get(id)
+                if (!slot || slot.isBooked) continue
+                const res = await fetch(`/api/admin/slots?id=${id}`, { method: "DELETE" })
+                if (res.ok) deleted++
+            }
+            toast.success("Bulk delete complete", {
+                description: `${deleted} slot(s) deleted.`,
+            })
+            setData((prev) => ({
+                ...prev,
+                slots: prev.slots.filter((s) => !selectedRows.has(s.id))
+            }))
+            setSelectedRows(new Set())
+            setActionLoading(false)
+            fetchData()
+        } catch (error: any) {
+            setActionLoading(false)
+            toast.error("Bulk delete failed", {
+                description: error?.message || "Server error",
+            })
         }
-        toast.success("Bulk delete complete", {
-            description: `${deleted} slot(s) deleted.`,
-        })
-        setSelectedRows(new Set())
-        mutate("/api/admin/slots")
     }
 
     const toggleGroup = (items: AppointmentSlot[]) => {
-        // select/deselect only unbooked slots in this group
         const ids = items.filter((s) => !s.isBooked).map((s) => s.id)
         if (ids.length === 0) return
         setSelectedRows((prev) => {
@@ -363,21 +432,25 @@ export default function AppointmentAdmin() {
             })
             return
         }
-        // Generate only once for a single day preview
         const ranges = generateTimeRanges(dayStart, dayEnd, duration)
         setGenerated(ranges)
         setSelected(new Set())
     }
 
     return (
-        <div className="space-y-8">
-            {/* Slot generation */}
-            <Card className="border-muted">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Bulk Slot Generation</CardTitle>
+        <div className="w-full flex flex-col gap-6 px-2 sm:px-4 md:px-8 py-4 overflow-x-auto">
+            {actionLoading && (
+                <div className="fixed inset-0 z-50 bg-black/20 flex items-center justify-center">
+                    <Spinner className="w-10 h-10" />
+                </div>
+            )}
+
+            <Card className="w-full shadow-none border mb-0 p-0">
+                <CardHeader className="pb-1 px-2 sm:px-4 pt-3">
+                    <CardTitle className="text-lg sm:text-xl font-semibold">Bulk Slot Generation</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <CardContent className="space-y-4 p-2 sm:p-4 pt-2">
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                         <div className="space-y-2">
                             <Label htmlFor="start-date">Start date</Label>
                             <Input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -410,11 +483,27 @@ export default function AppointmentAdmin() {
                             <Input type="time" value={dayEnd} onChange={(e) => setDayEnd(e.target.value)} />
                         </div>
                     </div>
-                    <div className="flex flex-wrap gap-3">
-                        <Button onClick={onGenerate} variant="default">
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
+                        <Button
+                            onClick={onGenerate}
+                            variant="default"
+                            size="sm"
+                            className="min-w-[110px]"
+                            title="Preview time slots for a single day"
+                            aria-label="Generate slots"
+                        >
                             Generate slots
                         </Button>
-                        <Button onClick={createSelected} variant="secondary" disabled={selected.size === 0}>
+                        <Button
+                            onClick={createSelected}
+                            variant="secondary"
+                            size="sm"
+                            disabled={selected.size === 0 || actionLoading}
+                            className="min-w-[140px] flex items-center gap-2"
+                            title={selected.size === 0 ? "Select at least one slot" : "Create selected slots"}
+                            aria-label="Create selected slots"
+                        >
+                            {actionLoading && <Spinner className="w-4 h-4" />}
                             Create selected (
                             {selected.size} slot{selected.size > 1 ? "s" : ""}
                             {startDate && endDate && startDate !== endDate && selected.size > 0
@@ -429,7 +518,6 @@ export default function AppointmentAdmin() {
                                 : ")"}
                         </Button>
                     </div>
-
                     {generated.length > 0 && (
                         <>
                             <Separator />
@@ -437,322 +525,319 @@ export default function AppointmentAdmin() {
                                 Showing time slots for a single day. When you Create selected, these times will be created for each date
                                 in the selected date range.
                             </p>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mt-2">
-                                {generated.map((slot) => (
-                                    <button
-                                        key={slot}
-                                        onClick={() => toggleSelect(slot)}
-                                        className={cn(
-                                            "rounded-md border px-2 py-1 text-sm transition-colors",
-                                            selected.has(slot) ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted",
-                                        )}
-                                        aria-pressed={selected.has(slot)}
-                                    >
-                                        {slot}
-                                    </button>
-                                ))}
+                            <div className="w-full overflow-x-auto">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mt-2 min-w-[320px]">
+                                    {generated.map((slot) => (
+                                        <button
+                                            key={slot}
+                                            onClick={() => toggleSelect(slot)}
+                                            className={cn(
+                                                "rounded-md border px-2 py-1 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary/60",
+                                                selected.has(slot) ? "bg-primary text-primary-foreground shadow" : "bg-card hover:bg-muted"
+                                            )}
+                                            aria-pressed={selected.has(slot)}
+                                            title={selected.has(slot) ? "Deselect slot" : "Select slot"}
+                                        >
+                                            {slot}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </>
                     )}
                 </CardContent>
             </Card>
 
-            {/* Existing slots */}
-            <div className="space-y-3">
-                {/* Change to vertical stack */}
-                <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-medium">Existing Slots</h2>
-                        <Badge variant="secondary">{slots?.length ?? 0} total</Badge>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <div className="flex items-center gap-2">
-                            <Label className="text-sm">Group by</Label>
-                            <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "date" | "week")}>
-                                <SelectTrigger className="h-8 w-[120px]">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="date">Date</SelectItem>
-                                    <SelectItem value="week">Week</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Label className="text-sm">Filter</Label>
-                            <Select value={showFilter} onValueChange={(v) => setShowFilter(v as "all" | "booked" | "available")}>
-                                <SelectTrigger className="h-8 w-[140px]">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="booked">Booked only</SelectItem>
-                                    <SelectItem value="available">Available only</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Label className="text-sm">When</Label>
-                            <Select value={whenFilter} onValueChange={(v) => setWhenFilter(v as "all" | "upcoming" | "past")}>
-                                <SelectTrigger className="h-8 w-[140px]">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="upcoming">Upcoming</SelectItem>
-                                    <SelectItem value="past">Past</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <Separator orientation="vertical" className="hidden sm:block h-6" />
-                        <div className="flex items-center gap-2">
-                            <Label className="text-sm">Page size</Label>
-                            <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
-                                <SelectTrigger className="h-8 w-[110px]">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="10">10</SelectItem>
-                                    <SelectItem value="20">20</SelectItem>
-                                    <SelectItem value="50">50</SelectItem>
-                                    <SelectItem value="100">100</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <Button
-                            variant="destructive"
-                            size="sm"
-                            disabled={selectedRows.size === 0}
-                            onClick={deleteSelected}
-                            title={selectedRows.size === 0 ? "No slots selected" : "Delete selected"}
-                        >
-                            Delete selected ({selectedRows.size})
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSelectedRows(new Set())}
-                            disabled={selectedRows.size === 0}
-                        >
-                            Clear selection
-                        </Button>
-                    </div>
+            <Card className="w-full shadow-none border mt-0 p-0">
+                <CardHeader className="pb-1 px-2 sm:px-4 pt-3">
+                    <CardTitle className="text-lg sm:text-xl font-semibold">Manage Existing Slots</CardTitle>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 pt-2">
+                    <div className="space-y-4">
+                        <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <h2 className="text-base sm:text-lg font-medium">Existing Slots</h2>
+                                    <Badge variant="secondary">{data.slots?.length ?? 0} total</Badge>
+                                </div>
+                                <div className="flex flex-col sm:flex-row flex-wrap items-stretch gap-2 w-full">
+                                    <div className="flex flex-col sm:flex-row items-stretch gap-2 flex-1 min-w-[180px]">
+                                        <div className="flex flex-col justify-end gap-1 w-full max-w-xs">
+                                            <Label className="text-sm">Group by</Label>
+                                            <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "date" | "week")}>
+                                                <SelectTrigger className="h-9 w-full min-w-[160px]">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="date">Date</SelectItem>
+                                                    <SelectItem value="week">Week</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="flex flex-col justify-end gap-1 w-full max-w-xs">
+                                            <Label className="text-sm">Filter</Label>
+                                            <Select value={showFilter} onValueChange={(v) => setShowFilter(v as "all" | "booked" | "available")}>
+                                                <SelectTrigger className="h-9 w-full min-w-[160px]">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">All</SelectItem>
+                                                    <SelectItem value="booked">Booked only</SelectItem>
+                                                    <SelectItem value="available">Available only</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="flex flex-col justify-end gap-1 w-full max-w-xs">
+                                            <Label className="text-sm">When</Label>
+                                            <Select value={whenFilter} onValueChange={(v) => setWhenFilter(v as "all" | "upcoming" | "past")}>
+                                                <SelectTrigger className="h-9 w-full min-w-[160px]">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">All</SelectItem>
+                                                    <SelectItem value="upcoming">Upcoming</SelectItem>
+                                                    <SelectItem value="past">Past</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-row items-end gap-2 flex-wrap mt-2 sm:mt-0">
+                                        <Separator orientation="vertical" className="hidden sm:block h-6" />
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            disabled={selectedRows.size === 0 || actionLoading}
+                                            onClick={deleteSelected}
+                                            className="min-w-[120px] flex items-center gap-2"
+                                        >
+                                            {actionLoading && <Spinner className="w-4 h-4" />}
+                                            {actionLoading ? "Deleting..." : `Delete selected (${selectedRows.size})`}
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setSelectedRows(new Set())}
+                                            disabled={selectedRows.size === 0}
+                                        >
+                                            Clear selection
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
 
-                    <div className="rounded-md border mt-2 overflow-x-auto">
-                        <Table className="min-w-[720px]">
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[36px]">Select</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Time</TableHead>
-                                    <TableHead>Booked</TableHead>
-                                    <TableHead className="hidden md:table-cell">Appointments</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {isLoading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6}>
-                                            <div className="flex items-center gap-2 py-6">
-                                                <Spinner className="h-4 w-4" />
-                                                <span className="text-sm text-muted-foreground">Loading slots…</span>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ) : groupedPage.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">
-                                            No slots found
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    groupedPage.map((g) => (
-                                        <React.Fragment key={g.label}>
+                            <div className="rounded-md border mt-2 overflow-x-auto">
+                                <Table className="min-w-[600px] w-full">
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[36px]">Select</TableHead>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Time</TableHead>
+                                            <TableHead>Booked</TableHead>
+                                            <TableHead className="hidden md:table-cell">Appointments</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {isLoading ? (
+                                            <TableSkeletonRows rows={pagination.limit} cols={6} />
+                                        ) : groupedPage.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={6} className="bg-muted/50 text-sm font-medium">
-                                                    <div className="flex items-center justify-between gap-3">
-                                                        <div>
-                                                            {g.label}{" "}
-                                                            <span className="text-muted-foreground font-normal">· {g.items.length} slots</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <Checkbox
-                                                                aria-label="Select unbooked in group"
-                                                                // checked state: all unbooked selected
-                                                                checked={
-                                                                    g.items.filter((s) => !s.isBooked).every((s) => selectedRows.has(s.id)) &&
-                                                                    g.items.some((s) => !s.isBooked)
-                                                                }
-                                                                onCheckedChange={() => toggleGroup(g.items)}
-                                                            />
-                                                            <span className="text-xs text-muted-foreground">Select group</span>
-                                                        </div>
-                                                    </div>
+                                                <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">
+                                                    No slots found
                                                 </TableCell>
                                             </TableRow>
-                                            {g.items.map((slot) => (
-                                                <TableRow key={slot.id}>
-                                                    <TableCell>
-                                                        <Checkbox
-                                                            checked={selectedRows.has(slot.id)}
-                                                            onCheckedChange={() => toggleRow(slot.id)}
-                                                            disabled={slot.isBooked}
-                                                            aria-label="Select slot"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>{format(new Date(slot.date), "PPP")}</TableCell>
-                                                    <TableCell>{slot.timeSlot}</TableCell>
-                                                    <TableCell>
-                                                        {slot.isBooked ? <Badge variant="default">Yes</Badge> : <Badge variant="outline">No</Badge>}
-                                                    </TableCell>
-                                                    <TableCell className="hidden md:table-cell max-w-[360px]">
-                                                        {slot.Appointment.length > 0 ? (
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {slot.Appointment.map((a) => (
-                                                                    <Badge key={a.id} variant="secondary" className="font-normal">
-                                                                        {a.userName} · {a.status.toLowerCase()}
-                                                                    </Badge>
-                                                                ))}
+                                        ) : (
+                                            groupedPage.map((g) => (
+                                                <React.Fragment key={g.label}>
+                                                    <TableRow>
+                                                        <TableCell colSpan={6} className="bg-muted/50 text-sm font-medium">
+                                                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-3">
+                                                                <div>
+                                                                    {g.label}{" "}
+                                                                    <span className="text-muted-foreground font-normal">· {g.items.length} slots</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1 sm:gap-2">
+                                                                    <Checkbox
+                                                                        checked={
+                                                                            g.items.filter((s) => !s.isBooked).every((s) => selectedRows.has(s.id)) &&
+                                                                            g.items.some((s) => !s.isBooked)
+                                                                        }
+                                                                        onCheckedChange={() => toggleGroup(g.items)}
+                                                                    />
+                                                                    <span className="text-xs text-muted-foreground">Select group</span>
+                                                                </div>
                                                             </div>
-                                                        ) : (
-                                                            <span className="text-muted-foreground">—</span>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        {!slot.isBooked ? (
-                                                            <div className="flex justify-end gap-2">
-                                                                <Button size="sm" onClick={() => setBookingSlot(slot)}>
-                                                                    Book
-                                                                </Button>
-                                                                <Button size="sm" variant="destructive" onClick={() => deleteSlot(slot.id)}>
-                                                                    Delete
-                                                                </Button>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex justify-end gap-2">
-                                                                {slot.Appointment.map((a) => (
-                                                                    <div key={a.id} className="flex items-center gap-2">
-                                                                        <Select
-                                                                            value={a.status}
-                                                                            onValueChange={(v) => updateStatus(a.id, v as AppointmentStatus)}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                    {g.items.map((slot) => (
+                                                        <TableRow key={slot.id} className="transition-opacity duration-300 hover:bg-muted/40">
+                                                            <TableCell>
+                                                                <Checkbox
+                                                                    checked={selectedRows.has(slot.id)}
+                                                                    onCheckedChange={() => toggleRow(slot.id)}
+                                                                    disabled={slot.isBooked}
+                                                                />
+                                                            </TableCell>
+                                                            <TableCell title={format(new Date(slot.date), "PPP")}>{format(new Date(slot.date), "PPP")}</TableCell>
+                                                            <TableCell title={slot.timeSlot}>{slot.timeSlot}</TableCell>
+                                                            <TableCell>
+                                                                {slot.isBooked
+                                                                    ? <Badge variant="default">Yes</Badge>
+                                                                    : <Badge variant="outline">No</Badge>
+                                                                }
+                                                            </TableCell>
+                                                            <TableCell className="hidden md:table-cell max-w-[360px]">
+                                                                {slot.Appointment.length > 0 ? (
+                                                                    <div className="flex flex-wrap gap-1 sm:gap-2">
+                                                                        {slot.Appointment.map((a) => (
+                                                                            <Badge
+                                                                                key={a.id}
+                                                                                variant="secondary"
+                                                                                className="font-normal"
+                                                                            >
+                                                                                {a.userName} · {a.status.toLowerCase()}
+                                                                            </Badge>
+                                                                        ))}
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-muted-foreground">—</span>
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell className="text-right">
+                                                                {!slot.isBooked ? (
+                                                                    <div className="flex flex-col sm:flex-row justify-end gap-1 sm:gap-2">
+                                                                        <Button
+                                                                            size="sm"
+                                                                            onClick={() => setBookingSlot(slot)}
+                                                                            disabled={actionLoading}
+                                                                            className="transition-colors hover:bg-primary/80"
                                                                         >
-                                                                            <SelectTrigger className="h-8 w-[130px]">
-                                                                                <SelectValue />
-                                                                            </SelectTrigger>
-                                                                            <SelectContent>
-                                                                                <SelectItem value="PENDING">Pending</SelectItem>
-                                                                                <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                                                                                <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                                                                            </SelectContent>
-                                                                        </Select>
-                                                                        <Button variant="destructive" size="sm" onClick={() => cancelAppointment(a.id)}>
-                                                                            Cancel
+                                                                            Book
+                                                                        </Button>
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="destructive"
+                                                                            onClick={() => deleteSlot(slot.id)}
+                                                                            disabled={actionLoading}
+                                                                            className="transition-colors hover:bg-destructive/80"
+                                                                        >
+                                                                            Delete
                                                                         </Button>
                                                                     </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </React.Fragment>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
+                                                                ) : (
+                                                                    <div className="flex flex-col sm:flex-row justify-end gap-1 sm:gap-2">
+                                                                        {slot.Appointment.map((a) => (
+                                                                            <div key={a.id} className="flex items-center gap-1 sm:gap-2">
+                                                                                <Select
+                                                                                    value={a.status}
+                                                                                    onValueChange={(v) => updateStatus(a.id, v as AppointmentStatus)}
+                                                                                >
+                                                                                    <SelectTrigger className="h-8 w-[130px]">
+                                                                                        <SelectValue />
+                                                                                    </SelectTrigger>
+                                                                                    <SelectContent>
+                                                                                        <SelectItem value="PENDING">Pending</SelectItem>
+                                                                                        <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                                                                                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                                                                                    </SelectContent>
+                                                                                </Select>
+                                                                                <Button
+                                                                                    variant="destructive"
+                                                                                    size="sm"
+                                                                                    onClick={() => cancelAppointment(a.id)}
+                                                                                    disabled={actionLoading}
+                                                                                    className="transition-colors hover:bg-destructive/80"
+                                                                                >
+                                                                                    Cancel
+                                                                                </Button>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </React.Fragment>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+
+                            <div className="w-full flex justify-center">
+                                <Pagination
+                                    pagination={{
+                                        page: pagination.page,
+                                        totalPages: Math.ceil(pagination.total / pagination.limit),
+                                        total: pagination.total,
+                                    }}
+                                    limit={pagination.limit}
+                                    setLimit={(v) => setPagination((p) => ({ ...p, limit: v }))}
+                                    handlePageChange={(v) => setPagination((p) => ({ ...p, page: v }))}
+                                />
+                            </div>
+                        </div>
+                        {bookingSlot && (
+                            <div className="fixed inset-0 bg-black/20 backdrop-blur-md z-40">
+                                <Dialog open={!!bookingSlot} onOpenChange={(open) => !open && setBookingSlot(null)}>
+                                    <DialogContent className="max-w-[95vw] sm:max-w-lg">
+                                        <DialogHeader>
+                                            <DialogTitle>Book appointment</DialogTitle>
+                                            <DialogDescription>
+                                                {bookingSlot ? `${format(new Date(bookingSlot.date), "PPP")} · ${bookingSlot.timeSlot}` : ""}
+                                            </DialogDescription>
+                                        </DialogHeader>
+
+                                        <div className="grid gap-2 sm:gap-3">
+                                            <div className="space-y-1">
+                                                <Label htmlFor="name">Name</Label>
+                                                <Input
+                                                    id="name"
+                                                    value={userName}
+                                                    onChange={(e) => setUserName(e.target.value)}
+                                                    placeholder="Jane Doe"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label htmlFor="email">Email</Label>
+                                                <Input
+                                                    id="email"
+                                                    type="email"
+                                                    value={userEmail}
+                                                    onChange={(e) => setUserEmail(e.target.value)}
+                                                    placeholder="jane@example.com"
+                                                />
+                                                <div className="mb-2 text-xs text-muted-foreground">
+                                                    An email confirmation will be sent to the user.
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label htmlFor="phone">Phone (optional)</Label>
+                                                <Input
+                                                    id="phone"
+                                                    value={userPhone}
+                                                    onChange={(e) => setUserPhone(e.target.value)}
+                                                    placeholder="+1 555 555 5555"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <DialogFooter className="gap-2 flex flex-col-reverse sm:flex-row sm:justify-end">
+                                            <Button variant="ghost" onClick={() => setBookingSlot(null)}>
+                                                Close
+                                            </Button>
+                                            <Button onClick={bookNow} disabled={actionLoading}>
+                                                {actionLoading ? <Spinner className="w-4 h-4 mr-2" /> : null}
+                                                {actionLoading ? "Booking..." : "Book now"}
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+                        )}
                     </div>
-
-                    {/* Pagination controls */}
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="text-sm text-muted-foreground">
-                            Showing {totalCount === 0 ? 0 : startIndex + 1}–{Math.min(endIndex, totalCount)} of {totalCount}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={currentPage === 1}>
-                                First
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                disabled={currentPage === 1}
-                            >
-                                Previous
-                            </Button>
-                            <span className="text-sm">
-                                Page {currentPage} / {totalPages}
-                            </span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
-                            >
-                                Next
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage(totalPages)}
-                                disabled={currentPage === totalPages}
-                            >
-                                Last
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Booking dialog */}
-                <Dialog open={!!bookingSlot} onOpenChange={(open) => !open && setBookingSlot(null)}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Book appointment</DialogTitle>
-                            <DialogDescription>
-                                {bookingSlot ? `${format(new Date(bookingSlot.date), "PPP")} · ${bookingSlot.timeSlot}` : ""}
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <div className="grid gap-3">
-                            <div className="space-y-2">
-                                <Label htmlFor="name">Name</Label>
-                                <Input
-                                    id="name"
-                                    value={userName}
-                                    onChange={(e) => setUserName(e.target.value)}
-                                    placeholder="Jane Doe"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    value={userEmail}
-                                    onChange={(e) => setUserEmail(e.target.value)}
-                                    placeholder="jane@example.com"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="phone">Phone (optional)</Label>
-                                <Input
-                                    id="phone"
-                                    value={userPhone}
-                                    onChange={(e) => setUserPhone(e.target.value)}
-                                    placeholder="+1 555 555 5555"
-                                />
-                            </div>
-                        </div>
-
-                        <DialogFooter className="gap-2">
-                            <Button variant="ghost" onClick={() => setBookingSlot(null)}>
-                                Close
-                            </Button>
-                            <Button onClick={bookNow}>Book</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </div>
+                </CardContent>
+            </Card>
         </div>
     )
 }

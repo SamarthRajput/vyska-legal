@@ -1,21 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     Search,
     Download,
     Users,
     UserCheck,
-    ChevronLeft,
-    ChevronRight,
     Mail,
     Calendar,
-    FileText,
     Shield,
     Crown,
     RefreshCw,
     AlertTriangle
 } from 'lucide-react';
+import Pagination from '@/components/Pagination';
 
 interface UsersWithStats {
     id: string;
@@ -76,13 +75,21 @@ const AdminUsersPage = () => {
         endDate: ""
     });
 
-    const fetchUsers = async () => {
+    // Debounce filter/search input to avoid excessive fetches
+    const [debouncedFilterInput, setDebouncedFilterInput] = useState(filterInput);
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedFilterInput(filterInput), 350);
+        return () => clearTimeout(handler);
+    }, [filterInput]);
+
+    // Memoize fetchUsers to avoid unnecessary re-creation
+    const fetchUsers = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             const params = new URLSearchParams({
-                search: searchTerm,
-                role: roleFilter,
+                search: debouncedFilterInput.search,
+                role: debouncedFilterInput.role,
                 sortBy,
                 sortDir,
                 page: pagination.page.toString(),
@@ -98,25 +105,37 @@ const AdminUsersPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [debouncedFilterInput, sortBy, sortDir, pagination.page, pagination.pageSize]);
 
+    // Fetch users when relevant state changes
     useEffect(() => {
         fetchUsers();
-    }, [searchTerm, roleFilter, sortBy, sortDir, pagination.page, pagination.pageSize]);
+    }, [fetchUsers]);
 
+    // Keep filterInput in sync with pagination reset
     useEffect(() => {
         setFilterInput({
-            search: searchTerm,
-            role: roleFilter,
+            search: "",
+            role: "all",
             startDate: "",
             endDate: ""
         });
     }, []);
 
-    useEffect(() => {
-        setSearchTerm(filterInput.search);
-        setRoleFilter(filterInput.role as "all" | "USER" | "ADMIN");
-    }, [filterInput]);
+    // Memoize stats for performance
+    const stats = useMemo(() => [
+        { label: "Total Users", value: pagination.total, icon: Users, color: "text-blue-600" },
+        { label: "Administrators", value: users.filter(u => u.siteRole === "ADMIN").length, icon: Crown, color: "text-amber-600" },
+        { label: "New This Month", value: users.filter(u => new Date(u.createdAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000).length, icon: UserCheck, color: "text-purple-600" }
+    ], [pagination.total, users]);
+
+    // Memoize activeFilters for performance
+    const activeFilters = useMemo(() => [
+        filterInput.search && { key: "search", label: "Search", value: filterInput.search },
+        filterInput.role !== "all" && { key: "role", label: "Role", value: filterInput.role },
+        filterInput.startDate && { key: "startDate", label: "Start", value: filterInput.startDate },
+        filterInput.endDate && { key: "endDate", label: "End", value: filterInput.endDate }
+    ].filter(Boolean), [filterInput]);
 
     const handleRoleChangeRequest = (userId: string, userName: string, currentRole: string, newRole: string) => {
         setConfirmRoleChange({ userId, userName, currentRole, newRole });
@@ -156,44 +175,33 @@ const AdminUsersPage = () => {
         window.URL.revokeObjectURL(url);
     };
 
-    const getRoleIcon = (role: string) => {
-        return role === "ADMIN"
-            ? <Crown className="w-4 h-4 text-amber-500" />
-            : <Shield className="w-4 h-4 text-blue-500" />;
-    };
-
-    const getRoleBadge = (role: string) => {
-        return role === "ADMIN"
-            ? "bg-amber-100 text-amber-800 border-amber-200"
-            : "bg-blue-100 text-blue-800 border-blue-200";
-    };
-
     const handlePageChange = (page: number) => {
         if (page < 1 || page > pagination.totalPages) return;
         setPagination(prev => ({ ...prev, page }));
     };
 
-    const handlePageSizeChange = (pageSize: number) => {
-        setPagination(prev => ({ ...prev, pageSize, page: 1 }));
-    };
-
-    const activeFilters = [
-        filterInput.search && { key: "search", label: "Search", value: filterInput.search },
-        filterInput.role !== "all" && { key: "role", label: "Role", value: filterInput.role },
-        filterInput.startDate && { key: "startDate", label: "Start", value: filterInput.startDate },
-        filterInput.endDate && { key: "endDate", label: "End", value: filterInput.endDate }
-    ].filter(Boolean);
-
     return (
         <div className="min-h-screen bg-gray-50/50 p-2 sm:p-4 md:p-6">
             <div className="max-w-7xl mx-auto space-y-6">
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6" title="User statistics overview">
-                    {[
-                        { label: "Total Users", value: pagination.total, icon: Users, color: "text-blue-600" },
-                        { label: "Administrators", value: users.filter(u => u.siteRole === "ADMIN").length, icon: Crown, color: "text-amber-600" },
-                        { label: "New This Month", value: users.filter(u => new Date(u.createdAt).getTime() > Date.now() - 30*24*60*60*1000).length, icon: UserCheck, color: "text-purple-600" }
-                    ].map((stat, index) => (
+                {/* Error display */}
+                {error && (
+                    <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded mb-2 text-sm flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4" />
+                        <span>{error}</span>
+                        <button
+                            className="ml-auto text-xs underline"
+                            onClick={() => setError(null)}
+                            aria-label="Dismiss error"
+                        >Dismiss</button>
+                    </div>
+                )}
+
+                <div
+                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6"
+                    title="User statistics overview"
+                >
+                    {stats.map((stat, index) => (
                         <div key={index} className="bg-white rounded-lg border border-gray-200 p-6" title={stat.label}>
                             <div className="flex items-center justify-between">
                                 <div>
@@ -220,8 +228,10 @@ const AdminUsersPage = () => {
                                 type="text"
                                 className="border rounded pl-8 pr-2 py-2 text-sm w-full focus:ring-2 focus:ring-blue-500"
                                 value={filterInput.search}
-                                onChange={e => setFilterInput(f => ({...f, search: e.target.value}))}
+                                onChange={e => setFilterInput(f => ({ ...f, search: e.target.value }))}
                                 placeholder="Name or email..."
+                                autoComplete="off"
+                                aria-label="Search users"
                             />
                         </div>
                     </div>
@@ -230,7 +240,7 @@ const AdminUsersPage = () => {
                         <select
                             className="border rounded px-2 py-2 text-sm w-full focus:ring-2 focus:ring-blue-500"
                             value={filterInput.role}
-                            onChange={e => setFilterInput(f => ({...f, role: e.target.value}))}
+                            onChange={e => setFilterInput(f => ({ ...f, role: e.target.value }))}
                         >
                             <option value="all">All</option>
                             <option value="USER">User</option>
@@ -301,10 +311,10 @@ const AdminUsersPage = () => {
                                         title={`Remove filter: ${filter.label}`}
                                         onClick={() => {
                                             setFilterInput(f => {
-                                                if (filter.key === "role") return {...f, role: "all"};
-                                                if (filter.key === "search") return {...f, search: ""};
-                                                if (filter.key === "startDate") return {...f, startDate: ""};
-                                                if (filter.key === "endDate") return {...f, endDate: ""};
+                                                if (filter.key === "role") return { ...f, role: "all" };
+                                                if (filter.key === "search") return { ...f, search: "" };
+                                                if (filter.key === "startDate") return { ...f, startDate: "" };
+                                                if (filter.key === "endDate") return { ...f, endDate: "" };
                                                 return f;
                                             });
                                         }}
@@ -331,7 +341,7 @@ const AdminUsersPage = () => {
 
                 {/* Users Table */}
                 <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto" title="User list table">
-                    { loading ? (
+                    {loading ? (
                         <div className="p-6">
                             <div className="animate-pulse space-y-4">
                                 {[...Array(6)].map((_, i) => (
@@ -355,7 +365,7 @@ const AdminUsersPage = () => {
                             <p className="mt-1 text-sm text-gray-500">No users match your criteria. Try searching by name, email, or adjust filters above.</p>
                         </div>
                     ) : (
-                        <table className="min-w-full divide-y divide-gray-200 text-xs sm:text-sm" style={{minWidth: 700}}>
+                        <table className="min-w-full divide-y divide-gray-200 text-xs sm:text-sm" >
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-2 sm:px-4 md:px-6 py-3 text-left uppercase text-gray-500 font-medium">User</th>
@@ -383,11 +393,10 @@ const AdminUsersPage = () => {
                                         </td>
                                         <td className="px-2 sm:px-4 md:px-6 py-3 whitespace-nowrap">
                                             <div className="flex items-center gap-2">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                                                    user.siteRole === "ADMIN"
-                                                        ? "bg-amber-100 text-amber-800 border-amber-200"
-                                                        : "bg-blue-100 text-blue-800 border-blue-200"
-                                                }`}>
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${user.siteRole === "ADMIN"
+                                                    ? "bg-amber-100 text-amber-800 border-amber-200"
+                                                    : "bg-blue-100 text-blue-800 border-blue-200"
+                                                    }`}>
                                                     {user.siteRole === "ADMIN" ? (
                                                         <Crown className="w-4 h-4 text-amber-500 mr-1" />
                                                     ) : (
@@ -400,6 +409,7 @@ const AdminUsersPage = () => {
                                                     onChange={e => handleRoleChangeRequest(user.id, user.name, user.siteRole, e.target.value)}
                                                     className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
                                                     title="Change user role"
+                                                    aria-label={`Change role for ${user.name}`}
                                                 >
                                                     <option value="USER">User</option>
                                                     <option value="ADMIN">Admin</option>
@@ -418,50 +428,16 @@ const AdminUsersPage = () => {
                 </div>
 
                 {/* Pagination */}
-                {pagination && (
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-2 mt-4 px-1">
-                        <div className="text-xs text-gray-600 text-center md:text-left">
-                            Page {pagination.page} of {pagination.totalPages} | {pagination.total} users
-                        </div>
-                        <div className="flex gap-2 items-center w-full sm:w-auto">
-                            <button
-                                disabled={!pagination.hasPrev}
-                                onClick={() => handlePageChange(pagination.page - 1)}
-                                className="px-3 py-1 border rounded text-xs disabled:opacity-50"
-                                title="Previous page"
-                            >
-                                <ChevronLeft className="inline w-4 h-4" /> Previous
-                            </button>
-                            <input
-                                type="number"
-                                min={1}
-                                max={pagination.totalPages}
-                                value={pagination.page}
-                                onChange={e => handlePageChange(Number(e.target.value))}
-                                className="w-14 p-1 border rounded text-center text-xs"
-                                title="Current page"
-                            />
-                            <button
-                                disabled={!pagination.hasNext}
-                                onClick={() => handlePageChange(pagination.page + 1)}
-                                className="px-3 py-1 border rounded text-xs disabled:opacity-50"
-                                title="Next page"
-                            >
-                                Next <ChevronRight className="inline w-4 h-4" />
-                            </button>
-                            <select
-                                className="ml-2 p-1 border rounded text-xs cursor-pointer"
-                                value={pagination.pageSize}
-                                onChange={e => handlePageSizeChange(Number(e.target.value))}
-                                title="Users per page"
-                            >
-                                {[10, 20, 30, 50].map(sz => (
-                                    <option key={sz} value={sz}>{sz} / page</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                )}
+                <Pagination
+                    pagination={pagination}
+                    limit={pagination.pageSize}
+                    setLimit={(v) => setPagination((p) => ({ ...p, pageSize: v, page: 1 }))}
+                    pageSizes={[10, 20, 30, 50]}
+                    handlePageChange={useCallback((page: number) => {
+                        if (page < 1 || page > pagination.totalPages) return;
+                        setPagination(prev => ({ ...prev, page }));
+                    }, [pagination.totalPages])}
+                />
 
                 {/* Confirm Role Change Modal */}
                 {confirmRoleChange && (

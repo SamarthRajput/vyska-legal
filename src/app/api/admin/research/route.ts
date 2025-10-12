@@ -1,11 +1,55 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import cloudinary from '@/lib/cloudinary';
 import { getCurrentUser, isAdmin } from '@/actions/syncUser';
+import { getUser } from '@/lib/getUser';
+import { UserRole } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
-// GET: Fetch all research papers
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const user = await getUser();
+    if (!user || user.role !== UserRole.ADMIN) {
+      return NextResponse.json(
+        { error: "Access Denied. Admins only." },
+        { status: 403 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const search = searchParams.get("search")?.trim() || "";
+    const filter = searchParams.get("filter") || "all";
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+
+    const skip = (page - 1) * limit;
+    let where: any = {};
+    if (search.length > 0) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (filter === 'withFile') {
+      where.fileUrl = { not: null };
+    } else if (filter === 'withoutFile') {
+      where.fileUrl = null;
+    }
+    const orderBy: any = {};
+    if (sortBy === 'title') {
+      orderBy.title = 'asc';
+    } else {
+      orderBy.createdAt = 'desc';
+    }
+
     const research = await prisma.research.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy,
       include: {
         createdBy: {
           select: {
@@ -13,10 +57,10 @@ export async function GET() {
             name: true,
             email: true,
             profilePicture: true,
+            role: true,
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
     });
 
     return NextResponse.json(research, { status: 200 });

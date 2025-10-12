@@ -51,7 +51,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           {!isCollapsed && (
             <>
               <div>
-                <h1 className="text-xl font-bold text-slate-800">Vyaska Legal</h1>
+                <div className="flex items-center space-x-2 mb-1">
+                  <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-lg shadow" />
+                  <h1 className="text-xl font-bold text-slate-800">Vyaska Legal</h1>
+                </div>
                 <p className="text-xs text-slate-500">
                   {isAdminRoute ? "Admin" : "User"} Dashboard
                 </p>

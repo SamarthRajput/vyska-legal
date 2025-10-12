@@ -16,6 +16,7 @@ import { Search, X, ChevronLeft, ChevronRight, Filter, SortAsc, Eye, Edit, Trash
 import { toast } from 'sonner';
 import getExcerpt from '@/lib/getExcerpt';
 import MarkdownRender from '@/components/MarkdownRender';
+import Pagination from '@/components/Pagination';
 
 interface Author {
     name: string;
@@ -354,213 +355,137 @@ const PAGE = () => {
                 </div>
             )}
 
-            {pagination && pagination.totalPages > 0 && (
-                <div className="mt-8">
-                    <Separator className="mb-4" />
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">
-                                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                                {pagination.total} results
-                            </span>
-                        </div>
+            <Pagination
+                pagination={pagination}
+                limit={limit}
+                setLimit={(v) => { setLimit(v); setPage(1); }}
+                pageSizes={[5, 10, 20, 50]}
+                handlePageChange={(page) => setPage(page)}
+            />
 
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage(1)}
-                                disabled={!pagination.hasPrev}
-                            >
-                                First
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                                disabled={!pagination.hasPrev}
-                            >
-                                <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                            <span className="text-sm px-4">
-                                Page {pagination.page} of {pagination.totalPages}
-                            </span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage((prev) => (pagination.hasNext ? prev + 1 : prev))}
-                                disabled={!pagination.hasNext}
-                            >
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage(pagination.totalPages)}
-                                disabled={!pagination.hasNext}
-                            >
-                                Last
-                            </Button>
+            {/* Detail View Modal */}
+            {selectedBlog && showDetailDialog && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50" aria-modal="true" role="dialog">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-4 sm:p-8 relative mx-2 animate-fadeIn border border-gray-200 max-h-[90vh] overflow-y-auto flex flex-col">
+                        <button
+                            className="absolute top-2 right-2 sm:top-3 sm:right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onClick={() => setShowDetailDialog(false)}
+                            aria-label="Close modal"
+                            title="Close"
+                        >
+                            ×
+                        </button>
+                        <h2 className="text-lg sm:text-2xl font-bold mb-4 text-gray-800 border-b pb-2 flex items-center gap-2">
+                            {selectedBlog.title}
+                            <span className="ml-auto">{getStatusBadge(selectedBlog.status)}</span>
+                        </h2>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
+                            <Avatar className="h-10 w-10">
+                                <AvatarImage src={selectedBlog.author.profilePicture || undefined} />
+                                <AvatarFallback>{getInitials(selectedBlog.author.name)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <div className="font-semibold text-foreground">{selectedBlog.author.name}</div>
+                                <div className="text-xs sm:text-sm flex flex-wrap items-center gap-2">
+                                    <span className="break-all">{selectedBlog.author.email}</span>
+                                    <Badge variant="outline" className="text-xs">{selectedBlog.author.role}</Badge>
+                                </div>
+                            </div>
                         </div>
-
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">Items per page:</span>
-                            <Select
-                                value={limit.toString()}
-                                onValueChange={(value) => {
-                                    setLimit(Number(value));
-                                    setPage(1);
-                                }}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm mb-4">
+                            <div>
+                                <span className="font-semibold text-foreground">Created:</span> {formatDate(selectedBlog.createdAt)}
+                            </div>
+                            <div>
+                                <span className="font-semibold text-foreground">Updated:</span> {formatDate(selectedBlog.updatedAt)}
+                            </div>
+                            <div>
+                                <span className="font-semibold text-foreground">Author ID:</span> <span className="break-all">{selectedBlog.authorId}</span>
+                            </div>
+                            <div>
+                                <span className="font-semibold text-foreground">Blog ID:</span> <span className="break-all">{selectedBlog.id}</span>
+                            </div>
+                        </div>
+                        <div className="mb-4">
+                            <h3 className="font-semibold text-base sm:text-lg mb-2">Content</h3>
+                            <div className="prose prose-sm max-w-none bg-muted/30 p-2 sm:p-4 rounded-lg overflow-x-auto">
+                                <MarkdownRender content={selectedBlog.content} />
+                            </div>
+                        </div>
+                        {selectedBlog.status === 'REJECTED' && selectedBlog.rejectionReason && (
+                            <Alert variant="destructive" className="mb-4">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>
+                                    <strong>Rejection Reason:</strong> {selectedBlog.rejectionReason}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                        <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => handleEdit(selectedBlog.id)}
+                                className="flex-1 sm:flex-initial"
                             >
-                                <SelectTrigger className="w-[80px]">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {[5, 10, 20, 50].map((size) => (
-                                        <SelectItem key={size} value={size.toString()}>
-                                            {size}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={() => handleDelete(selectedBlog.id)}
+                                disabled={deleting}
+                                className="flex-1 sm:flex-initial"
+                            >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                {deleting ? 'Deleting...' : 'Delete'}
+                            </Button>
+                            {selectedBlog.status !== 'APPROVED' && (
+                                <Button
+                                    variant="default"
+                                    onClick={() => handleStatusChange(selectedBlog.id, 'APPROVED')}
+                                    disabled={statusUpdating}
+                                    className="flex-1 sm:flex-initial"
+                                >
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                    Approve
+                                </Button>
+                            )}
+                            {selectedBlog.status !== 'REJECTED' && (
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => openRejectDialog(selectedBlog)}
+                                    disabled={statusUpdating}
+                                    className="flex-1 sm:flex-initial"
+                                >
+                                    <XCircle className="h-4 w-4 mr-2" />
+                                    Reject
+                                </Button>
+                            )}
+                            {selectedBlog.status !== 'PENDING' && (
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => handleStatusChange(selectedBlog.id, 'PENDING')}
+                                    disabled={statusUpdating}
+                                    className="flex-1 sm:flex-initial"
+                                >
+                                    <Clock className="h-4 w-4 mr-2" />
+                                    Set Pending
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Detail View Dialog */}
-            <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    {selectedBlog && (
-                        <>
-                            <DialogHeader>
-                                <div className="flex items-start justify-between gap-4">
-                                    <DialogTitle className="text-2xl pr-8">{selectedBlog.title}</DialogTitle>
-                                    {getStatusBadge(selectedBlog.status)}
-                                </div>
-                                <DialogDescription className="space-y-4 pt-4">
-                                    <div className="flex items-center gap-3">
-                                        <Avatar className="h-10 w-10">
-                                            <AvatarImage src={selectedBlog.author.profilePicture || undefined} />
-                                            <AvatarFallback>{getInitials(selectedBlog.author.name)}</AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <div className="font-semibold text-foreground">{selectedBlog.author.name}</div>
-                                            <div className="text-sm flex items-center gap-2">
-                                                <span>{selectedBlog.author.email}</span>
-                                                <Badge variant="outline" className="text-xs">{selectedBlog.author.role}</Badge>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                            <span className="font-semibold text-foreground">Created:</span> {formatDate(selectedBlog.createdAt)}
-                                        </div>
-                                        <div>
-                                            <span className="font-semibold text-foreground">Updated:</span> {formatDate(selectedBlog.updatedAt)}
-                                        </div>
-                                        <div>
-                                            <span className="font-semibold text-foreground">Author ID:</span> {selectedBlog.authorId}
-                                        </div>
-                                        <div>
-                                            <span className="font-semibold text-foreground">Blog ID:</span> {selectedBlog.id}
-                                        </div>
-                                    </div>
-                                </DialogDescription>
-                            </DialogHeader>
-
-                            <Separator className="my-4" />
-
-                            <div className="space-y-4">
-                                <div>
-                                    <h3 className="font-semibold text-lg mb-2">Content</h3>
-                                    <div className="prose prose-sm max-w-none bg-muted/30 p-4 rounded-lg">
-                                        <MarkdownRender content={selectedBlog.content} />
-                                    </div>
-                                </div>
-
-                                {selectedBlog.status === 'REJECTED' && selectedBlog.rejectionReason && (
-                                    <Alert variant="destructive">
-                                        <AlertCircle className="h-4 w-4" />
-                                        <AlertDescription>
-                                            <strong>Rejection Reason:</strong> {selectedBlog.rejectionReason}
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-                            </div>
-
-                            <DialogFooter className="flex-col sm:flex-row gap-2 mt-6">
-                                <div className="flex gap-2 w-full sm:w-auto">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => handleEdit(selectedBlog.id)}
-                                        className="flex-1 sm:flex-initial"
-                                    >
-                                        <Edit className="h-4 w-4 mr-2" />
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        onClick={() => handleDelete(selectedBlog.id)}
-                                        disabled={deleting}
-                                        className="flex-1 sm:flex-initial"
-                                    >
-                                        <Trash2 className="h-4 w-4 mr-2" />
-                                        {deleting ? 'Deleting...' : 'Delete'}
-                                    </Button>
-                                </div>
-                                <div className="flex gap-2 w-full sm:w-auto sm:ml-auto">
-                                    {selectedBlog.status !== 'APPROVED' && (
-                                        <Button
-                                            variant="default"
-                                            onClick={() => handleStatusChange(selectedBlog.id, 'APPROVED')}
-                                            disabled={statusUpdating}
-                                            className="flex-1 sm:flex-initial"
-                                        >
-                                            <CheckCircle className="h-4 w-4 mr-2" />
-                                            Approve
-                                        </Button>
-                                    )}
-                                    {selectedBlog.status !== 'REJECTED' && (
-                                        <Button
-                                            variant="destructive"
-                                            onClick={() => openRejectDialog(selectedBlog)}
-                                            disabled={statusUpdating}
-                                            className="flex-1 sm:flex-initial"
-                                        >
-                                            <XCircle className="h-4 w-4 mr-2" />
-                                            Reject
-                                        </Button>
-                                    )}
-                                    {selectedBlog.status !== 'PENDING' && (
-                                        <Button
-                                            variant="secondary"
-                                            onClick={() => handleStatusChange(selectedBlog.id, 'PENDING')}
-                                            disabled={statusUpdating}
-                                            className="flex-1 sm:flex-initial"
-                                        >
-                                            <Clock className="h-4 w-4 mr-2" />
-                                            Set Pending
-                                        </Button>
-                                    )}
-                                </div>
-                            </DialogFooter>
-                        </>
-                    )}
-                </DialogContent>
-            </Dialog>
-
             {/* Reject Dialog */}
             <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-                <DialogContent>
+                <DialogContent className="w-full max-w-md px-2 sm:px-6 py-4 sm:py-8">
                     <DialogHeader>
                         <DialogTitle>Reject Blog Post</DialogTitle>
                         <DialogDescription>
                             Please provide a reason for rejecting this blog post. This will be visible to the author.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
+                    <div className="space-y-4 py-2 sm:py-4">
                         <div className="space-y-2">
                             <Label htmlFor="rejection-reason">Rejection Reason</Label>
                             <Textarea
@@ -569,17 +494,19 @@ const PAGE = () => {
                                 value={rejectionReason}
                                 onChange={(e) => setRejectionReason(e.target.value)}
                                 rows={4}
+                                className="resize-none"
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowRejectDialog(false)}>
+                    <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                        <Button variant="outline" onClick={() => setShowRejectDialog(false)} className="w-full sm:w-auto">
                             Cancel
                         </Button>
                         <Button
                             variant="destructive"
                             onClick={() => selectedBlog && handleStatusChange(selectedBlog.id, 'REJECTED', rejectionReason)}
                             disabled={!rejectionReason.trim() || statusUpdating}
+                            className="w-full sm:w-auto"
                         >
                             {statusUpdating ? 'Rejecting...' : 'Reject Blog'}
                         </Button>

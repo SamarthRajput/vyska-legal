@@ -81,6 +81,12 @@ export const adminNavItems = [
     icon: Users,
   },
   {
+    title: "Team Members",
+    description: "Manage team member data that appears on the website.",
+    icon: FileText,
+    href: "/admin/team-members",
+  },
+  {
     title: "Services Management",
     description: "Services provided by the firm.",
     href: "/admin/services",
