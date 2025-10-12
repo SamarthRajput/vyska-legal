@@ -171,15 +171,15 @@ export default function ResearchDetailPage() {
         <h1 className="text-4xl font-bold mb-4">{research.title}</h1>
         
         <div className="flex items-center gap-3 mb-4">
-          {/* {research.createdBy.profilePicture && (
-            <Image
+          {research.createdBy.profilePicture && (
+            <img
               src={research.createdBy.profilePicture}
               alt={research.createdBy.name}
               width={40}
               height={40}
               className="rounded-full"
             />
-          )} */}
+          )}
           <div>
             <p className="font-medium">{research.createdBy.name}</p>
             <p className="text-sm text-gray-500">
@@ -278,12 +278,11 @@ export default function ResearchDetailPage() {
       {/* Thumbnail */}
       {research.thumbnailUrl && (
         <div className="relative h-96 w-full mb-8 rounded-lg overflow-hidden">
-          {/* <Image
+          <img
             src={research.thumbnailUrl}
             alt={research.title}
-            fill
-            className="object-cover"
-          /> */}
+            className="w-full h-full object-"
+          />
         </div>
       )}
 

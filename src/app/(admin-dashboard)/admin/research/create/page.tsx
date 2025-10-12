@@ -4,6 +4,15 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { EditorSection } from '@/components/BlogEditor';
 import { toast } from 'sonner';
+import { Sparkles, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function CreateResearchPage() {
   const router = useRouter();
@@ -18,6 +27,11 @@ export default function CreateResearchPage() {
   const [file, setFile] = useState<File | null>(null);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [mode, setMode] = useState<'write' | 'upload'>('write');
+
+  // AI Title Generation States
+  const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
+  const [showTitleOptions, setShowTitleOptions] = useState(false);
+  const [titleOptions, setTitleOptions] = useState<string[]>([]);
 
   useEffect(() => {
     checkAdminStatus();
@@ -44,6 +58,96 @@ export default function CreateResearchPage() {
 
   const handleContentChange = (value: string) => {
     setFormData({ ...formData, content: value });
+  };
+
+  const handleGenerateTitle = async () => {
+    setIsGeneratingTitle(true);
+    
+    try {
+      // Validate input
+      if (!formData.content.trim() && !formData.title.trim()) {
+        toast.error('Please write some content or enter a title first');
+        return;
+      }
+
+      // Prepare request body based on what's available
+      const requestBody: { content?: string; currentTitle?: string } = {};
+      
+      if (formData.content.trim()) {
+        requestBody.content = formData.content;
+      }
+      
+      if (formData.title.trim()) {
+        requestBody.currentTitle = formData.title;
+      }
+
+      // Get 3 title variations by calling API multiple times
+      const titles: string[] = [];
+      
+      for (let i = 0; i < 3; i++) {
+        const response = await fetch('/api/ai/generate-title', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to generate titles');
+        }
+
+        const data = await response.json();
+        
+        if (data.title && !titles.includes(data.title)) {
+          titles.push(data.title);
+        }
+      }
+
+      if (titles.length === 0) {
+        throw new Error('No titles generated');
+      }
+
+      // Remove duplicates and trim
+      const uniqueTitles = [...new Set(titles)].map(t => t.trim());
+      
+      setTitleOptions(uniqueTitles);
+      setShowTitleOptions(true);
+      toast.success('Generated title suggestions!');
+      
+    } catch (error) {
+      console.error('Title generation error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to generate title');
+    } finally {
+      setIsGeneratingTitle(false);
+    }
+  };
+
+  const handleSelectTitle = (selectedTitle: string) => {
+    setFormData({ ...formData, title: selectedTitle });
+    setShowTitleOptions(false);
+    toast.success('Title applied!');
+  };
+
+  const getGenerateTitleButtonText = () => {
+    if (formData.title.trim() && formData.content.trim()) {
+      return 'Improve Title';
+    } else if (formData.title.trim()) {
+      return 'Enhance Title';
+    } else if (formData.content.trim()) {
+      return 'Generate from Content';
+    }
+    return 'Generate Title';
+  };
+
+  const getGenerateTitleTooltip = () => {
+    if (formData.title.trim() && formData.content.trim()) {
+      return 'Generate improved titles based on your current title and content';
+    } else if (formData.title.trim()) {
+      return 'Generate enhanced variations of your current title';
+    } else if (formData.content.trim()) {
+      return 'Generate titles based on your content';
+    }
+    return 'Write some content or enter a title first';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,21 +237,53 @@ export default function CreateResearchPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title */}
+        {/* Title with AI Generation */}
         <div>
           <label className="block text-sm font-semibold mb-2">
             Research Paper Title <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            value={formData.title}
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter the title of your research paper"
+              required
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGenerateTitle}
+              disabled={isGeneratingTitle || (!formData.content.trim() && !formData.title.trim())}
+              className="flex items-center gap-2 whitespace-nowrap px-4 py-3"
+              title={getGenerateTitleTooltip()}
+            >
+              {isGeneratingTitle ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  {getGenerateTitleButtonText()}
+                </>
+              )}
+            </Button>
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            {formData.title.trim() && formData.content.trim() 
+              ? 'AI will suggest improved titles based on your title and content'
+              : formData.title.trim()
+              ? 'AI will enhance your current title'
+              : formData.content.trim()
+              ? 'AI will generate titles from your content'
+              : 'Write content or enter a title to use AI title generation'
             }
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter the title of your research paper"
-            required
-          />
+          </p>
         </div>
 
         {/* Abstract/Description */}
@@ -282,6 +418,87 @@ export default function CreateResearchPage() {
           )}
         </button>
       </form>
+
+      {/* Title Options Dialog */}
+      <Dialog open={showTitleOptions} onOpenChange={setShowTitleOptions}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-blue-600" />
+              AI-Generated Title Suggestions
+            </DialogTitle>
+            <DialogDescription>
+              {formData.title.trim() && formData.content.trim()
+                ? 'Based on your current title and content, here are improved suggestions:'
+                : formData.title.trim()
+                ? 'Enhanced variations of your current title:'
+                : 'Generated titles based on your content:'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {titleOptions.map((option, index) => (
+              <div
+                key={index}
+                className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
+                onClick={() => handleSelectTitle(option)}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        Option {index + 1}
+                      </span>
+                      <span className={`text-xs ${
+                        option.length >= 40 && option.length <= 60
+                          ? 'text-green-600'
+                          : option.length < 40
+                          ? 'text-amber-600'
+                          : 'text-red-600'
+                      }`}>
+                        {option.length} characters {
+                          option.length >= 40 && option.length <= 60 ? '✓ SEO Optimal' : ''
+                        }
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {option}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectTitle(option);
+                    }}
+                  >
+                    Select
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between mt-4 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={handleGenerateTitle}
+              disabled={isGeneratingTitle}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isGeneratingTitle ? 'animate-spin' : ''}`} />
+              Generate New Options
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setShowTitleOptions(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

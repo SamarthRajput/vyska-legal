@@ -120,7 +120,6 @@ export async function POST(req: NextRequest) {
             type: 'upload',
             access_mode: 'public',
             folder: 'research-papers',
-            format: 'pdf',
           },
           (error, result) => {
             if (error) reject(error);

@@ -88,14 +88,13 @@ interface ResearchPaperPDFProps {
   };
 }
 
-// Simple markdown to text converter for PDF
 const parseMarkdown = (markdown: string): string[] => {
   const text = markdown
-    .replace(/#{1,6}\s/g, '') // Remove headers
-    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
-    .replace(/\*(.*?)\*/g, '$1') // Remove italic
-    .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove links
-    .replace(/`{1,3}(.*?)`{1,3}/g, '$1'); // Remove code blocks
+    .replace(/#{1,6}\s/g, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1') 
+    .replace(/\*(.*?)\*/g, '$1') 
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1') 
+    .replace(/`{1,3}(.*?)`{1,3}/g, '$1'); 
   
   return text.split('\n\n').filter(p => p.trim());
 };

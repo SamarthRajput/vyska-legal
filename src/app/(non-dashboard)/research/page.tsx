@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 
 interface Research {
   id: string;
@@ -19,6 +18,7 @@ interface Research {
 
 export default function ResearchListPage() {
   const [research, setResearch] = useState<Research[]>([]);
+  console.log(research);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,46 +56,43 @@ export default function ResearchListPage() {
           <Link
             key={paper.id}
             href={`/research/${paper.id}`}
-            className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-white"
+            className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
           >
             {paper.thumbnailUrl ? (
-              <div className="relative h-64 w-full">
-                {/* Fix this */}
-                {/* <Image
+              <div className="relative w-full h-48 bg-gray-100 dark:bg-gray-900">
+                <img
                   src={paper.thumbnailUrl}
                   alt={paper.title}
-                  fill
-                  className="object-cover"
-                /> */}
+                  className="w-full h-full object-contain"
+                />
               </div>
             ) : (
-              <div className="h-64 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <span className="text-white text-6xl">📄</span>
               </div>
             )}
 
             <div className="p-4">
-              <h2 className="text-xl font-bold mb-2 line-clamp-2">
+              <h2 className="text-xl font-bold mb-2 line-clamp-2 dark:text-gray-100">
                 {paper.title}
               </h2>
               
               {paper.description && (
-                <p className="text-gray-600 text-sm mb-3 line-clamp-3">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-3">
                   {paper.description}
                 </p>
               )}
 
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                {/* Fix this */}
-                {/* {paper.createdBy.profilePicture && (
-                  <Image
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                {paper.createdBy.profilePicture && (
+                  <img
                     src={paper.createdBy.profilePicture}
                     alt={paper.createdBy.name}
                     width={24}
                     height={24}
-                    className="rounded-full"
+                    className="rounded-full w-6 h-6 object-cover"
                   />
-                )} */}
+                )}
                 <span>{paper.createdBy.name}</span>
                 <span>•</span>
                 <span>
