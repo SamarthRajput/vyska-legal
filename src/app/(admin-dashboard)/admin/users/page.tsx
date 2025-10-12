@@ -12,7 +12,8 @@ import {
     Shield,
     Crown,
     RefreshCw,
-    AlertTriangle
+    AlertTriangle,
+    Trash2
 } from 'lucide-react';
 import Pagination from '@/components/Pagination';
 
@@ -23,7 +24,7 @@ interface UsersWithStats {
     name: string;
     avatarUrl: string | null;
     bio: string | null;
-    siteRole: "USER" | "ADMIN";
+    role: "USER" | "ADMIN";
     createdAt: Date;
     updatedAt: Date;
 }
@@ -66,6 +67,12 @@ const AdminUsersPage = () => {
         userName: string;
         currentRole: string;
         newRole: string;
+    } | null>(null);
+
+    const [confirmDelete, setConfirmDelete] = useState<{
+        userId: string;
+        userName: string;
+        userEmail: string;
     } | null>(null);
 
     const [filterInput, setFilterInput] = useState({
@@ -138,7 +145,9 @@ const AdminUsersPage = () => {
     ].filter(Boolean), [filterInput]);
 
     const handleRoleChangeRequest = (userId: string, userName: string, currentRole: string, newRole: string) => {
-        setConfirmRoleChange({ userId, userName, currentRole, newRole });
+        if (currentRole !== newRole) {
+            setConfirmRoleChange({ userId, userName, currentRole, newRole });
+        }
     };
 
     const handleRoleChange = async (userId: string, newRole: "USER" | "ADMIN") => {
@@ -146,13 +155,47 @@ const AdminUsersPage = () => {
             const response = await fetch(`/api/admin/users/${userId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ siteRole: newRole }),
+                body: JSON.stringify({ role: newRole }),
             });
-            if (!response.ok) throw new Error('Failed to update user role');
-            setUsers(prev => prev.map(u => u.id === userId ? { ...u, siteRole: newRole } : u));
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to update user role');
+            }
+            
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
             setConfirmRoleChange(null);
+            setError(null);
         } catch (error: any) {
             setError(error.message);
+            setConfirmRoleChange(null);
+        }
+    };
+
+    const handleDeleteRequest = (userId: string, userName: string, userEmail: string) => {
+        setConfirmDelete({ userId, userName, userEmail });
+    };
+
+    const handleDeleteUser = async (userId: string) => {
+        try {
+            const response = await fetch(`/api/admin/users/${userId}`, {
+                method: 'DELETE',
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to delete user');
+            }
+            
+            setUsers(prev => prev.filter(u => u.id !== userId));
+            setPagination(prev => ({ ...prev, total: prev.total - 1 }));
+            setConfirmDelete(null);
+            setError(null);
+        } catch (error: any) {
+            setError(error.message);
+            setConfirmDelete(null);
         }
     };
 
@@ -162,7 +205,7 @@ const AdminUsersPage = () => {
             ...users.map(user => [
                 `"${user.name}"`,
                 `"${user.email}"`,
-                user.siteRole,
+                user.role,
                 new Date(user.createdAt).toLocaleDateString(),
             ].join(","))
         ].join("\n");
@@ -175,13 +218,25 @@ const AdminUsersPage = () => {
         window.URL.revokeObjectURL(url);
     };
 
+    const getRoleIcon = (role: string) => {
+        return role === "ADMIN"
+            ? <Crown className="w-4 h-4 text-amber-500" />
+            : <Shield className="w-4 h-4 text-blue-500" />;
+    };
+
+    const getRoleBadge = (role: string) => {
+        return role === "ADMIN"
+            ? "bg-amber-100 text-amber-800 border-amber-200"
+            : "bg-blue-100 text-blue-800 border-blue-200";
+    };
+
     const handlePageChange = (page: number) => {
         if (page < 1 || page > pagination.totalPages) return;
         setPagination(prev => ({ ...prev, page }));
     };
 
     return (
-        <div className="min-h-screen bg-gray-50/50 p-2 sm:p-4 md:p-6">
+        <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto space-y-6">
 
                 {/* Error display */}
@@ -206,10 +261,10 @@ const AdminUsersPage = () => {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                                    <p className="text-2xl font-semibold text-gray-900 mt-1">{stat.value}</p>
+                                    <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
                                 </div>
-                                <div className={`p-3 rounded-lg bg-gray-50 ${stat.color}`}>
-                                    <stat.icon className="w-6 h-6" />
+                                <div className={`p-4 rounded-xl ${stat.bgColor}`}>
+                                    <stat.icon className={`w-7 h-7 ${stat.color}`} />
                                 </div>
                             </div>
                         </div>
@@ -228,10 +283,8 @@ const AdminUsersPage = () => {
                                 type="text"
                                 className="border rounded pl-8 pr-2 py-2 text-sm w-full focus:ring-2 focus:ring-blue-500"
                                 value={filterInput.search}
-                                onChange={e => setFilterInput(f => ({ ...f, search: e.target.value }))}
+                                onChange={e => setFilterInput(f => ({...f, search: e.target.value}))}
                                 placeholder="Name or email..."
-                                autoComplete="off"
-                                aria-label="Search users"
                             />
                         </div>
                     </div>
@@ -240,7 +293,7 @@ const AdminUsersPage = () => {
                         <select
                             className="border rounded px-2 py-2 text-sm w-full focus:ring-2 focus:ring-blue-500"
                             value={filterInput.role}
-                            onChange={e => setFilterInput(f => ({ ...f, role: e.target.value }))}
+                            onChange={e => setFilterInput(f => ({...f, role: e.target.value}))}
                         >
                             <option value="all">All</option>
                             <option value="USER">User</option>
@@ -311,10 +364,10 @@ const AdminUsersPage = () => {
                                         title={`Remove filter: ${filter.label}`}
                                         onClick={() => {
                                             setFilterInput(f => {
-                                                if (filter.key === "role") return { ...f, role: "all" };
-                                                if (filter.key === "search") return { ...f, search: "" };
-                                                if (filter.key === "startDate") return { ...f, startDate: "" };
-                                                if (filter.key === "endDate") return { ...f, endDate: "" };
+                                                if (filter.key === "role") return {...f, role: "all"};
+                                                if (filter.key === "search") return {...f, search: ""};
+                                                if (filter.key === "startDate") return {...f, startDate: ""};
+                                                if (filter.key === "endDate") return {...f, endDate: ""};
                                                 return f;
                                             });
                                         }}
@@ -341,7 +394,7 @@ const AdminUsersPage = () => {
 
                 {/* Users Table */}
                 <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto" title="User list table">
-                    {loading ? (
+                    { loading ? (
                         <div className="p-6">
                             <div className="animate-pulse space-y-4">
                                 {[...Array(6)].map((_, i) => (
@@ -365,7 +418,7 @@ const AdminUsersPage = () => {
                             <p className="mt-1 text-sm text-gray-500">No users match your criteria. Try searching by name, email, or adjust filters above.</p>
                         </div>
                     ) : (
-                        <table className="min-w-full divide-y divide-gray-200 text-xs sm:text-sm" >
+                        <table className="min-w-full divide-y divide-gray-200 text-xs sm:text-sm" style={{minWidth: 700}}>
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-2 sm:px-4 md:px-6 py-3 text-left uppercase text-gray-500 font-medium">User</th>
@@ -393,10 +446,11 @@ const AdminUsersPage = () => {
                                         </td>
                                         <td className="px-2 sm:px-4 md:px-6 py-3 whitespace-nowrap">
                                             <div className="flex items-center gap-2">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${user.siteRole === "ADMIN"
-                                                    ? "bg-amber-100 text-amber-800 border-amber-200"
-                                                    : "bg-blue-100 text-blue-800 border-blue-200"
-                                                    }`}>
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                                                    user.siteRole === "ADMIN"
+                                                        ? "bg-amber-100 text-amber-800 border-amber-200"
+                                                        : "bg-blue-100 text-blue-800 border-blue-200"
+                                                }`}>
                                                     {user.siteRole === "ADMIN" ? (
                                                         <Crown className="w-4 h-4 text-amber-500 mr-1" />
                                                     ) : (
@@ -409,7 +463,6 @@ const AdminUsersPage = () => {
                                                     onChange={e => handleRoleChangeRequest(user.id, user.name, user.siteRole, e.target.value)}
                                                     className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
                                                     title="Change user role"
-                                                    aria-label={`Change role for ${user.name}`}
                                                 >
                                                     <option value="USER">User</option>
                                                     <option value="ADMIN">Admin</option>
@@ -441,33 +494,78 @@ const AdminUsersPage = () => {
 
                 {/* Confirm Role Change Modal */}
                 {confirmRoleChange && (
-                    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-lg">
-                            <div className="flex items-center mb-4">
-                                <AlertTriangle className="w-6 h-6 text-amber-600 mr-2" />
-                                <h3 className="text-lg font-semibold">Confirm Role Change</h3>
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in zoom-in duration-200">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 rounded-full bg-amber-100">
+                                    <AlertTriangle className="w-6 h-6 text-amber-600" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900">Confirm Role Change</h3>
                             </div>
-                            <p className="mb-6 text-gray-700">
-                                Are you sure you want to change <strong>{confirmRoleChange.userName}</strong> to <strong>{confirmRoleChange.newRole.toUpperCase()}</strong>? This will {confirmRoleChange.newRole === 'ADMIN' ? 'give full administrative access' : 'assign standard user permissions'}.
+                            <p className="text-gray-600 mb-6 leading-relaxed">
+                                Are you sure you want to change <span className="font-semibold text-gray-900">{confirmRoleChange.userName}'s</span> role to <span className="font-semibold text-gray-900">{confirmRoleChange.newRole}</span>?
+                                {confirmRoleChange.newRole === 'ADMIN' ? (
+                                    <span className="block mt-2 text-amber-600 font-medium">This will grant full administrative access.</span>
+                                ) : (
+                                    <span className="block mt-2 text-blue-600 font-medium">This will assign standard user permissions.</span>
+                                )}
                             </p>
-                            <div className="flex justify-end gap-3">
+                            <div className="flex gap-3">
                                 <button
-                                    className="px-4 py-2 border rounded hover:bg-gray-100"
+                                    className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                                     onClick={() => setConfirmRoleChange(null)}
                                 >
                                     Cancel
                                 </button>
                                 <button
-                                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                                    className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                                     onClick={() => handleRoleChange(confirmRoleChange.userId, confirmRoleChange.newRole as "USER" | "ADMIN")}
                                 >
-                                    Confirm
+                                    Confirm Change
                                 </button>
                             </div>
                         </div>
                     </div>
                 )}
 
+                {/* Confirm Delete Modal */}
+                {confirmDelete && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in zoom-in duration-200">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 rounded-full bg-red-100">
+                                    <Trash2 className="w-6 h-6 text-red-600" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900">Delete User</h3>
+                            </div>
+                            <p className="text-gray-600 mb-2 leading-relaxed">
+                                Are you sure you want to permanently delete <span className="font-semibold text-gray-900">{confirmDelete.userName}</span>?
+                            </p>
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+                                <p className="text-sm text-red-800">
+                                    <strong>Warning:</strong> This action cannot be undone. All user data, including their blogs, appointments, and other related information will be permanently deleted.
+                                </p>
+                                <p className="text-xs text-red-700 mt-2">
+                                    Email: {confirmDelete.userEmail}
+                                </p>
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                    onClick={() => setConfirmDelete(null)}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors shadow-sm"
+                                    onClick={() => handleDeleteUser(confirmDelete.userId)}
+                                >
+                                    Delete User
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
