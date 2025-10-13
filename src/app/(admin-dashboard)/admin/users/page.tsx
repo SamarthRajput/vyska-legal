@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -576,7 +577,7 @@ const AdminUsersPage = () => {
                                 <h3 className="text-xl font-bold text-gray-900">Confirm Role Change</h3>
                             </div>
                             <p className="text-gray-600 mb-6 leading-relaxed">
-                                Are you sure you want to change <span className="font-semibold text-gray-900">{confirmRoleChange.userName}'s</span> role to <span className="font-semibold text-gray-900">{confirmRoleChange.newRole}</span>?
+                                Are you sure you want to change <span className="font-semibold text-gray-900">{confirmRoleChange.userName}&lsquo;s</span> role to <span className="font-semibold text-gray-900">{confirmRoleChange.newRole}</span>?
                                 {confirmRoleChange.newRole === 'ADMIN' ? (
                                     <span className="block mt-2 text-amber-600 font-medium">This will grant full administrative access.</span>
                                 ) : (
