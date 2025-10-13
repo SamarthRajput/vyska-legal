@@ -18,20 +18,14 @@ export const navItems = [
   {
     title: "Overview",
     description: "Get a quick overview of your blog performance and recent activity.",
-    href: "/dashboard",
+    href: "/user",
     icon: LayoutDashboard,
     exact: true,
   },
   {
-    title: "Analytics",
-    description: "Dive deep into your blog analytics and track your growth.",
-    href: "/dashboard/analytics",
-    icon: BarChart3,
-  },
-  {
     title: "My Blogs",
     description: "Manage and edit your blog posts all in one place.",
-    href: "/dashboard/blogs",
+    href: "/user/blogs",
     icon: BookOpen,
   },
   {
@@ -41,21 +35,15 @@ export const navItems = [
     icon: ImageIcon,
   },
   {
-    title: "Bookmarks",
-    description: "Save and manage your favorite blog posts.",
-    href: "/dashboard/bookmarks",
-    icon: Bookmark,
-  },
-  {
     title: "Profile & Settings",
     description: "Manage your profile settings and preferences.",
-    href: "/dashboard/settings",
+    href: "/user/profile",
     icon: Settings,
   },
   {
     title: "Help / Tips",
     description: "Access help resources and useful tips for using the dashboard.",
-    href: "/dashboard/help",
+    href: "/user/help",
     icon: HelpCircle,
   },
 ];

@@ -5,14 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, X, ChevronLeft, ChevronRight, Filter, SortAsc, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Search, X, Filter, SortAsc, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, AlertCircle, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import getExcerpt from '@/lib/getExcerpt';
 import MarkdownRender from '@/components/blog/MarkdownRender';
@@ -23,7 +20,7 @@ interface Author {
     id: string;
     clerkId: string;
     email: string;
-    role: 'user' | 'admin';
+    role: 'USER' | 'ADMIN';
     profilePicture: string | null;
     createdAt: Date;
     updatedAt: Date;
@@ -41,7 +38,7 @@ interface Blog {
     authorId: string;
 }
 
-interface Pagination {
+interface PaginationData {
     total: number;
     page: number;
     limit: number;
@@ -50,10 +47,9 @@ interface Pagination {
     hasPrev: boolean;
 }
 
-const PAGE = () => {
+const MyBlogs = () => {
     const [blogs, setBlogs] = React.useState<Blog[]>([]);
-    const [pagination, setPagination] = React.useState<Pagination | null>(null);
-    const [authors, setAuthors] = React.useState<Author[]>([]);
+    const [pagination, setPagination] = React.useState<PaginationData | null>(null);
     const [loading, setLoading] = React.useState<boolean>(false);
     const [error, setError] = React.useState<string | null>(null);
     const [search, setSearch] = React.useState<string>('');
@@ -61,24 +57,25 @@ const PAGE = () => {
     const [sortBy, setSortBy] = React.useState<string>('createdAt');
     const [page, setPage] = React.useState<number>(1);
     const [limit, setLimit] = React.useState<number>(10);
-    const [authorId, setAuthorId] = React.useState<string>('all');
-    const [rejectionReason, setRejectionReason] = React.useState<string>('');
     const [selectedBlog, setSelectedBlog] = React.useState<Blog | null>(null);
     const [statusUpdating, setStatusUpdating] = React.useState<boolean>(false);
     const [deleting, setDeleting] = React.useState<boolean>(false);
     const [showDetailDialog, setShowDetailDialog] = React.useState<boolean>(false);
-    const [showRejectDialog, setShowRejectDialog] = React.useState<boolean>(false);
 
     React.useEffect(() => {
         const fetchBlogs = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`/api/admin/blogs?page=${page}&limit=${limit}&sortBy=${sortBy}&filter=${filter}&search=${search}&authorId=${authorId === 'all' ? '' : authorId}`);
+                const response = await fetch(`/api/user/blogs?page=${page}&limit=${limit}&sortBy=${sortBy}&filter=${filter}&search=${search}`);
                 const data = await response.json();
-                setBlogs(data.data);
-                setPagination(data.pagination);
-                setAuthors(data.authors);
-                setError(null);
+                
+                if (response.ok) {
+                    setBlogs(data.data);
+                    setPagination(data.pagination);
+                    setError(null);
+                } else {
+                    setError(data.error || 'Failed to fetch blogs');
+                }
             } catch (error) {
                 setError('Failed to fetch blogs');
             } finally {
@@ -86,13 +83,13 @@ const PAGE = () => {
             }
         };
         fetchBlogs();
-    }, [page, limit, sortBy, filter, search, authorId]);
+    }, [page, limit, sortBy, filter, search]);
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this blog?")) return;
         try {
             setDeleting(true);
-            const response = await fetch(`/api/admin/blogs/${id}`, { method: 'DELETE' });
+            const response = await fetch(`/api/user/blogs/${id}`, { method: 'DELETE' });
             const data = await response.json();
             if (response.ok) {
                 setBlogs((prev) => prev.filter((blog) => blog.id !== id));
@@ -108,51 +105,42 @@ const PAGE = () => {
         }
     };
 
-    const handleStatusChange = async (id: string, status: 'APPROVED' | 'REJECTED' | 'PENDING', rejectionReason?: string) => {
+    const handleStatusChange = async (id: string, status: 'DRAFT' | 'PENDING') => {
         try {
             setStatusUpdating(true);
-            const response = await fetch(`/api/admin/blogs/${id}`, {
+            const response = await fetch(`/api/user/blogs/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status, rejectionReason }),
+                body: JSON.stringify({ status }),
             });
             const data = await response.json();
             if (response.ok) {
                 setBlogs((prev) =>
                     prev.map((blog) =>
-                        blog.id === id ? { ...blog, status: status, rejectionReason } : blog
+                        blog.id === id ? { ...blog, status: status } : blog
                     )
                 );
                 if (selectedBlog?.id === id) {
-                    setSelectedBlog({ ...selectedBlog, status: status, rejectionReason });
+                    setSelectedBlog({ ...selectedBlog, status: status });
                 }
-                toast.success(`Blog ${status.toLowerCase()} successfully`);
-                setShowRejectDialog(false);
-                setRejectionReason('');
-            }
-            else {
+                toast.success(`Blog status updated to ${status.toLowerCase()} successfully`);
+            } else {
                 toast.error(data.error || `Failed to update blog status`);
             }
         } catch (error) {
             toast.error(`Failed to update blog status`);
-        }
-        finally {
+        } finally {
             setStatusUpdating(false);
         }
     };
 
     const handleEdit = (id: string) => {
         window.location.href = `/blog/edit/${id}`;
-    }
+    };
 
     const openDetailView = (blog: Blog) => {
         setSelectedBlog(blog);
         setShowDetailDialog(true);
-    };
-
-    const openRejectDialog = (blog: Blog) => {
-        setSelectedBlog(blog);
-        setShowRejectDialog(true);
     };
 
     const getStatusBadge = (status: Blog['status']) => {
@@ -163,9 +151,6 @@ const PAGE = () => {
             DRAFT: { variant: "outline", label: "Draft", icon: <Edit className="h-3 w-3" /> }
         };
         const config = variants[status];
-        if (!config) {
-            return <Badge variant="default">Unknown</Badge>;
-        }
         return (
             <Badge variant={config.variant} className="gap-1">
                 {config.icon}
@@ -188,16 +173,20 @@ const PAGE = () => {
         return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     };
 
-    const hasActiveFilters = search !== '' || filter !== 'all' || authorId !== 'all';
+    const hasActiveFilters = search !== '' || filter !== 'all';
 
     const clearAllFilters = () => {
         setSearch('');
         setFilter('all');
-        setAuthorId('all');
     };
 
     return (
-        <div className="container mx-auto py-8 px-4 max-w-7xl">
+        <div className="container mx-auto py-4 sm:py-8 px-4 max-w-7xl">
+            <div className="mb-6">
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2">My Blogs</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">Manage all your blog posts</p>
+            </div>
+
             {error && (
                 <Alert variant="destructive" className="mb-6">
                     <AlertDescription>{error}</AlertDescription>
@@ -218,20 +207,21 @@ const PAGE = () => {
                     </div>
                     <div className="flex gap-2 flex-wrap">
                         <Select value={filter} onValueChange={setFilter}>
-                            <SelectTrigger className="w-[140px]">
+                            <SelectTrigger className="w-full sm:w-[140px]">
                                 <Filter className="h-4 w-4 mr-2" />
                                 <SelectValue placeholder="Status" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Status</SelectItem>
-                                <SelectItem value="approved">Approved</SelectItem>
+                                <SelectItem value="draft">Draft</SelectItem>
                                 <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="approved">Approved</SelectItem>
                                 <SelectItem value="rejected">Rejected</SelectItem>
                             </SelectContent>
                         </Select>
 
                         <Select value={sortBy} onValueChange={setSortBy}>
-                            <SelectTrigger className="w-[140px]">
+                            <SelectTrigger className="w-full sm:w-[140px]">
                                 <SortAsc className="h-4 w-4 mr-2" />
                                 <SelectValue placeholder="Sort by" />
                             </SelectTrigger>
@@ -240,20 +230,6 @@ const PAGE = () => {
                                 <SelectItem value="title">Title</SelectItem>
                                 <SelectItem value="status">Status</SelectItem>
                                 <SelectItem value="updatedAt">Updated</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        <Select value={authorId} onValueChange={setAuthorId}>
-                            <SelectTrigger className="w-[160px]">
-                                <SelectValue placeholder="All Authors" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Authors</SelectItem>
-                                {authors.map((author) => (
-                                    <SelectItem key={author.id} value={author.id}>
-                                        {author.name}
-                                    </SelectItem>
-                                ))}
                             </SelectContent>
                         </Select>
                     </div>
@@ -274,12 +250,6 @@ const PAGE = () => {
                                 <X className="h-3 w-3 cursor-pointer" onClick={() => setFilter("all")} />
                             </Badge>
                         )}
-                        {authorId !== 'all' && (
-                            <Badge variant="secondary" className="gap-1">
-                                {authors.find((author) => author.id === authorId)?.name}
-                                <X className="h-3 w-3 cursor-pointer" onClick={() => setAuthorId("all")} />
-                            </Badge>
-                        )}
                         <Button variant="ghost" size="sm" onClick={clearAllFilters}>
                             Clear all
                         </Button>
@@ -288,7 +258,7 @@ const PAGE = () => {
             </div>
 
             {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
                         <Card key={i}>
                             <CardHeader>
@@ -304,7 +274,7 @@ const PAGE = () => {
             ) : !blogs.length ? (
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center py-16">
-                        <p className="text-muted-foreground text-lg">No blogs found</p>
+                        <p className="text-muted-foreground text-base sm:text-lg">No blogs found</p>
                         {hasActiveFilters && (
                             <Button variant="outline" className="mt-4" onClick={clearAllFilters}>
                                 Clear filters
@@ -313,22 +283,14 @@ const PAGE = () => {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {blogs.map((blog) => (
                         <Card key={blog.id} className="flex flex-col hover:shadow-md transition-shadow">
                             <CardHeader>
                                 <div className="flex items-start justify-between gap-2">
-                                    <CardTitle className="text-xl line-clamp-2">{blog.title}</CardTitle>
+                                    <CardTitle className="text-lg sm:text-xl line-clamp-2">{blog.title}</CardTitle>
                                     {getStatusBadge(blog.status)}
                                 </div>
-                                <CardDescription className="flex items-center gap-2 mt-2">
-                                    <Avatar className="h-6 w-6">
-                                        <AvatarImage src={blog.author.profilePicture || undefined} />
-                                        <AvatarFallback className="text-xs">{getInitials(blog.author.name)}</AvatarFallback>
-                                    </Avatar>
-                                    <span>{blog.author.name}</span>
-                                    <Badge variant="outline" className="text-xs">{blog.author.role}</Badge>
-                                </CardDescription>
                             </CardHeader>
                             <CardContent className="flex-1">
                                 <p className="text-sm text-muted-foreground line-clamp-3">
@@ -339,15 +301,24 @@ const PAGE = () => {
                                     <div>Updated: {formatDate(blog.updatedAt)}</div>
                                 </div>
                             </CardContent>
-                            <CardFooter className="flex gap-2">
+                            <CardFooter className="flex flex-col sm:flex-row gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="flex-1"
+                                    className="w-full sm:flex-1"
                                     onClick={() => openDetailView(blog)}
                                 >
                                     <Eye className="h-4 w-4 mr-1" />
                                     View
+                                </Button>
+                                <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="w-full sm:flex-1"
+                                    onClick={() => handleEdit(blog.id)}
+                                >
+                                    <Edit className="h-4 w-4 mr-1" />
+                                    Edit
                                 </Button>
                             </CardFooter>
                         </Card>
@@ -365,8 +336,8 @@ const PAGE = () => {
 
             {/* Detail View Modal */}
             {selectedBlog && showDetailDialog && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50" aria-modal="true" role="dialog">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-4 sm:p-8 relative mx-2 animate-fadeIn border border-gray-200 max-h-[90vh] overflow-y-auto flex flex-col">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4" aria-modal="true" role="dialog">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-4 sm:p-8 relative animate-fadeIn border border-gray-200 max-h-[90vh] overflow-y-auto flex flex-col">
                         <button
                             className="absolute top-2 right-2 sm:top-3 sm:right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
                             onClick={() => setShowDetailDialog(false)}
@@ -375,23 +346,11 @@ const PAGE = () => {
                         >
                             ×
                         </button>
-                        <h2 className="text-lg sm:text-2xl font-bold mb-4 text-gray-800 border-b pb-2 flex items-center gap-2">
-                            {selectedBlog.title}
-                            <span className="ml-auto">{getStatusBadge(selectedBlog.status)}</span>
+                        <h2 className="text-lg sm:text-2xl font-bold mb-4 text-gray-800 border-b pb-2 flex items-start gap-2 flex-wrap pr-8">
+                            <span className="flex-1">{selectedBlog.title}</span>
+                            {getStatusBadge(selectedBlog.status)}
                         </h2>
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
-                            <Avatar className="h-10 w-10">
-                                <AvatarImage src={selectedBlog.author.profilePicture || undefined} />
-                                <AvatarFallback>{getInitials(selectedBlog.author.name)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <div className="font-semibold text-foreground">{selectedBlog.author.name}</div>
-                                <div className="text-xs sm:text-sm flex flex-wrap items-center gap-2">
-                                    <span className="break-all">{selectedBlog.author.email}</span>
-                                    <Badge variant="outline" className="text-xs">{selectedBlog.author.role}</Badge>
-                                </div>
-                            </div>
-                        </div>
+                        
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm mb-4">
                             <div>
                                 <span className="font-semibold text-foreground">Created:</span> {formatDate(selectedBlog.createdAt)}
@@ -399,19 +358,15 @@ const PAGE = () => {
                             <div>
                                 <span className="font-semibold text-foreground">Updated:</span> {formatDate(selectedBlog.updatedAt)}
                             </div>
-                            <div>
-                                <span className="font-semibold text-foreground">Author ID:</span> <span className="break-all">{selectedBlog.authorId}</span>
-                            </div>
-                            <div>
-                                <span className="font-semibold text-foreground">Blog ID:</span> <span className="break-all">{selectedBlog.id}</span>
-                            </div>
                         </div>
+                        
                         <div className="mb-4">
                             <h3 className="font-semibold text-base sm:text-lg mb-2">Content</h3>
                             <div className="prose prose-sm max-w-none bg-muted/30 p-2 sm:p-4 rounded-lg overflow-x-auto">
                                 <MarkdownRender content={selectedBlog.content} />
                             </div>
                         </div>
+                        
                         {selectedBlog.status === 'REJECTED' && selectedBlog.rejectionReason && (
                             <Alert variant="destructive" className="mb-4">
                                 <AlertCircle className="h-4 w-4" />
@@ -420,11 +375,12 @@ const PAGE = () => {
                                 </AlertDescription>
                             </Alert>
                         )}
+                        
                         <div className="flex flex-col sm:flex-row gap-2 mt-4">
                             <Button
                                 variant="outline"
                                 onClick={() => handleEdit(selectedBlog.id)}
-                                className="flex-1 sm:flex-initial"
+                                className="w-full sm:flex-1"
                             >
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit
@@ -433,88 +389,39 @@ const PAGE = () => {
                                 variant="destructive"
                                 onClick={() => handleDelete(selectedBlog.id)}
                                 disabled={deleting}
-                                className="flex-1 sm:flex-initial"
+                                className="w-full sm:flex-1"
                             >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 {deleting ? 'Deleting...' : 'Delete'}
                             </Button>
-                            {selectedBlog.status !== 'APPROVED' && (
+                            {selectedBlog.status === 'DRAFT' && (
                                 <Button
                                     variant="default"
-                                    onClick={() => handleStatusChange(selectedBlog.id, 'APPROVED')}
-                                    disabled={statusUpdating}
-                                    className="flex-1 sm:flex-initial"
-                                >
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    Approve
-                                </Button>
-                            )}
-                            {selectedBlog.status !== 'REJECTED' && (
-                                <Button
-                                    variant="destructive"
-                                    onClick={() => openRejectDialog(selectedBlog)}
-                                    disabled={statusUpdating}
-                                    className="flex-1 sm:flex-initial"
-                                >
-                                    <XCircle className="h-4 w-4 mr-2" />
-                                    Reject
-                                </Button>
-                            )}
-                            {selectedBlog.status !== 'PENDING' && (
-                                <Button
-                                    variant="secondary"
                                     onClick={() => handleStatusChange(selectedBlog.id, 'PENDING')}
                                     disabled={statusUpdating}
-                                    className="flex-1 sm:flex-initial"
+                                    className="w-full sm:flex-1"
                                 >
-                                    <Clock className="h-4 w-4 mr-2" />
-                                    Set Pending
+                                    <Send className="h-4 w-4 mr-2" />
+                                    Submit for Review
+                                </Button>
+                            )}
+                            {selectedBlog.status === 'PENDING' && (
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => handleStatusChange(selectedBlog.id, 'DRAFT')}
+                                    disabled={statusUpdating}
+                                    className="w-full sm:flex-1"
+                                >
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Move to Draft
                                 </Button>
                             )}
                         </div>
                     </div>
                 </div>
             )}
-
-            {/* Reject Dialog */}
-            <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-                <DialogContent className="w-full max-w-md px-2 sm:px-6 py-4 sm:py-8">
-                    <DialogHeader>
-                        <DialogTitle>Reject Blog Post</DialogTitle>
-                        <DialogDescription>
-                            Please provide a reason for rejecting this blog post. This will be visible to the author.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-2 sm:py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="rejection-reason">Rejection Reason</Label>
-                            <Textarea
-                                id="rejection-reason"
-                                placeholder="Enter the reason for rejection..."
-                                value={rejectionReason}
-                                onChange={(e) => setRejectionReason(e.target.value)}
-                                rows={4}
-                                className="resize-none"
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                        <Button variant="outline" onClick={() => setShowRejectDialog(false)} className="w-full sm:w-auto">
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={() => selectedBlog && handleStatusChange(selectedBlog.id, 'REJECTED', rejectionReason)}
-                            disabled={!rejectionReason.trim() || statusUpdating}
-                            className="w-full sm:w-auto"
-                        >
-                            {statusUpdating ? 'Rejecting...' : 'Reject Blog'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 };
 
-export default PAGE;
+export default MyBlogs;
