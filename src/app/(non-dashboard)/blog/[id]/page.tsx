@@ -1,4 +1,4 @@
-import IndividualBlogPageClient from '@/components/IndividualBlogPageComponent';
+import IndividualBlogPageClient from '@/components/blog/IndividualBlogPageComponent';
 import React from 'react';
 
 const IndividualBlogPage = async ({ params }: { params: { id: Promise<string> } }) => {

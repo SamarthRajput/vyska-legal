@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { EditorSection } from '@/components/BlogEditor';
+import { EditorSection } from '@/components/blog/BlogEditor';
 import { toast } from 'sonner';
 import { Sparkles, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
