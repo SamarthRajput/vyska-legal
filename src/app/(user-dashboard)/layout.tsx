@@ -2,7 +2,6 @@ import { getCurrentUser } from "@/actions/syncUser";
 import DashboardLayout from "@/components/dashboard/layout/DashboardLayout";
 import ShowError from "@/components/ShowError";
 
-
 export default async function RootLayout({
     children,
 }: Readonly<{

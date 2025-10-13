@@ -1,8 +1,6 @@
 "use client"
 import { useRouter } from "next/navigation";
 
-
-
 export default function ResearchPage() {
     const router = useRouter();
     return (
