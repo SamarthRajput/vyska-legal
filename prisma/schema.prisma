@@ -47,6 +47,7 @@ model Blog {
   id              String     @id @default(cuid())
   title           String
   content         String
+  thumbnailUrl    String?
   status          BlogStatus @default(PENDING)
   author          User       @relation(fields: [authorId], references: [id])
   authorId        String

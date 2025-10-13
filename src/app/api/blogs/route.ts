@@ -1,5 +1,4 @@
 import { getUser } from "@/lib/getUser";
-import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -8,12 +7,14 @@ export async function POST(request: NextRequest) {
         if (!loggedInUser) {
             return NextResponse.json({ error: "User not found, please log in." }, { status: 404 });
         }
+        
         const body = await request.json();
-        const { title, content } = body;
+        const { title, content, thumbnailUrl } = body; 
 
         if (!title || !content) {
             return NextResponse.json({ error: "Title and content are required." }, { status: 400 });
         }
+        
         // validate title and content length
         if (title.length < 5 || content.length < 20) {
             return NextResponse.json({ error: "Title must be at least 5 characters and content at least 20 characters long." }, { status: 400 });
@@ -23,6 +24,7 @@ export async function POST(request: NextRequest) {
             data: {
                 title,
                 content,
+                thumbnailUrl: thumbnailUrl || null,
                 authorId: loggedInUser.id,
             },
         });
@@ -46,13 +48,6 @@ export async function GET(request: NextRequest) {
         // Search by title/content
         const search = searchParams.get("search") || "";
 
-        // // mark all as approved // test
-        // const updateAll = await prisma.blog.updateMany({
-        //     where: { status: 'PENDING' },
-        //     data: { status: 'APPROVED' },
-        // });
-        // console.log(`Updated ${updateAll.count} blogs to APPROVED status`);
-        
         // Fetch blogs
         const blogs = await prisma.blog.findMany({
             where: {

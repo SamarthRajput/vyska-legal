@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, X, ChevronLeft, ChevronRight, Filter, SortAsc, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import getExcerpt from '@/lib/getExcerpt';
-import MarkdownRender from '@/components/MarkdownRender';
+import MarkdownRender from '@/components/blog/MarkdownRender';
 import Pagination from '@/components/Pagination';
 
 interface Author {
