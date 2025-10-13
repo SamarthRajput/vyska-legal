@@ -36,6 +36,7 @@ interface Appointment {
     userName: string
     userEmail: string
     userPhone: string | null
+    agenda: string | null
     slotId: string
     userId: string | null
 }
@@ -107,6 +108,7 @@ export default function AppointmentAdmin() {
     const [userName, setUserName] = React.useState("")
     const [userEmail, setUserEmail] = React.useState("")
     const [userPhone, setUserPhone] = React.useState("")
+    const [agenda, setAgenda] = React.useState<string | null>(null)
     const [actionLoading, setActionLoading] = React.useState(false)
 
     const fetchData = async () => {
@@ -236,6 +238,7 @@ export default function AppointmentAdmin() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                    agenda,
                     userName,
                     userEmail,
                     userPhone,
@@ -249,6 +252,7 @@ export default function AppointmentAdmin() {
                     description: "Appointment booked successfully.",
                 })
                 setBookingSlot(null)
+                setAgenda(null)
                 setUserName("")
                 setUserEmail("")
                 setUserPhone("")
@@ -810,6 +814,15 @@ export default function AppointmentAdmin() {
                                                 <div className="mb-2 text-xs text-muted-foreground">
                                                     An email confirmation will be sent to the user.
                                                 </div>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label htmlFor="agenda">Agenda</Label>
+                                                <Input
+                                                    id="agenda"
+                                                    value={agenda ?? ""}
+                                                    onChange={(e) => setAgenda(e.target.value)}
+                                                    placeholder="Enter agenda"
+                                                />
                                             </div>
                                             <div className="space-y-1">
                                                 <Label htmlFor="phone">Phone (optional)</Label>

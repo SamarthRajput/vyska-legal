@@ -103,6 +103,7 @@ model Appointment {
   slot      AppointmentSlot   @relation(fields: [slotId], references: [id])
   slotId    String
   status    AppointmentStatus @default(PENDING)
+    agenda    String?
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
   User      User?             @relation(fields: [userId], references: [id])

@@ -35,9 +35,9 @@ export const navItems = [
     icon: BookOpen,
   },
   {
-    title: "Media Library",
+    title: "Manage Appointments",
     description: "Organize and manage your media files efficiently.",
-    href: "/dashboard/media",
+    href: "/user/manage-appointments",
     icon: ImageIcon,
   },
   {
