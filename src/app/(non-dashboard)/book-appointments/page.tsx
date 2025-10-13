@@ -16,7 +16,7 @@ import MarkedCalendar from "./Calander"
 
 type Slots = {
     id: string
-    date: string // "YYYY-MM-DD"
+    date: string
     timeSlot: string
     isBooked: boolean
     createdAt: string
@@ -25,7 +25,6 @@ type Slots = {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-// Compute a YYYY-MM-DD string
 function toYMD(d: Date) {
     const y = d.getFullYear()
     const m = `${d.getMonth() + 1}`.padStart(2, "0")
@@ -33,7 +32,6 @@ function toYMD(d: Date) {
     return `${y}-${m}-${day}`
 }
 
-// Build a Set of YYYY-MM-DD strings that have available slots
 function buildAvailabilitySet(slots: Slots[]) {
     const set = new Set<string>()
     for (const s of slots) {
@@ -42,21 +40,20 @@ function buildAvailabilitySet(slots: Slots[]) {
     return set
 }
 
-// DayButton overlay dot for days with availability
 function AvailabilityDot({ available }: { available: boolean }) {
     if (!available) return null
     return (
         <span
             aria-hidden
             className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full bg-primary"
+            title="Available slot"
         />
     )
 }
 
-// Skeleton loader for calendar
 function CalendarSkeleton() {
     return (
-        <div className="w-full animate-pulse space-y-2">
+        <div className="w-full animate-pulse space-y-2" aria-busy="true" aria-label="Loading calendar">
             <div className="h-8 bg-muted rounded w-1/2 mx-auto mb-2" />
             <div className="grid grid-cols-7 gap-2">
                 {Array.from({ length: 35 }).map((_, i) => (
@@ -67,10 +64,9 @@ function CalendarSkeleton() {
     )
 }
 
-// Skeleton loader for slots
 function SlotsSkeleton() {
     return (
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-3" aria-busy="true" aria-label="Loading slots">
             {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="h-10 bg-muted rounded" />
             ))}
@@ -78,11 +74,15 @@ function SlotsSkeleton() {
     )
 }
 
-// Error alert box
 function ErrorAlert({ message }: { message: string }) {
     return (
-        <div className="flex items-center gap-2 rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-destructive text-sm mt-4">
-            <svg width="20" height="20" fill="none" className="text-destructive shrink-0" viewBox="0 0 24 24">
+        <div
+            className="flex items-center gap-2 rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-destructive text-sm mt-4"
+            role="alert"
+            aria-live="assertive"
+            title="Error"
+        >
+            <svg width="20" height="20" fill="none" className="text-destructive shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
                 <path d="M12 8v4m0 4h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
@@ -100,8 +100,6 @@ export default function BookAppointmentsPage() {
     const [submitting, setSubmitting] = React.useState(false)
     const [daySlots, setDaySlots] = React.useState<Slots[]>([])
 
-    // Fetch a large batch of upcoming available slots for availability indicators.
-    // If your dataset is large, consider adding a server endpoint that aggregates by month.
     const {
         data: availabilityData,
         isLoading: availabilityLoading,
@@ -112,7 +110,6 @@ export default function BookAppointmentsPage() {
 
     const availabilitySet = React.useMemo(() => buildAvailabilitySet(availabilityData?.slots ?? []), [availabilityData])
 
-    // Fetch slots for the selected date (only available ones)
     const {
         data: daySlotsData,
         isLoading: daySlotsLoading,
@@ -122,13 +119,11 @@ export default function BookAppointmentsPage() {
         fetcher,
         { revalidateOnFocus: false },
     )
-    // const daySlots: Slots[] = daySlotsData?.slots ?? []
     React.useEffect(() => {
         setDaySlots(daySlotsData?.slots ?? [])
         setSelectedSlotId("")
     }, [daySlotsData])
 
-    // Handle slot select from list
     const handleSelectSlot = (slotId: string) => {
         setSelectedSlotId(slotId)
     }
@@ -154,8 +149,6 @@ export default function BookAppointmentsPage() {
                 setAgenda("")
                 setPhone("")
                 setSelectedSlotId("")
-
-                // Refresh both availability and day slots
                 mutate("/api/slots?limit=1000&show=available&when=upcoming")
                 mutate(`/api/slots?limit=1000&show=available&when=upcoming&date=${selectedYMD}`)
             }
@@ -176,17 +169,16 @@ export default function BookAppointmentsPage() {
     return (
         <main className="mx-auto max-w-6xl p-4 sm:p-6">
             <header className="mb-6">
-                <h1 className="text-balance text-center text-3xl font-bold">Book an Appointment</h1>
+                <h1 className="text-balance text-center text-3xl font-bold" title="Book an Appointment">Book an Appointment</h1>
                 <p className="mt-2 text-center text-muted-foreground">
                     Choose a date with availability, pick a time, and confirm your booking.
                 </p>
             </header>
 
             <div className="grid gap-6 md:grid-cols-2">
-                {/* Left: Calendar with availability dots */}
                 <Card className="min-h-[420px] flex flex-col">
                     <CardHeader>
-                        <CardTitle className="text-lg">Select a date</CardTitle>
+                        <CardTitle className="text-lg" title="Select a date">Select a date</CardTitle>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col items-center justify-center">
                         {availabilityLoading ? (
@@ -204,46 +196,38 @@ export default function BookAppointmentsPage() {
                                             const available = availabilitySet.has(ymd)
                                             return (
                                                 <div className="relative">
-                                                    <CalendarDayButton {...props} />
+                                                    <CalendarDayButton {...props} title={available ? "Available" : "Unavailable"} aria-label={available ? "Available" : "Unavailable"} />
                                                     <AvailabilityDot available={available} />
                                                 </div>
                                             )
                                         },
                                     }}
                                     className="rounded-md border shadow-sm"
+                                    aria-label="Calendar"
+                                    title="Calendar"
                                 />
                                 <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-                                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+                                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" title="Available slot" aria-hidden="true" />
                                     <span>Indicates available slots</span>
                                 </div>
-                                {/* <MarkedCalendar
-                                markedDates={Array.from(availabilitySet)}
-                                selected={selectedDate}
-                                onSelect={(date) => {
-                                    if (date) setSelectedDate(date)
-                                }}
-                                color="#22c55e" // optional (Tailwind green-500)
-                            /> */}
                             </div>
                         )}
                         {hasError && <ErrorAlert message={errorMessage} />}
                     </CardContent>
                 </Card>
 
-                {/* Right: Slots list + booking form */}
                 <Card className="min-h-[420px] flex flex-col">
                     <CardHeader>
-                        <CardTitle className="text-lg">{`Available slots for ${format(selectedDate, "PPP")}`}</CardTitle>
+                        <CardTitle className="text-lg" title={`Available slots for ${format(selectedDate, "PPP")}`}>{`Available slots for ${format(selectedDate, "PPP")}`}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 flex-1 flex flex-col">
-                        {/* Slots */}
                         <div>
                             {daySlotsLoading ? (
                                 <SlotsSkeleton />
                             ) : daySlots.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No available slots for this date.</p>
+                                <p className="text-sm text-muted-foreground" aria-live="polite">No available slots for this date.</p>
                             ) : (
-                                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                                <div className="grid grid-cols-2 gap-2 md:grid-cols-3" role="list" aria-label="Available time slots">
                                     {daySlots.map((slot) => {
                                         const isSelected = selectedSlotId === slot.id
                                         return (
@@ -259,6 +243,7 @@ export default function BookAppointmentsPage() {
                                                 disabled={slot.isBooked}
                                                 aria-pressed={isSelected}
                                                 aria-label={`Select ${slot.timeSlot}`}
+                                                title={`Select ${slot.timeSlot}${slot.isBooked ? " (Booked)" : ""}`}
                                             >
                                                 {slot.timeSlot}
                                             </Button>
@@ -268,8 +253,7 @@ export default function BookAppointmentsPage() {
                             )}
                         </div>
 
-                        {/* Booking form */}
-                        <form onSubmit={onSubmit} className="space-y-3 mt-2 flex-1 flex flex-col justify-end">
+                        <form onSubmit={onSubmit} className="space-y-3 mt-2 flex-1 flex flex-col justify-end" aria-label="Booking form" title="Booking form">
                             <div className="grid gap-2">
                                 <label htmlFor="agenda" className="text-sm font-medium">
                                     Agenda
@@ -281,6 +265,9 @@ export default function BookAppointmentsPage() {
                                     value={agenda}
                                     onChange={(e) => setAgenda(e.target.value)}
                                     required
+                                    aria-required="true"
+                                    aria-label="Agenda"
+                                    title="Agenda"
                                 />
                             </div>
 
@@ -295,6 +282,8 @@ export default function BookAppointmentsPage() {
                                     placeholder="Include country code if applicable"
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
+                                    aria-label="Phone"
+                                    title="Phone"
                                 />
                             </div>
 
@@ -304,10 +293,12 @@ export default function BookAppointmentsPage() {
                                     className="w-full"
                                     disabled={!selectedSlotId || submitting}
                                     aria-disabled={!selectedSlotId || submitting}
+                                    aria-label="Confirm Booking"
+                                    title="Confirm Booking"
                                 >
                                     {submitting ? (
                                         <>
-                                            <Loader2 className="mr-2 animate-spin" /> Booking…
+                                            <Loader2 className="mr-2 animate-spin" aria-hidden="true" /> Booking…
                                         </>
                                     ) : (
                                         "Confirm Booking"
@@ -316,7 +307,7 @@ export default function BookAppointmentsPage() {
                             </CardFooter>
 
                             {!selectedSlotId && (
-                                <p className="text-xs text-muted-foreground">Select a time slot above to enable booking.</p>
+                                <p className="text-xs text-muted-foreground" aria-live="polite">Select a time slot above to enable booking.</p>
                             )}
                         </form>
                     </CardContent>
