@@ -2,6 +2,7 @@
 import React from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 
 type AppointmentStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
 
@@ -316,7 +317,10 @@ const BookAppointments = () => {
             onFocus={handlePrefetch}
             type="button"
           >
-            + Book New Appointment
+            <div className="flex items-center gap-2">
+              <Plus className="w-5 h-5" aria-hidden="true" />{" "}
+              Book New Appointment
+            </div>
           </button>
         </div>
       </div>

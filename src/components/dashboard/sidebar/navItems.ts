@@ -23,15 +23,9 @@ export const navItems = [
     exact: true,
   },
   {
-    title: "Analytics",
-    description: "Dive deep into your blog analytics and track your growth.",
-    href: "/dashboard/analytics",
-    icon: BarChart3,
-  },
-  {
     title: "My Blogs",
     description: "Manage and edit your blog posts all in one place.",
-    href: "/dashboard/blogs",
+    href: "/user/blogs",
     icon: BookOpen,
   },
   {
@@ -39,24 +33,6 @@ export const navItems = [
     description: "Organize and manage your media files efficiently.",
     href: "/user/manage-appointments",
     icon: ImageIcon,
-  },
-  {
-    title: "Bookmarks",
-    description: "Save and manage your favorite blog posts.",
-    href: "/dashboard/bookmarks",
-    icon: Bookmark,
-  },
-  {
-    title: "Profile & Settings",
-    description: "Manage your profile settings and preferences.",
-    href: "/dashboard/settings",
-    icon: Settings,
-  },
-  {
-    title: "Help / Tips",
-    description: "Access help resources and useful tips for using the dashboard.",
-    href: "/dashboard/help",
-    icon: HelpCircle,
   },
 ];
 
