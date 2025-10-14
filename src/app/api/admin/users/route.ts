@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getCurrentUser } from "@/actions/syncUser";
 import { UserRole } from "@prisma/client";
 import { currentUser } from "@clerk/nextjs/server";
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
       orderByClause = { createdAt: "desc" };
     }
 
-    let usersData = await prisma.user.findMany({
+    const usersData = await prisma.user.findMany({
       where: whereClause,
       skip,
       take: pageSize,

@@ -3,6 +3,7 @@ import cloudinary from "@/lib/cloudinary";
 import { Readable } from "stream";
 import type { UploadApiResponse, UploadApiErrorResponse } from "cloudinary";
 import { syncUser } from "@/actions/syncUser";
+import { prisma } from "@/lib/prisma";
 
 // POST - Upload image
 export async function POST(request: Request) {

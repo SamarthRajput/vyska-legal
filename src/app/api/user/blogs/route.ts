@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
-import { syncUser } from '@/actions/syncUser';
+import { syncUser } from '@/actions/syncUser'; import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {

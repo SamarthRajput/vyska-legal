@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get("sortBy") || "createdAt";
 
     const skip = (page - 1) * limit;
-    let where: any = {};
+    const where: any = {};
     if (search.length > 0) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },

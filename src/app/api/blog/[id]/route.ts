@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { syncUser } from '@/actions/syncUser';
 import { z } from 'zod';
+import { prisma } from "@/lib/prisma";
 
 // Schema for validation
 const updateBlogSchema = z.object({
@@ -14,7 +16,7 @@ const updateBlogSchema = z.object({
 // GET single blog
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -54,7 +56,7 @@ export async function GET(
 // UPDATE blog
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -97,7 +99,7 @@ export async function PUT(
     const validatedData = updateBlogSchema.parse(body);
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: { [key: string]: any } = {
       title: validatedData.title,
       content: validatedData.content,
       thumbnailUrl: validatedData.thumbnailUrl ?? null,

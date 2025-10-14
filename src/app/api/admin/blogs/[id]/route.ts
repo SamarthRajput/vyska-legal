@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = (await params);
         const user = await getUser();
@@ -35,7 +35,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = (await params);
         const user = await getUser();

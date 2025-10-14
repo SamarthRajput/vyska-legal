@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import { pdf } from '@react-pdf/renderer';
 import ResearchPaperPDF from '@/components/ResearchPaperPDF';

@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import puppeteer from 'puppeteer';
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const research = await prisma.research.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         createdBy: { select: { name: true } },
       },

@@ -1,6 +1,6 @@
 // src/lib/getUser.ts
 import { currentUser } from "@clerk/nextjs/server";
-import { prisma } from './prisma'
+import { prisma } from './prisma';
 
 /**
  * Get the current logged-in user from Prisma.

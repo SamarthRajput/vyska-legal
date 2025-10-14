@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { syncUser } from '@/actions/syncUser';
+import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params;
@@ -44,7 +45,7 @@ export async function DELETE(
             { message: 'Blog deleted successfully' },
             { status: 200 }
         );
-    } 
+    }
     catch (error) {
         console.error('Error deleting blog:', error);
         return NextResponse.json(
@@ -55,8 +56,8 @@ export async function DELETE(
 }
 
 export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params;
@@ -101,27 +102,27 @@ export async function PATCH(
 
         const updatedBlog = await prisma.blog.update({
             where: { id },
-        data: {
-            status: status || blog.status,
-        },
-        include: {
-            author: {
-            select: {
-                id: true,
-                clerkId: true,
-                name: true,
-                email: true,
-                role: true,
-                profilePicture: true,
-                createdAt: true,
-                updatedAt: true,
+            data: {
+                status: status || blog.status,
             },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        clerkId: true,
+                        name: true,
+                        email: true,
+                        role: true,
+                        profilePicture: true,
+                        createdAt: true,
+                        updatedAt: true,
+                    },
+                },
             },
-        },
         });
 
         return NextResponse.json(updatedBlog);
-    } 
+    }
     catch (error) {
         console.error('Error updating blog:', error);
         return NextResponse.json(
