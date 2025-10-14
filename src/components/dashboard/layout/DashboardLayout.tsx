@@ -35,15 +35,16 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   }, [user]);
 
   useEffect(() => {
+    // toast.success(`Pathname is now: ${pathname}`);
     setIsAdminRoute(pathname.startsWith("/admin"));
   }, [pathname]);
 
   const currentPage =
     (isAdminRoute
       ? adminNavItems.find((i) =>
-          i.exact ? i.href === pathname : pathname.startsWith(i.href)
-        )
-      : navItems.find((i) => pathname.startsWith(i.href))) ?? {
+        i.exact ? i.href === pathname : pathname.startsWith(i.href)
+      )
+      : navItems.find((i) => i.href === pathname)) ?? {
       title: "Dashboard",
       description: "Manage your content and settings.",
     };
@@ -64,7 +65,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         loggedInUser={loggedInUser}
         isAdminRoute={isAdminRoute}
         isCollapsed={false}
-        onToggle={() => {}}
+        onToggle={() => { }}
         isMobile={true}
         isOpen={isMobileSidebarOpen}
         onClose={() => setIsMobileSidebarOpen(false)}
@@ -83,10 +84,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           currentPageTitle={currentPage.title}
           currentPageDescription={currentPage.description}
           onMobileMenuToggle={() => setIsMobileSidebarOpen(true)}
-          onLogout={() => {
-            signOut({ redirectUrl: "/" });
-            toast.success("Logged out successfully");
-          }}
         />
         <main className="p-4 sm:p-6">{children}</main>
       </div>
