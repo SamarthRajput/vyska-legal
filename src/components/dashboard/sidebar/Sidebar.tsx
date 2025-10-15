@@ -53,17 +53,17 @@ const Sidebar: React.FC<SidebarProps> = ({
         >
           {(!isCollapsed || isMobile) && (
             <>
-              <img 
-                src="/logo.png" 
-                alt="Logo" 
+              <img
+                src="/logo.png"
+                alt="Logo"
                 className={cn(
                   "rounded-lg shadow transition-all",
                   isCollapsed && !isMobile ? "w-8 h-8" : "w-10 h-10"
-                )} 
+                )}
               />
               <div className={cn(isCollapsed && !isMobile && "hidden")}>
                 <h1 className="text-xl font-bold text-slate-800 truncate">
-                  Vyaska Legal
+                  Vyska Legal
                 </h1>
                 <p className="text-xs text-slate-500 truncate">
                   {isAdminRoute ? "Admin" : "User"} Dashboard
@@ -72,10 +72,10 @@ const Sidebar: React.FC<SidebarProps> = ({
             </>
           )}
           {isCollapsed && !isMobile && (
-            <img 
-              src="/logo.png" 
-              alt="Logo" 
-              className="w-8 h-8 rounded-lg shadow" 
+            <img
+              src="/logo.png"
+              alt="Logo"
+              className="w-8 h-8 rounded-lg shadow"
             />
           )}
         </div>

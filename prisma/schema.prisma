@@ -36,6 +36,7 @@ model User {
   createdTeamMembers TeamMember[]  @relation("CreatedTeamMembers")
 
   repliedContacts Contact[] @relation("UserRepliedContacts")
+  Payment         Payment[]
 }
 
 enum UserRole {
@@ -64,13 +65,14 @@ enum BlogStatus {
 }
 
 model Service {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   description String
   price       Float?
   iconUrl     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  payments    Payment[]
 }
 
 model Research {
@@ -96,19 +98,41 @@ model AppointmentSlot {
   Appointment Appointment[]
 }
 
+model AppointmentType {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  appointments Appointment[]
+}
+
 model Appointment {
   id        String            @id @default(cuid())
   userName  String
   userEmail String
   userPhone String?
-  slot      AppointmentSlot   @relation(fields: [slotId], references: [id])
-  slotId    String
   status    AppointmentStatus @default(PENDING)
-    agenda    String?
+  agenda    String?
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
-  User      User?             @relation(fields: [userId], references: [id])
-  userId    String?
+
+  slot   AppointmentSlot @relation(fields: [slotId], references: [id])
+  slotId String
+
+  User   User?   @relation(fields: [userId], references: [id])
+  userId String?
+
+  appointmentType   AppointmentType @relation(fields: [appointmentTypeId], references: [id])
+  appointmentTypeId String
+
+  payment Payment?
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([userEmail])
 }
 
 enum AppointmentStatus {
@@ -158,4 +182,58 @@ model Contact {
 enum ContactStatus {
   PENDING
   RESOLVED
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  orderId     String        @unique // Razorpay order ID
+  paymentId   String? // Razorpay payment ID
+  signature   String? // Razorpay signature
+  amount      Decimal       @db.Decimal(10, 2)
+  currency    String        @default("INR")
+  status      PaymentStatus @default(PENDING) // Payment status
+  paymentFor  PaymentFor
+  method      String? // Card / UPI / Netbanking
+  description String? // Optional: purpose of payment
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // RELATIONS
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  service   Service? @relation(fields: [serviceId], references: [id])
+  serviceId String?
+
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  appointmentId String?      @unique
+
+  transactions Transaction[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum PaymentFor {
+  SERVICE
+  APPOINTMENT
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  payment   Payment  @relation(fields: [paymentId], references: [id])
+  paymentId String
+  eventType String // e.g. 'order.created', 'payment.captured'
+  rawData   Json // Full event payload (from Razorpay webhook)
+  createdAt DateTime @default(now())
 }

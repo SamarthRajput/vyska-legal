@@ -6,7 +6,7 @@ const Homepage = () => {
     <div>
       <div className="flex flex-col items-center justify-center min-h-screen py-20 px-4 text-center">
         <h1 className="text-5xl font-bold mb-6 text-gray-800">
-          Welcome to Vyaska Legal
+          Welcome to Vyska Legal
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mb-8">
           Providing expert legal guidance and insights. Explore our services,

@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getUser } from "@/lib/getUser";
+import { createAppointmentAndBookSlot } from "@/lib/helper/bookSlot";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -11,7 +13,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { agenda, slotId, userId, phone } = body;
+        const { agenda, slotId, appointmentTypeId, userId, phone } = body;
 
         if (!slotId) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -20,36 +22,18 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Agenda must be a string up to 500 characters" }, { status: 400 });
         }
 
-        // Check if slot is already booked
-        const slot = await prisma.appointmentSlot.findUnique({ where: { id: slotId } });
-        if (!slot) {
-            return NextResponse.json({ error: "Slot not found" }, { status: 404 });
+        let appointment;
+        try {
+            appointment = await createAppointmentAndBookSlot({
+                agenda,
+                slotId,
+                userId,
+                phone,
+                appointmentTypeId
+            });
+        } catch (err: any) {
+            return NextResponse.json({ error: err.message || "Error" }, { status: err.status || 500 });
         }
-        if (slot.isBooked) {
-            return NextResponse.json({ error: "Slot already booked" }, { status: 400 });
-        }
-
-        // Create appointment and mark slot as booked in a transaction
-        const [appointment] = await prisma.$transaction([
-            prisma.appointment.create({
-                data: {
-                    userName: user.name!,
-                    userEmail: user.email!,
-                    userPhone: phone || null,
-                    agenda,
-                    userId,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                    status: "PENDING",
-                    User: { connect: { id: user.id } },
-                    slot: { connect: { id: slotId } },
-                },
-            }),
-            prisma.appointmentSlot.update({
-                where: { id: slotId },
-                data: { isBooked: true },
-            }),
-        ]);
 
         return NextResponse.json({ message: "Appointment created", appointment });
     } catch (error) {

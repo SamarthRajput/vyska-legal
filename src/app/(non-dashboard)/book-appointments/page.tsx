@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import React from "react"
-import useSWR, { mutate } from "swr"
+import useSWR from "swr"
 import { toast } from "sonner"
 import { format } from "date-fns"
 
@@ -10,8 +11,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import AppointmentPayButton from "@/components/AppointmentBookButton"
 
 type Slots = {
     id: string
@@ -20,6 +21,14 @@ type Slots = {
     isBooked: boolean
     createdAt: string
     updatedAt: string
+}
+interface AppointmentTypes {
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    title: string;
+    description: string | null;
+    price: number | { toNumber: () => number };
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
@@ -92,11 +101,12 @@ function ErrorAlert({ message }: { message: string }) {
 
 export default function BookAppointmentsPage() {
     const [selectedDate, setSelectedDate] = React.useState<Date>(new Date())
+    const [appointmentType, setAppointmentType] = React.useState<AppointmentTypes[] | null>(null)
+    const [selectedAppointmentTypeId, setSelectedAppointmentTypeId] = React.useState<string>("")
     const selectedYMD = toYMD(selectedDate)
     const [selectedSlotId, setSelectedSlotId] = React.useState<string>("")
     const [agenda, setAgenda] = React.useState("")
     const [phone, setPhone] = React.useState("")
-    const [submitting, setSubmitting] = React.useState(false)
     const [daySlots, setDaySlots] = React.useState<Slots[]>([])
 
     const {
@@ -119,6 +129,22 @@ export default function BookAppointmentsPage() {
         { revalidateOnFocus: false },
     )
     React.useEffect(() => {
+        const fetchAppointmentTypes = async () => {
+            try {
+                const res = await fetch("/api/appointment-type");
+                const data = await res.json();
+                if (res.ok && data.appointmentTypes && data.appointmentTypes.length > 0) {
+                    setAppointmentType(data.appointmentTypes);
+                }
+            } catch (error) {
+                toast.error("Failed to fetch appointment types");
+                console.error("Failed to fetch appointment types:", error);
+            }
+        };
+        fetchAppointmentTypes();
+    }, []);
+
+    React.useEffect(() => {
         setDaySlots(daySlotsData?.slots ?? [])
         setSelectedSlotId("")
     }, [daySlotsData])
@@ -127,36 +153,25 @@ export default function BookAppointmentsPage() {
         setSelectedSlotId(slotId)
     }
 
-    const onSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!selectedSlotId || !agenda) {
-            toast.error("Please select a slot and add your agenda")
-            return
+    const handleDateSelect = (d: Date | undefined) => {
+        if (d) {
+            setSelectedDate(d)
+            setSelectedSlotId("")
         }
-        setSubmitting(true)
-        try {
-            const res = await fetch("/api/appointments", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ slotId: selectedSlotId, agenda, phone }),
-            })
-            const data = await res.json()
-            if (!res.ok) {
-                toast.error(data?.error || "Failed to book appointment")
-            } else {
-                toast.success("Appointment booked successfully")
-                setAgenda("")
-                setPhone("")
-                setSelectedSlotId("")
-                mutate("/api/slots?limit=1000&show=available&when=upcoming")
-                mutate(`/api/slots?limit=1000&show=available&when=upcoming&date=${selectedYMD}`)
-            }
-        } catch (err) {
-            console.error(err)
-            toast.error("Failed to book appointment")
-        } finally {
-            setSubmitting(false)
-        }
+    }
+
+    const handlePaymentSuccess = () => {
+        toast.success("Appointment booked successfully! and this is from appointment button");
+        // Reset form
+        setSelectedSlotId("")
+        setAgenda("")
+        setPhone("")
+        // todo create a success component and show after success for 5 second and redirect to 'user/manage-appointments'
+    }
+    const handlePaymentError = (error: any) => {
+        console.error("Payment Error:", error);
+        toast.info("Payment was not completed. and this toast is from appointment button");
+        toast.error(error?.message || "Payment failed, please try again.");
     }
 
     const hasError = availabilityError || daySlotsError
@@ -187,7 +202,7 @@ export default function BookAppointmentsPage() {
                                 <Calendar
                                     mode="single"
                                     selected={selectedDate}
-                                    onSelect={(d) => d && setSelectedDate(d)}
+                                    onSelect={handleDateSelect}
                                     components={{
                                         DayButton: (props) => {
                                             const d = props.day.date
@@ -252,21 +267,65 @@ export default function BookAppointmentsPage() {
                             )}
                         </div>
 
-                        <form onSubmit={onSubmit} className="space-y-3 mt-2 flex-1 flex flex-col justify-end" aria-label="Booking form" title="Booking form">
+                        <div className="grid gap-2">
+                            <label htmlFor="appointmentType" className="text-sm font-medium">
+                                Appointment Type
+                            </label>
+                            <select
+                                id="appointmentType"
+                                name="appointmentType"
+                                className="border rounded px-3 py-2"
+                                value={selectedAppointmentTypeId}
+                                onChange={(e) => setSelectedAppointmentTypeId(e.target.value)}
+                                required
+                                aria-required="true"
+                                aria-label="Appointment Type"
+                                title="Appointment Type"
+                            >
+                                <option value="" disabled>
+                                    {appointmentType && appointmentType.length > 0
+                                        ? "Select appointment type"
+                                        : "Loading types..."}
+                                </option>
+                                {appointmentType &&
+                                    appointmentType.map((type) => (
+                                        <option
+                                            key={type.id}
+                                            value={type.id}
+                                            title={type.description || type.title}
+                                        >
+                                            {type.title}
+                                            {type.price ? "( ₹" : ""}
+                                            {typeof type.price === "object"
+                                                ? type.price.toNumber()
+                                                : type.price
+                                            }
+                                            {type.price ? ")" : ""}
+                                        </option>
+                                    ))
+                                }
+                            </select>
+                        </div>
+
+                        {/* Change form to div to prevent submission/refresh */}
+                        <div
+                            className="space-y-3 mt-2 flex-1 flex flex-col justify-end"
+                            aria-label="Booking form"
+                            title="Booking form"
+                        >
                             <div className="grid gap-2">
                                 <label htmlFor="agenda" className="text-sm font-medium">
-                                    Agenda
+                                    Any Message (Optional)
                                 </label>
                                 <Textarea
                                     id="agenda"
                                     name="agenda"
-                                    placeholder="Agenda (required)"
+                                    placeholder="Any Message (Optional)"
                                     value={agenda}
                                     onChange={(e) => setAgenda(e.target.value)}
-                                    required
                                     aria-required="true"
-                                    aria-label="Agenda"
-                                    title="Agenda"
+                                    aria-label="Any Message"
+                                    title="Any Message"
                                 />
                             </div>
 
@@ -287,28 +346,27 @@ export default function BookAppointmentsPage() {
                             </div>
 
                             <CardFooter className="p-0">
-                                <Button
-                                    type="submit"
+                                <AppointmentPayButton
+                                    appointmentTypeId={selectedAppointmentTypeId}
+                                    slotId={selectedSlotId}
+                                    agenda={agenda}
+                                    description={`Payment for appointment on ${format(selectedDate, "PPP")}`}
                                     className="w-full"
-                                    disabled={!selectedSlotId || submitting}
-                                    aria-disabled={!selectedSlotId || submitting}
-                                    aria-label="Confirm Booking"
-                                    title="Confirm Booking"
-                                >
-                                    {submitting ? (
-                                        <>
-                                            <Loader2 className="mr-2 animate-spin" aria-hidden="true" /> Booking…
-                                        </>
-                                    ) : (
-                                        "Confirm Booking"
-                                    )}
-                                </Button>
+                                    onSuccess={handlePaymentSuccess}
+                                    onError={handlePaymentError}
+                                    disabled={!selectedSlotId || !selectedAppointmentTypeId || selectedSlotId === "" || selectedAppointmentTypeId === ""}
+                                />
                             </CardFooter>
 
-                            {!selectedSlotId && (
-                                <p className="text-xs text-muted-foreground" aria-live="polite">Select a time slot above to enable booking.</p>
+                            {(!selectedSlotId || !selectedAppointmentTypeId) && (
+                                <p className="text-xs text-muted-foreground" aria-live="polite">
+                                    {!selectedSlotId
+                                        ? "Select a time slot above to enable booking."
+                                        : "Select an appointment type to enable booking."
+                                    }
+                                </p>
                             )}
-                        </form>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

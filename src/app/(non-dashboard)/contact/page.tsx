@@ -67,7 +67,7 @@ const ContactUsPage = () => {
         setSubmitting(false);
         return;
       }
-      
+
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,8 +98,8 @@ const ContactUsPage = () => {
         <div className="md:w-1/2 bg-gradient-to-br from-blue-700 to-blue-500 text-white flex flex-col justify-between p-8 md:p-10">
           <div>
             <div className="flex items-center gap-3 mb-8">
-              <img src="/logo.png" alt="Vyaska Legal Logo" className="h-12 w-12 rounded-full bg-white p-1 shadow" />
-              <span className="text-2xl font-extrabold tracking-wide">Vyaska Legal</span>
+              <img src="/logo.png" alt="Vyska Legal Logo" className="h-12 w-12 rounded-full bg-white p-1 shadow" />
+              <span className="text-2xl font-extrabold tracking-wide">Vyska Legal</span>
             </div>
             <h2 className="text-3xl font-bold mb-4">Contact Us</h2>
             <p className="text-blue-100 mb-8">
@@ -108,7 +108,7 @@ const ContactUsPage = () => {
             <div className="space-y-4 text-blue-100 text-sm">
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-blue-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M16 2v6a2 2 0 002 2h6"></path><path d="M2 7v13a2 2 0 002 2h16a2 2 0 002-2V7"></path></svg>
-                <span>info@vyaskalegal.com</span>
+                <span>info@vyskalegal.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-blue-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"></path><path d="M16 3v4a1 1 0 001 1h4"></path></svg>
@@ -121,7 +121,7 @@ const ContactUsPage = () => {
             </div>
           </div>
           <div className="mt-10 text-xs text-blue-200">
-            &copy; {new Date().getFullYear()} Vyaska Legal. All rights reserved.
+            &copy; {new Date().getFullYear()} Vyska Legal. All rights reserved.
           </div>
         </div>
         {/* Right: Contact Form */}

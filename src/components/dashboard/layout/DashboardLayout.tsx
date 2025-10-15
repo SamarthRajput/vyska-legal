@@ -2,9 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useUser, useClerk } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import { adminNavItems, navItems } from "../sidebar/navItems";
 import Sidebar from "../sidebar/Sidebar";
 import TopNavbar from "../navbar/TopNavbar";
@@ -12,7 +11,6 @@ import TopNavbar from "../navbar/TopNavbar";
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const { user } = useUser();
-  const { signOut } = useClerk();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);

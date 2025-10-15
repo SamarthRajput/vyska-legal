@@ -35,8 +35,8 @@ export default function Footer() {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                         {/* Logo and Description */}
                         <div>
-                            <Link href="/" className="flex items-center space-x-2" aria-label="Vyaska Legal Home">
-                                <span className="text-2xl font-extrabold text-blue-700 tracking-tight">Vyaska</span>
+                            <Link href="/" className="flex items-center space-x-2" aria-label="Vyska Legal Home">
+                                <span className="text-2xl font-extrabold text-blue-700 tracking-tight">Vyska</span>
                                 <span className="text-xl font-semibold text-gray-700">Legal</span>
                             </Link>
                             <p className="mt-3 text-gray-600 text-sm">
@@ -109,7 +109,7 @@ export default function Footer() {
 
                     {/* Footer Bottom */}
                     <div className="border-t border-gray-200 mt-8 pt-4 flex flex-col md:flex-row items-center justify-between text-sm text-gray-600">
-                        <p>© {new Date().getFullYear()} Vyaska Legal. All rights reserved.</p>
+                        <p>© {new Date().getFullYear()} Vyska Legal. All rights reserved.</p>
                         <div className="mt-2 md:mt-0 space-x-4">
                             <Link href="/privacy" className="hover:text-blue-700">Privacy Policy</Link>
                             <Link href="/terms" className="hover:text-blue-700">Terms of Service</Link>
