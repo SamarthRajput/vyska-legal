@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from '@clerk/nextjs'
 import Navbar from "@/components/Navbar";
 import Script from "next/script";
+import DisclaimerModal from "@/components/DisclaimerModal";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
       >
         <Script src="https://checkout.razorpay.com/v1/checkout.js" />
         <ClerkProvider>
+          <DisclaimerModal />
           <Toaster />
           {children}
         </ClerkProvider>
