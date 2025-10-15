@@ -3,11 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import ReactMarkdown from 'react-markdown';
 import { pdf } from '@react-pdf/renderer';
 import ResearchPaperPDF from '@/components/ResearchPaperPDF';
+import MarkdownRender from '@/components/blog/MarkdownRender';
 
-// Dynamically import PDFViewer to avoid SSR issues
 const PDFViewer = dynamic(
   () => import('@react-pdf/renderer').then((mod) => mod.PDFViewer),
   {
@@ -74,17 +73,14 @@ export default function ResearchDetailPage() {
   const handleDownload = async () => {
     if (!research) return;
 
-    // If research has uploaded file, download it directly
     if (research.fileUrl) {
       window.open(research.fileUrl, '_blank');
       return;
     }
 
-    // Generate PDF on client-side
     if (research.content) {
       setIsDownloading(true);
       try {
-        // Convert research data to match ResearchPaperPDF props
         const researchData = {
           title: research.title,
           description: research.description,
@@ -152,7 +148,6 @@ export default function ResearchDetailPage() {
     );
   }
 
-  // Prepare research data for PDF component
   const researchForPDF = {
     title: research.title,
     description: research.description,
@@ -165,7 +160,7 @@ export default function ResearchDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      {/* Header */}
+
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">{research.title}</h1>
         
@@ -222,7 +217,6 @@ export default function ResearchDetailPage() {
             )}
           </button>
 
-          {/* Preview Toggle Button */}
           {research.content && (
             <button
               onClick={() => setShowPreview(!showPreview)}
@@ -262,7 +256,7 @@ export default function ResearchDetailPage() {
         </div>
       </div>
 
-      {/* PDF Preview Section */}
+
       {showPreview && research.content && (
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-4">PDF Preview</h2>
@@ -274,18 +268,18 @@ export default function ResearchDetailPage() {
         </div>
       )}
 
-      {/* Thumbnail */}
+
       {research.thumbnailUrl && (
         <div className="relative h-96 w-full mb-8 rounded-lg overflow-hidden">
           <img
             src={research.thumbnailUrl}
             alt={research.title}
-            className="w-full h-full object-"
+            className="w-full h-full object-cover"
           />
         </div>
       )}
 
-      {/* Abstract */}
+
       {research.description && (
         <div className="mb-8 p-6 bg-gray-50 rounded-lg">
           <h2 className="text-2xl font-bold mb-3">Abstract</h2>
@@ -295,13 +289,11 @@ export default function ResearchDetailPage() {
         </div>
       )}
 
-      {/* Content Preview with Markdown Rendering */}
+
       {research.content && (
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-4">Content</h2>
-          <div className="prose prose-lg max-w-none dark:prose-invert">
-            <ReactMarkdown>{research.content}</ReactMarkdown>
-          </div>
+          <MarkdownRender content={research.content} />
         </div>
       )}
     </div>

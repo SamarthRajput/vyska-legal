@@ -35,6 +35,30 @@ export default function EditBlogPage() {
     const [fetching, setFetching] = useState(true)
     const [message, setMessage] = useState('')
     const [blog, setBlog] = useState<Blog | null>(null)
+    const [isAdmin, setIsAdmin] = useState(false);
+    
+    const backLink = isAdmin ? '/admin/blogs' : '/user/blogs';
+
+    useEffect(() => {
+        const checkAdmin = async () => {
+            try {
+                const res = await fetch('/api/auth/check-admin')
+                if (res.ok) {
+                    const data = await res.json();
+                    setIsAdmin(data.isAdmin || false);
+                } else {
+                    setIsAdmin(false);
+                }
+            } catch (err) {
+                console.error('Error checking admin status:', err);
+                setIsAdmin(false);
+            }
+        }
+        
+        if (isSignedIn) {
+            checkAdmin();
+        }
+    }, [isSignedIn])
 
     useEffect(() => {
         const fetchBlog = async () => {
@@ -87,7 +111,7 @@ export default function EditBlogPage() {
                 setMessage('Blog updated successfully!')
                 
                 setTimeout(() => {
-                    router.push('/user/blogs')
+                    router.push(backLink)
                 }, 1000)
             } else {
                 const data = await res.json()
@@ -131,10 +155,8 @@ export default function EditBlogPage() {
 
     return (
         <div className="max-w-5xl mx-auto py-6 sm:py-12 px-4">
-            {/* fix the link */}
-
             <Link 
-                href="/blogs"
+                href={backLink}
                 className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6 transition"
             >
                 <ArrowLeft className="w-4 h-4" />
@@ -223,7 +245,7 @@ export default function EditBlogPage() {
                     
                     <button
                         type="button"
-                        onClick={() => router.push('/blogs/my-blogs')}
+                        onClick={() => router.push(backLink)}
                         className="flex-1 sm:flex-initial bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition"
                         disabled={loading}
                     >
