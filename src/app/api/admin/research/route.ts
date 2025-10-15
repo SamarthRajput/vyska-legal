@@ -6,6 +6,7 @@ import { getUser } from '@/lib/getUser';
 import { UserRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
+// Get all the research papers
 export async function GET(request: NextRequest) {
   try {
     const user = await getUser();

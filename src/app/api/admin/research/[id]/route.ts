@@ -2,6 +2,7 @@ import { isAdmin } from '@/actions/syncUser';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from "@/lib/prisma";
 
+// Get a single research paper using id 
 export async function GET(
   req: NextRequest,
    { params }: { params: Promise<{ id: string }> } 
@@ -40,6 +41,7 @@ export async function GET(
   }
 }
 
+// Update the research paper
 export async function PUT(
   req: NextRequest,
    { params }: { params: Promise<{ id: string }> }
@@ -89,6 +91,7 @@ export async function PUT(
   }
 }
 
+// Delete the research paper
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> } 
