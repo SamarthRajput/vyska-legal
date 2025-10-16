@@ -49,14 +49,25 @@ const oauth2Client = new google.auth.OAuth2(
 //     }
 // }
 
-// --- Load tokens (used automatically)
+// --- Load tokens from environment variables
 function loadTokens() {
-    if (fs.existsSync(TOKEN_PATH)) {
-        const tokens = JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf-8'));
-        oauth2Client.setCredentials(tokens);
+    const accessToken = process.env.GOOGLE_ACCESS_TOKEN;
+    const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+    const scope = process.env.GOOGLE_SCOPE || 'https://www.googleapis.com/auth/calendar';
+    const tokenType = process.env.GOOGLE_TOKEN_TYPE || 'Bearer';
+    const expiryDate = process.env.GOOGLE_EXPIRY_DATE ? Number(process.env.GOOGLE_EXPIRY_DATE) : null;
+
+    if (accessToken && refreshToken) {
+        oauth2Client.setCredentials({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            scope: scope,
+            token_type: tokenType,
+            expiry_date: expiryDate,
+        });
     } else {
         throw new Error(
-            'Google OAuth tokens missing. Authorize once using getGoogleAuthUrl() & setGoogleTokens()'
+            'Google OAuth tokens missing. Make sure GOOGLE_ACCESS_TOKEN and GOOGLE_REFRESH_TOKEN are set in your environment variables.'
         );
     }
 }
