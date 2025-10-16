@@ -110,14 +110,16 @@ model AppointmentType {
 }
 
 model Appointment {
-  id        String            @id @default(cuid())
-  userName  String
-  userEmail String
-  userPhone String?
-  status    AppointmentStatus @default(PENDING)
-  agenda    String?
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  id              String            @id @default(cuid())
+  userName        String
+  userEmail       String
+  userPhone       String?
+  status          AppointmentStatus @default(PENDING)
+  agenda          String?
+  meetUrl         String?
+  noofrescheduled Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   slot   AppointmentSlot @relation(fields: [slotId], references: [id])
   slotId String
@@ -247,7 +249,7 @@ model Consent {
   language  String?
   referer   String?
   createdAt DateTime @default(now())
-  
+
   @@index([ip])
   @@index([createdAt])
 }

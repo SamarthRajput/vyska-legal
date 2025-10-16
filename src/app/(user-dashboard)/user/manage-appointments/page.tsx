@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 
 type AppointmentStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
-
 interface Appointment {
   id: string;
   createdAt: string;
@@ -15,11 +14,39 @@ interface Appointment {
   userEmail: string;
   userPhone: string | null;
   agenda: string | null;
+  meetUrl: string | null;
   slotId: string;
+  noofrescheduled: number;
   userId: string | null;
   slot: Slots;
+  payment: AppointmentPayment | null;
+  appointmentType: AppointmentType | null;
 }
-
+interface AppointmentType {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  title: string;
+  description: string | null;
+  price: number;
+};
+interface AppointmentPayment {
+  status: "SUCCESS" | "PENDING" | "FAILED";
+  method: string | null;
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  description: string | null;
+  orderId: string;
+  paymentId: string | null;
+  signature: string | null;
+  amount: number;
+  currency: string;
+  paymentFor: "APPOINTMENT" | "SUBSCRIPTION";
+  serviceId: string | null;
+  appointmentId: string | null;
+};
 interface Slots {
   id: string;
   date: string;
@@ -90,12 +117,17 @@ const CancelConfirmationModal = ({
     tabIndex={-1}
   >
     <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm flex flex-col items-center">
-      <span className="text-red-600 text-2xl mb-2">⚠️</span>
-      <div className="text-red-700 font-semibold mb-4 text-center">
-        Are you sure you want to cancel this appointment?
+      <span className="text-red-600 text-3xl mb-2">⚠️</span>
+      <div className="text-red-700 font-bold mb-2 text-center text-lg">
+        Cancel Appointment
       </div>
-      <div className="mb-4 text-sm text-yellow-700 bg-yellow-100 rounded px-3 py-2 text-center">
-        <strong>Note:</strong> If you cancel, you will need to book a new appointment and our admin team will need to approve it again.
+      <div className="mb-3 text-sm text-gray-700 bg-yellow-100 rounded px-3 py-2 text-center border border-yellow-300">
+        <strong>Important:</strong> No refund will be provided if you cancel this appointment.<br />
+        <span className="text-blue-700 font-medium">You can reschedule instead if you wish to change your slot.</span>
+      </div>
+      <div className="mb-4 text-sm text-gray-800 text-center">
+        Are you sure you want to cancel this appointment? <br />
+        If you cancel, you will need to book a new appointment if you wish to see us later.
       </div>
       <div className="flex gap-2 w-full">
         <button
@@ -127,6 +159,7 @@ const BookAppointments = () => {
   const [showRescheduleModal, setShowRescheduleModal] = React.useState(false);
   const [showCancelModal, setShowCancelModal] = React.useState(false);
   const [cancelId, setCancelId] = React.useState<string | null>(null);
+  const [rescheduleCount, setRescheduleCount] = React.useState<number>(0); // Track reschedules left
   const router = useRouter();
 
   // Focus management for modals
@@ -233,8 +266,14 @@ const BookAppointments = () => {
   };
 
   const handleReschedule = async (appointmentId: string) => {
+    const appointment = appointments.find(a => a.id === appointmentId);
+    if (appointment && appointment.noofrescheduled > 2) {
+      toast.error("You have reached the maximum number of reschedules (2).");
+      return;
+    }
     setRescheduleId(appointmentId);
     setShowRescheduleModal(true);
+    setRescheduleCount(appointment ? 2 - appointment.noofrescheduled : 0);
     await fetchAvailableSlots();
   };
 
@@ -344,6 +383,9 @@ const BookAppointments = () => {
       {/* Appointments List */}
       {!loading && !error && (
         <>
+          {/* {/* <pre className="text-xs text-gray-500 mb-4"> */}
+          {/* {JSON.stringify(appointments)} */}
+          {/* </pre> */}
           {appointments.length === 0 ? (
             <div className="text-gray-500 text-center py-8">
               No appointments found.
@@ -352,6 +394,16 @@ const BookAppointments = () => {
             <ul className="space-y-4">
               {appointments.map((appointment) => {
                 const past = isPastAppointment(appointment.slot?.date, appointment.slot?.timeSlot);
+                const payment = appointment.payment;
+                // Determine if cancel/reschedule should be shown
+                const canModify =
+                  !past &&
+                  (
+                    !payment ||
+                    payment.status === "SUCCESS"
+                  );
+                const canReschedule = canModify && appointment.noofrescheduled <= 2;
+                const reschedulesLeft = 2 - appointment.noofrescheduled;
                 return (
                   <li
                     key={appointment.id}
@@ -406,29 +458,113 @@ const BookAppointments = () => {
                     {/* Agenda always on a new line with different bg color */}
                     {appointment.agenda && (
                       <div className="mt-2 px-3 py-2 rounded bg-blue-50 text-blue-800 text-sm w-fit">
-                        <span className="font-medium">Agenda:</span>{" "}
+                        <span className="font-medium">Message from user:</span>{" "}
                         {appointment.agenda}
                       </div>
                     )}
-                    {!past && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        <button
-                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm transition focus:outline-none focus:ring-2 focus:ring-red-300"
-                          onClick={() => handleCancelClick(appointment.id)}
-                          disabled={loading}
-                          title="Cancel this appointment"
+
+                    {/* Show Join Meeting button if meetUrl exists */}
+                    {appointment.meetUrl && (
+                      <div className="mt-2">
+                        <a
+                          href={appointment.meetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition text-sm font-medium"
+                          title="Join Meeting"
                         >
-                          Cancel
-                        </button>
-                        <button
-                          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-300"
-                          onClick={() => handleReschedule(appointment.id)}
-                          disabled={loading}
-                          title="Reschedule this appointment"
-                        >
-                          Reschedule
-                        </button>
+                          Join Meeting
+                        </a>
                       </div>
+                    )}
+
+                    {/* Payment Information */}
+                    <div className="mt-2 px-3 py-2 rounded bg-gray-50 text-gray-800 text-sm w-fit flex flex-col gap-1">
+                      <span className="font-medium">Payment Info:</span>
+                      {payment ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span>
+                            <span className="font-medium">Status:</span>{" "}
+                            <span
+                              className={
+                                payment.status === "SUCCESS"
+                                  ? "text-green-700"
+                                  : payment.status === "PENDING"
+                                    ? "text-yellow-700"
+                                    : "text-red-700"
+                              }
+                            >
+                              {payment.status.toLowerCase()}
+                            </span>
+                          </span>
+                          <span>
+                            <span className="font-medium">Amount:</span>{" "}
+                            {payment.amount} {payment.currency}
+                          </span>
+                          {payment.method && (
+                            <span>
+                              <span className="font-medium">Method:</span> {payment.method}
+                            </span>
+                          )}
+                          {payment.paymentId && (
+                            <span>
+                              <span className="font-medium">Payment ID:</span> {payment.paymentId}
+                            </span>
+                          )}
+                          {payment.orderId && (
+                            <span>
+                              <span className="font-medium">Order ID:</span> {payment.orderId}
+                            </span>
+                          )}
+                          {payment.description && (
+                            <span>
+                              <span className="font-medium">Description:</span> {payment.description}
+                            </span>
+                          )}
+                          <span>
+                            <span className="font-medium">Payment done :</span>{" "}
+                            {formatDate(payment.createdAt)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-red-700">No payment record</span>
+                      )}
+                    </div>
+
+                    {/* Cancel/Reschedule buttons */}
+                    {canModify && (
+                      <>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <button
+                            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm transition focus:outline-none focus:ring-2 focus:ring-red-300"
+                            onClick={() => handleCancelClick(appointment.id)}
+                            disabled={loading}
+                            title="Cancel this appointment"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            className={`px-3 py-1 rounded text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-300 border ${canReschedule
+                              ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-600"
+                              : "bg-gray-100 text-gray-400 border-gray-400 cursor-not-allowed"
+                              }`}
+                            onClick={() => canReschedule && handleReschedule(appointment.id)}
+                            disabled={loading || !canReschedule}
+                            title={
+                              canReschedule
+                                ? reschedulesLeft === 2
+                                  ? "You can reschedule this appointment up to 2 times."
+                                  : `You can reschedule this appointment ${reschedulesLeft} more time${reschedulesLeft === 1 ? "" : "s"}.`
+                                : "You have reached the maximum number of reschedules (2)."
+                            }
+                          >
+                            Reschedule
+                          </button>
+                        </div>
+                        <div className="mt-2 px-3 py-2 rounded bg-yellow-50 border border-yellow-200 text-yellow-900 text-xs font-medium w-fit">
+                          <span className="font-semibold text-red-600">Note:</span> No refund will be provided if you cancel. You can reschedule your appointment instead.
+                        </div>
+                      </>
                     )}
                   </li>
                 );
@@ -454,9 +590,17 @@ const BookAppointments = () => {
             <h3 className="text-lg font-bold mb-4 text-center">
               Select a new slot
             </h3>
-            {/* Note about status change */}
-            <div className="mb-4 text-sm text-yellow-700 bg-yellow-100 rounded px-3 py-2 text-center">
-              <strong>Note:</strong> If you reschedule, your approved appointment will change to <span className="font-semibold">pending</span> and our admin team will review it.
+            {rescheduleCount > 0 && (
+              <div className="mb-2 text-sm text-yellow-700 bg-yellow-100 rounded px-3 py-2 text-center">
+                <strong>Note:</strong> If you reschedule, your approved appointment will change to <span className="font-semibold">pending</span> and our admin team will review it.
+              </div>
+            )}
+            <div className="mb-4 text-sm text-blue-700 bg-blue-100 rounded px-3 py-2 text-center">
+              {rescheduleCount === 2 && "You can reschedule this appointment up to 2 times."}
+              {rescheduleCount === 1 && "You can reschedule this appointment 1 more time."}
+              {rescheduleCount === 0 && (
+                <span className="text-red-600">You have reached the maximum number of reschedules (2).</span>
+              )}
             </div>
             {loading ? (
               <div className="flex flex-col gap-2">
@@ -482,10 +626,15 @@ const BookAppointments = () => {
                       <span className="ml-2">{slot.timeSlot}</span>
                     </div>
                     <button
-                      className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition focus:outline-none focus:ring-2 focus:ring-green-300"
+                      className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition focus:outline-none focus:ring-2 focus:ring-green-300 disabled:bg-gray-300 disabled:text-gray-500"
                       onClick={() => handleConfirmReschedule(slot.id)}
-                      disabled={loading}
-                      title="Select this slot"
+                      disabled={loading || rescheduleCount === 0}
+                      title={
+                        rescheduleCount === 0
+                          ? "You have reached the maximum number of reschedules (2)."
+                          : "Select this slot"
+                      }
+                      style={rescheduleCount === 0 ? { cursor: "not-allowed" } : undefined}
                     >
                       Select
                     </button>

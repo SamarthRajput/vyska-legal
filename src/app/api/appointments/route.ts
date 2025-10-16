@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         }
         const appointments = await prisma.appointment.findMany({
             where: { userId: user.id },
-            include: { slot: true },
+            include: { slot: true, payment: true, appointmentType: true },
             orderBy: { slot: { date: "desc" } },
         });
 
@@ -116,6 +116,11 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: "You can only update your own appointments" }, { status: 403 });
         }
 
+        // Limit reschedules to 2 times
+        if (appointment.noofrescheduled >= 2) {
+            return NextResponse.json({ error: "Reschedule limit reached, you can only reschedule 2 times" }, { status: 400 });
+        }
+
         let updatedAppointment;
 
         // Change slot time if newSlotId is provided
@@ -134,7 +139,8 @@ export async function PATCH(request: NextRequest) {
                     where: { id: appointmentId },
                     data: {
                         slotId: newSlotId,
-                        status: "PENDING", // Reset status to PENDING on slot change
+                        status: "CONFIRMED",
+                        noofrescheduled: appointment.noofrescheduled + 1,
                         updatedAt: new Date(),
                     },
                 }),

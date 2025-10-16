@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { createGoogleMeetLink } from "@/utils/googleMeet";
 
 export async function POST(request: NextRequest) {
     try {
@@ -44,6 +45,38 @@ export async function POST(request: NextRequest) {
                 where: { payment: { id: payment.id } },
                 data: { status: "CONFIRMED" },
             });
+        });
+        // Create Calendar Event here and send email to user with details
+        const appointment = await prisma.appointment.findFirst({
+            where: { payment: { orderId: orderId } },
+            include: { slot: true, User: true, appointmentType: true },
+        });
+        if (!appointment) throw new Error("Appointment not found for this payment");
+
+        // Parse timeSlot "HH:MM-HH:MM" and combine with slot.date
+        const [startTimeStr, endTimeStr] = appointment.slot.timeSlot.split('-');
+        const slotDate = appointment.slot.date;
+        const [startHour, startMinute] = startTimeStr.split(':').map(Number);
+        const [endHour, endMinute] = endTimeStr.split(':').map(Number);
+
+        const startDateTime = new Date(slotDate);
+        startDateTime.setHours(startHour, startMinute, 0, 0);
+
+        const endDateTime = new Date(slotDate);
+        endDateTime.setHours(endHour, endMinute, 0, 0);
+
+        const eventLink = await createGoogleMeetLink(
+            appointment.appointmentType.title,
+            appointment.appointmentType.description || appointment.agenda || 'No Description',
+            startDateTime.toISOString(),
+            endDateTime.toISOString(),
+            appointment.User?.email || ''
+        );
+        console.log('Google Meet Link:', eventLink);
+        // Save meet link to appointment
+        await prisma.appointment.update({
+            where: { id: appointment.id },
+            data: { meetUrl: eventLink },
         });
         return NextResponse.json({
             success: true,
