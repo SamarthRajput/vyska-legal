@@ -237,3 +237,17 @@ model Transaction {
   rawData   Json // Full event payload (from Razorpay webhook)
   createdAt DateTime @default(now())
 }
+
+model Consent {
+  id        String   @id @default(cuid())
+  ip        String
+  consent   Boolean
+  timestamp DateTime
+  userAgent String?
+  language  String?
+  referer   String?
+  createdAt DateTime @default(now())
+  
+  @@index([ip])
+  @@index([createdAt])
+}
