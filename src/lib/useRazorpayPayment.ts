@@ -26,7 +26,7 @@ declare global {
 export function useRazorpayPayment() {
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const startPayment = async ({
+    const startPayment = ({
         paymentFor,
         serviceId,
         agenda,
@@ -35,114 +35,152 @@ export function useRazorpayPayment() {
         description,
         onSuccess,
         onError,
-    }: PaymentOptions) => {
-        try {
-            setIsProcessing(true);
+    }: PaymentOptions): Promise<any> => {
+        return new Promise(async (resolve, reject) => {
+            let settled = false;
+            const safeResolve = (val?: any) => { if (!settled) { settled = true; resolve(val); } };
+            const safeReject = (err?: any) => { if (!settled) { settled = true; reject(err); } };
 
-            // Create order on the server
-            const res = await fetch('/api/create-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    paymentFor,
-                    serviceId,
-                    agenda,
-                    slotId,
-                    appointmentTypeId,
-                    description,
-                }),
-            });
+            try {
+                setIsProcessing(true);
 
-            const data = await res.json();
-            if (!data.success) throw new Error(data.message || 'Order creation failed');
+                // Create order on the server
+                const res = await fetch('/api/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        paymentFor,
+                        serviceId,
+                        agenda,
+                        slotId,
+                        appointmentTypeId,
+                        description,
+                    }),
+                });
 
-            // Initialize Razorpay payment
-            // if (!window.Razorpay) throw new Error('Razorpay SDK not loaded');
-            const options = {
-                key: data.key,
-                amount: data.amount,
-                currency: data.currency,
-                name: 'Vyska Legal',
-                description: description || 'Payment',
-                order_id: data.orderId,
-                handler: async function (response: any) {
-                    try {
-                        // Verify payment on the server
-                        const verifyRes = await fetch('/api/verify-payment', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                orderId: response.razorpay_order_id,
-                                paymentId: response.razorpay_payment_id,
-                                signature: response.razorpay_signature,
-                            }),
-                        });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message || 'Order creation failed');
 
-                        const verifyData = await verifyRes.json();
-                        if (verifyData.success) {
-                            toast.success('Payment successful!');
-                            onSuccess?.(verifyData);
-                        } else {
-                            toast.error(verifyData.message);
-                            throw new Error(verifyData.message);
-                        }
-                    } catch (err) {
-                        console.error('Verification failed:', err);
-                        onError?.(err);
-                    }
-                }, modal: {
-                    ondismiss: async function () {
-                        // When user closes Razorpay without paying
-                        toast.info('Payment cancelled by user.');
+                const options = {
+                    key: data.key,
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: 'Vyska Legal',
+                    description: description || 'Payment',
+                    order_id: data.orderId,
+                    handler: async function (response: any) {
                         try {
-                            await fetch('/api/cancel-payment', {
+                            // Verify payment on the server
+                            const verifyRes = await fetch('/api/verify-payment', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                    orderId: data.orderId, reason: 'User closed the payment modal', metadata: {
-                                        paymentFor, serviceId, agenda, slotId, appointmentTypeId, description
-                                    }
+                                    orderId: response.razorpay_order_id,
+                                    paymentId: response.razorpay_payment_id,
+                                    signature: response.razorpay_signature,
                                 }),
                             });
+
+                            const verifyData = await verifyRes.json();
+                            if (verifyData.success) {
+                                toast.success('Payment successful!');
+                                onSuccess?.(verifyData);
+                                safeResolve(verifyData);
+                            } else {
+                                const err = new Error(verifyData.message || 'Verification failed');
+                                toast.error(verifyData.message || 'Verification failed');
+                                onError?.(err);
+                                safeReject(err);
+                            }
                         } catch (err) {
-                            console.error('Error cancelling payment:', err);
+                            console.error('Verification failed:', err);
+                            onError?.(err);
+                            safeReject(err);
                         }
+                    }, modal: {
+                        ondismiss: async function () {
+                            // When user closes Razorpay without paying
+                            const err = new Error('Payment cancelled by user');
+                            // toast.info('Payment cancelled by user.');
+
+                            // Notify consumer via callback
+                            try { onError?.(err); } catch (e) { /* swallow */ }
+
+                            // Reject the startPayment promise so callers can await and react
+                            safeReject(err);
+
+                            // Dispatch a window event for any other listeners in the app
+                            try {
+                                window.dispatchEvent(new CustomEvent('razorpay-payment-cancelled', {
+                                    detail: {
+                                        orderId: data.orderId,
+                                        reason: 'User closed the payment modal',
+                                        metadata: { paymentFor, serviceId, agenda, slotId, appointmentTypeId, description },
+                                    },
+                                }));
+                            } catch (e) {
+                                console.error('Event dispatch failed:', e);
+                            }
+
+                            // Inform server about cancellation to free the slots
+                            try {
+                                await fetch('/api/cancel-payment', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        orderId: data.orderId,
+                                        reason: 'User closed the payment modal',
+                                        metadata: { paymentFor, serviceId, agenda, slotId, appointmentTypeId, description },
+                                    }),
+                                });
+                            } catch (err) {
+                                console.error('Error cancelling payment:', err);
+                            } finally {
+                                setIsProcessing(false);
+                            }
+                        },
                     },
-                },
-                theme: { color: '#2563eb' },
-            };
+                    theme: { color: '#2563eb' },
+                };
 
-            const razor = new window.Razorpay(options);
-            razor.on('payment.failed', async function (response: any) {
-                toast.error('Payment failed. Please try again.');
-                const { code, description, reason, source, step, metadata } = response.error;
-                toast.error(`Payment failed`, {
-                    description: `Error Code: ${code} ${description || reason || 'Payment failed'}`,
-                });
-                try {
-                    await fetch('/api/cancel-payment', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            orderId: response.error.metadata.order_id,
-                            reason: description || reason || 'Payment failed',
-                            metadata,
-                        }),
+                const razor = new window.Razorpay(options);
+                razor.on('payment.failed', async function (response: any) {
+                    const { code, description, reason, metadata } = response.error || {};
+                    toast.error('Payment failed. Please try again.');
+                    toast.error(`Payment failed`, {
+                        description: `Error Code: ${code} ${description || reason || 'Payment failed'}`,
                     });
-                } catch (err) {
-                    console.error('Error reporting failed payment:', err);
-                }
 
-                onError?.(new Error(response.error.description || 'Payment failed'));
-            });
+                    const err = new Error(response.error?.description || description || reason || 'Payment failed');
+                    try {
+                        await fetch('/api/cancel-payment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                orderId: response.error?.metadata?.order_id || data.orderId,
+                                reason: description || reason || 'Payment failed',
+                                metadata,
+                            }),
+                        });
+                    } catch (err2) {
+                        console.error('Error reporting failed payment:', err2);
+                    }
 
-            razor.open();
-        } catch (error) {
-            console.error('Payment Error:', error);
-            onError?.(error instanceof Error ? error : new Error('Payment failed'));
-        } finally {
-            setIsProcessing(false);
-        }
+                    onError?.(err);
+                    safeReject(err);
+                });
+
+                razor.open();
+            } catch (error) {
+                console.error('Payment Error:', error);
+                const err = error instanceof Error ? error : new Error('Payment failed');
+                onError?.(err);
+                safeReject(err);
+            } finally {
+                // If not settled already (e.g., ondismiss handled it), clear processing state
+                if (!settled) setIsProcessing(false);
+            }
+        });
     };
 
     return { startPayment, isProcessing };
