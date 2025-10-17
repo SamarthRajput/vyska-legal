@@ -1,181 +1,160 @@
-/* eslint-disable @next/next/no-img-element */
-'use client'
-
 import Link from 'next/link'
-import { SignedIn, SignedOut, SignInButton, SignOutButton, useUser } from '@clerk/nextjs'
-import { Facebook, Instagram, Linkedin, Twitter, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { ArrowUp, Plus } from 'lucide-react'
+import { Instagram, Linkedin } from 'lucide-react'
 
 export default function Footer() {
-    const { user } = useUser()
-    const [showScroll, setShowScroll] = useState(false)
-    const [dialogOpen, setDialogOpen] = useState(false)
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setShowScroll(window.scrollY > 100)
-        }
-        window.addEventListener('scroll', handleScroll)
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
-
-    const handleFabClick = () => {
-        if (showScroll) {
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-        } else {
-            setDialogOpen(true)
-        }
-    }
-
     return (
-        <>
-            <footer className="bg-white border-t border-gray-200 shadow-inner mt-10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                        {/* Logo and Description */}
+        <footer className="bg-gray-50 border-t-4 border-blue-600">
+            <div className="h-1 bg-blue-600"></div>
+
+            <div className="bg-gray-50 py-12 md:py-16 lg:py-20 px-6 sm:px-8 md:px-12 lg:px-16">
+                <div className="max-w-7xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
                         <div>
-                            <Link href="/" className="flex items-center space-x-2" aria-label="Vyska Legal Home">
-                                <span className="text-2xl font-extrabold text-blue-700 tracking-tight">Vyska</span>
-                                <span className="text-xl font-semibold text-gray-700">Legal</span>
-                            </Link>
-                            <p className="mt-3 text-gray-600 text-sm">
-                                Simplifying legal solutions with technology and expertise. Your trusted legal partner.
+                            <h3 className="text-2xl sm:text-3xl font-bold text-blue-700 mb-3">
+                                Vyska Legal
+                            </h3>
+                            <p className="text-gray-700 text-base mb-6">
+                                Guiding you through life's legal turns
                             </p>
+                            <div className="flex items-center gap-4">
+                                <Link 
+                                    href="https://instagram.com" 
+                                    target="_blank"
+                                    className="hover:opacity-70 transition-opacity"
+                                    aria-label="Instagram"
+                                >
+                                    <Instagram className="w-6 h-6 text-gray-900" />
+                                </Link>
+                                <Link 
+                                    href="https://linkedin.com" 
+                                    target="_blank"
+                                    className="hover:opacity-70 transition-opacity"
+                                    aria-label="LinkedIn"
+                                >
+                                    <Linkedin className="w-6 h-6 text-gray-900" />
+                                </Link>
+                                <Link 
+                                    href="https://twitter.com" 
+                                    target="_blank"
+                                    className="hover:opacity-70 transition-opacity"
+                                    aria-label="Twitter"
+                                >
+                                    <svg className="w-6 h-6 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                    </svg>
+                                </Link>
+                            </div>
                         </div>
 
-                        {/* Quick Links */}
                         <div>
-                            <h3 className="text-gray-900 font-semibold mb-3">Quick Links</h3>
-                            <ul className="space-y-2 text-sm">
-                                <li><Link href="/" className="text-gray-700 hover:text-blue-700 transition-colors">Home</Link></li>
-                                <li><Link href="/about" className="text-gray-700 hover:text-blue-700 transition-colors">About</Link></li>
-                                <li><Link href="/services" className="text-gray-700 hover:text-blue-700 transition-colors">Services</Link></li>
-                                <li><Link href="/blogs" className="text-gray-700 hover:text-blue-700 transition-colors">Blog</Link></li>
-                                <li><Link href="/contact" className="text-gray-700 hover:text-blue-700 transition-colors">Contact</Link></li>
+                            <h4 className="text-lg font-bold text-gray-900 mb-4">
+                                Quick Links
+                            </h4>
+                            <ul className="space-y-3">
+                                <li>
+                                    <Link href="/services" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                        Services
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                        About us
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/blogs" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                        Blogs
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/faq" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                        FAQ
+                                    </Link>
+                                </li>
                             </ul>
                         </div>
 
-                        {/* User Section */}
                         <div>
-                            <h3 className="text-gray-900 font-semibold mb-3">Account</h3>
-                            <SignedOut>
-                                <SignInButton>
-                                    <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium shadow">
-                                        Login
-                                    </button>
-                                </SignInButton>
-                            </SignedOut>
-                            <SignedIn>
-                                <div className="flex items-center space-x-3">
-                                    {user?.imageUrl && (
-                                        <img
-                                            src={user.imageUrl}
-                                            alt={user.firstName || 'User'}
-                                            className="w-8 h-8 rounded-full border border-gray-300"
-                                        />
-                                    )}
-                                    <div>
-                                        <p className="text-gray-700 text-sm font-medium">{user?.firstName || 'User'}</p>
-                                        <SignOutButton>
-                                            <button className="text-red-600 hover:text-red-800 text-xs font-medium mt-1">
-                                                Logout
-                                            </button>
-                                        </SignOutButton>
-                                    </div>
-                                </div>
-                            </SignedIn>
+                            <h4 className="text-lg font-bold text-gray-900 mb-4">
+                                Legal & compliance
+                            </h4>
+                            <ul className="space-y-3">
+                                <li>
+                                    <Link href="/privacy" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                        Privacy policy
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/terms" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                        Terms & services
+                                    </Link>
+                                </li>
+                            </ul>
                         </div>
 
-                        {/* Social Media */}
                         <div>
-                            <h3 className="text-gray-900 font-semibold mb-3">Follow Us</h3>
-                            <div className="flex space-x-4">
-                                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
-                                    <Linkedin className="w-6 h-6 text-gray-700 hover:text-blue-700" />
-                                </a>
-                                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
-                                    <Twitter className="w-6 h-6 text-gray-700 hover:text-blue-700" />
-                                </a>
-                                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                                    <Facebook className="w-6 h-6 text-gray-700 hover:text-blue-700" />
-                                </a>
-                                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                                    <Instagram className="w-6 h-6 text-gray-700 hover:text-blue-700" />
-                                </a>
+                            <h4 className="text-lg font-bold text-gray-900 mb-4">
+                                Get in touch
+                            </h4>
+                            <ul className="space-y-3">
+                                <li>
+                                    <a 
+                                        href="mailto:service@vyskalegal.com" 
+                                        className="text-gray-700 hover:text-blue-600 transition-colors"
+                                    >
+                                        service@vyskalegal.com
+                                    </a>
+                                </li>
+                                <li>
+                                    <a 
+                                        href="tel:+918382XXXXXX" 
+                                        className="text-gray-700 hover:text-blue-600 transition-colors"
+                                    >
+                                        91+ 8382XXXXXX
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="relative w-full h-[200px] sm:h-[250px] md:h-[300px]">
+                <iframe
+                    title="Vyska Legal Office Location"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.2219901290355!2d-74.00369368400567!3d40.71312937933019!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25a316e2f4d69%3A0x6d4b5e9a7fcbe08d!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sin!4v1697543210000!5m2!1sen!2sin"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="w-full h-full"
+                />
+            </div>
+
+            <div className="bg-gray-100 py-6 px-6 sm:px-8 md:px-12 lg:px-16">
+                <div className="max-w-7xl mx-auto">
+                    <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                        <div>
+                            <h5 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                                Visit us today !
+                            </h5>
+                        </div>
+                        <div className="flex flex-col gap-2 text-sm md:text-base text-gray-700">
+                            <div>
+                                <span className="font-semibold">Offices at:</span> New Delhi, Mumbai, Pune, Noida, Lucknow and Prayagraj
+                            </div>
+                            <div>
+                                <span className="font-semibold">Working hours:</span> 12:00 PM - 08:00 PM
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    {/* Footer Bottom */}
-                    <div className="border-t border-gray-200 mt-8 pt-4 flex flex-col md:flex-row items-center justify-between text-sm text-gray-600">
-                        <p>© {new Date().getFullYear()} Vyska Legal. All rights reserved.</p>
-                        <div className="mt-2 md:mt-0 space-x-4">
-                            <Link href="/privacy" className="hover:text-blue-700">Privacy Policy</Link>
-                            <Link href="/terms" className="hover:text-blue-700">Terms of Service</Link>
-                        </div>
-                    </div>
-                </div>
-            </footer>
-            {/* Floating Action Button */}
-            <button
-                onClick={handleFabClick}
-                className="fixed z-50 bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg w-14 h-14 flex items-center justify-center transition-colors"
-                aria-label={showScroll ? "Scroll to top" : "Open actions"}
-            >
-                {showScroll ? <ArrowUp className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-            </button>
-            {/* Dialog */}
-            {dialogOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-lg shadow-lg p-6 min-w-[300px] relative">
-                        {/* a cross button at top right corner in this dialog box */}
-                        <button
-                            className="absolute top-2 right-3 text-gray-400 hover:text-gray-700 text-xl"
-                            onClick={() => setDialogOpen(false)}
-                            aria-label="Close dialog"
-                        >
-                            <X className='w-5 h-5' />
-                        </button>
-                        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-                        <ul className="space-y-3">
-                            <li>
-                                <button
-                                    className="w-full text-left px-4 py-2 rounded hover:bg-blue-50 text-blue-700 font-medium"
-                                    onClick={() => {
-                                        setDialogOpen(false);
-                                        window.location.href = '/blogs/write';
-                                    }}
-                                >
-                                    Write a Blog
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    className="w-full text-left px-4 py-2 rounded hover:bg-blue-50 text-blue-700 font-medium"
-                                    onClick={() => {
-                                        setDialogOpen(false);
-                                        window.location.href = '/research/write';
-                                    }}
-                                >
-                                    Write a Research
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    className="w-full text-left px-4 py-2 rounded hover:bg-blue-50 text-blue-700 font-medium"
-                                    onClick={() => {
-                                        setDialogOpen(false);
-                                        window.location.href = user?.publicMetadata?.role === 'ADMIN' ? '/admin/dashboard' : '/dashboard';
-                                    }}
-                                >
-                                    Manage Dashboard
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            )}
-        </>
+
+            <div className="h-2 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></div>
+        </footer>
     )
 }
