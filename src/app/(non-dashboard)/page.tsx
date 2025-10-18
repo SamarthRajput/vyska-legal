@@ -135,7 +135,7 @@ const Homepage = () => {
   }, [])
 
   return (
-    <div>
+    <div className='overflow-x-hidden'>
       <div ref={heroRef}>
         <HeroCarousel />
       </div>
