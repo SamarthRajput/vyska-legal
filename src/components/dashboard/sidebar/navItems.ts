@@ -99,6 +99,12 @@ export const adminNavItems = [
     icon: Bookmark,
   },
   {
+    title: 'Transactions Logs',
+    description: 'View and manage all payment transactions made on the platform.',
+    href: '/admin/transactions',
+    icon: BarChart3,
+  },
+  {
     title: "Contact Us Messages",
     description: "View and respond to messages submitted via the Contact Us form.",
     href: "/admin/contact-us",
