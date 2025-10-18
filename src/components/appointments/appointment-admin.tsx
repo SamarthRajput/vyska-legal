@@ -2,7 +2,6 @@
 "use client"
 
 import * as React from "react"
-import { mutate } from "swr"
 import { format, startOfWeek } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -11,14 +10,6 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "@/components/ui/dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Spinner } from "@/components/ui/spinner"
@@ -90,8 +81,6 @@ function TableSkeletonRows({ rows = 5, cols = 6 }: { rows?: number; cols?: numbe
 export default function AppointmentAdmin() {
     const [data, setData] = React.useState<{ slots: AppointmentSlot[] }>({ slots: [] })
     const [isLoading, setIsLoading] = React.useState(true)
-    const [deletingId, setDeletingId] = React.useState<string | null>(null)
-    const [insertingId, setInsertingId] = React.useState<string | null>(null)
     const [startDate, setStartDate] = React.useState("")
     const [endDate, setEndDate] = React.useState("")
     const [duration, setDuration] = React.useState<number>(30)
@@ -104,12 +93,8 @@ export default function AppointmentAdmin() {
     const [selectedRows, setSelectedRows] = React.useState<Set<string>>(new Set())
     const [whenFilter, setWhenFilter] = React.useState<"all" | "upcoming" | "past">("all")
     const [pagination, setPagination] = React.useState({ page: 1, limit: 50, total: 0 })
-    const [bookingSlot, setBookingSlot] = React.useState<AppointmentSlot | null>(null)
-    const [userName, setUserName] = React.useState("")
-    const [userEmail, setUserEmail] = React.useState("")
-    const [userPhone, setUserPhone] = React.useState("")
-    const [agenda, setAgenda] = React.useState<string | null>(null)
     const [actionLoading, setActionLoading] = React.useState(false)
+    const [deletingId, setDeletingId] = React.useState<string | null>(null)
 
     const fetchData = async () => {
         setIsLoading(true)
@@ -225,108 +210,9 @@ export default function AppointmentAdmin() {
         }
     }
 
-    const bookNow = async () => {
-        if (!bookingSlot || !userName || !userEmail) {
-            toast.error("Missing info", {
-                description: "Name and email are required.",
-            })
-            return
-        }
-        setActionLoading(true)
-        try {
-            const res = await fetch("/api/admin/appointments", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    agenda,
-                    userName,
-                    userEmail,
-                    userPhone,
-                    slotId: bookingSlot.id,
-                }),
-            })
-            const data = await res.json()
-            setActionLoading(false)
-            if (res.ok) {
-                toast.success("Booked", {
-                    description: "Appointment booked successfully.",
-                })
-                setBookingSlot(null)
-                setAgenda(null)
-                setUserName("")
-                setUserEmail("")
-                setUserPhone("")
-                mutate("/api/admin/slots")
-            } else {
-                toast.error("Booking failed", {
-                    description: data.error || "Server error",
-                })
-            }
-        } catch (error: any) {
-            setActionLoading(false)
-            toast.error("Booking failed", {
-                description: error?.message || "Server error",
-            })
-        }
-    }
 
-    const cancelAppointment = async (id: string) => {
-        setActionLoading(true)
-        try {
-            const res = await fetch(`/api/admin/appointments?id=${id}`, { method: "DELETE" })
-            const data = await res.json()
-            setActionLoading(false)
-            if (res.ok) {
-                toast.success("Cancelled", {
-                    description: "Appointment cancelled.",
-                })
-                mutate("/api/admin/slots")
-            } else {
-                toast.error("Cancel failed", {
-                    description: data.error || "Server error",
-                })
-            }
-        } catch (error: any) {
-            setActionLoading(false)
-            toast.error("Cancel failed", {
-                description: error?.message || "Server error",
-            })
-        }
-    }
 
-    const updateStatus = async (id: string, status: AppointmentStatus, reason?: string) => {
-        setActionLoading(true)
-        try {
-            const res = await fetch(`/api/admin/appointments`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ appointmentId: id, status, reason }),
-            })
-            const data = await res.json()
-            setActionLoading(false)
-            if (res.ok) {
-                toast.success("Updated", {
-                    description: "Appointment updated successfully.",
-                })
-                if (status === "CANCELLED") {
-                    toast.info("Cancelled Reason", {
-                        description: `Reason: ${reason || "No reason provided"}`,
-                        duration: 5000,
-                    })
-                }
-                mutate("/api/admin/slots")
-            } else {
-                toast.error("Update failed", {
-                    description: data.error || "Server error",
-                })
-            }
-        } catch (error: any) {
-            setActionLoading(false)
-            toast.error("Update failed", {
-                description: error?.message || "Server error",
-            })
-        }
-    }
+
 
     const toggleRow = (id: string) => {
         const slot = byId.get(id)
@@ -673,94 +559,53 @@ export default function AppointmentAdmin() {
                                                             </div>
                                                         </TableCell>
                                                     </TableRow>
-                                                    {g.items.map((slot) => (
-                                                        <TableRow key={slot.id} className="transition-opacity duration-300 hover:bg-muted/40">
-                                                            <TableCell>
-                                                                <Checkbox
-                                                                    checked={selectedRows.has(slot.id)}
-                                                                    onCheckedChange={() => toggleRow(slot.id)}
-                                                                    disabled={slot.isBooked}
-                                                                />
-                                                            </TableCell>
-                                                            <TableCell title={format(new Date(slot.date), "PPP")}>{format(new Date(slot.date), "PPP")}</TableCell>
-                                                            <TableCell title={slot.timeSlot}>{slot.timeSlot}</TableCell>
-                                                            <TableCell>
-                                                                {slot.isBooked
-                                                                    ? <Badge variant="default">Yes</Badge>
-                                                                    : <Badge variant="outline">No</Badge>
-                                                                }
-                                                            </TableCell>
-                                                            <TableCell className="hidden md:table-cell max-w-[360px]">
-                                                                {slot.Appointment.length > 0 ? (
-                                                                    <div className="flex flex-wrap gap-1 sm:gap-2">
-                                                                        {slot.Appointment.map((a) => (
-                                                                            <Badge
-                                                                                key={a.id}
-                                                                                variant="secondary"
-                                                                                className="font-normal"
+                                                    {g.items.map((slot) => {
+                                                        const confirmed = slot.Appointment.filter((a) => a.status?.toLowerCase() === "confirmed")
+                                                        return (
+                                                            <TableRow key={slot.id} className="transition-opacity duration-300 hover:bg-muted/40">
+                                                                <TableCell>
+                                                                    <Checkbox
+                                                                        checked={selectedRows.has(slot.id)}
+                                                                        onCheckedChange={() => toggleRow(slot.id)}
+                                                                        disabled={slot.isBooked}
+                                                                    />
+                                                                </TableCell>
+                                                                <TableCell title={format(new Date(slot.date), "PPP")}>{format(new Date(slot.date), "PPP")}</TableCell>
+                                                                <TableCell title={slot.timeSlot}>{slot.timeSlot}</TableCell>
+                                                                <TableCell>
+                                                                    {slot.isBooked ? <Badge variant="default">Yes</Badge> : <Badge variant="outline">No</Badge>}
+                                                                </TableCell>
+                                                                <TableCell className="hidden md:table-cell max-w-[360px]">
+                                                                    {confirmed.length > 0 ? (
+                                                                        <div className="flex flex-wrap gap-1 sm:gap-2">
+                                                                            {confirmed.map((a) => (
+                                                                                <Badge key={a.id} variant="secondary" className="font-normal">
+                                                                                    {a.userName} · {a.status.toLowerCase()}
+                                                                                </Badge>
+                                                                            ))}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-muted-foreground">—</span>
+                                                                    )}
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
+                                                                    {!slot.isBooked && (
+                                                                        <div className="flex flex-col sm:flex-row justify-end gap-1 sm:gap-2">
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="destructive"
+                                                                                onClick={() => deleteSlot(slot.id)}
+                                                                                disabled={actionLoading || slot.isBooked}
+                                                                                className="transition-colors hover:bg-destructive/80"
                                                                             >
-                                                                                {a.userName} · {a.status.toLowerCase()}
-                                                                            </Badge>
-                                                                        ))}
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-muted-foreground">—</span>
-                                                                )}
-                                                            </TableCell>
-                                                            <TableCell className="text-right">
-                                                                {!slot.isBooked ? (
-                                                                    <div className="flex flex-col sm:flex-row justify-end gap-1 sm:gap-2">
-                                                                        <Button
-                                                                            size="sm"
-                                                                            onClick={() => setBookingSlot(slot)}
-                                                                            disabled={actionLoading}
-                                                                            className="transition-colors hover:bg-primary/80"
-                                                                        >
-                                                                            Book
-                                                                        </Button>
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="destructive"
-                                                                            onClick={() => deleteSlot(slot.id)}
-                                                                            disabled={actionLoading}
-                                                                            className="transition-colors hover:bg-destructive/80"
-                                                                        >
-                                                                            Delete
-                                                                        </Button>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="flex flex-col sm:flex-row justify-end gap-1 sm:gap-2">
-                                                                        {slot.Appointment.map((a) => (
-                                                                            <div key={a.id} className="flex items-center gap-1 sm:gap-2">
-                                                                                <Select
-                                                                                    value={a.status}
-                                                                                    onValueChange={(v) => updateStatus(a.id, v as AppointmentStatus)}
-                                                                                >
-                                                                                    <SelectTrigger className="h-8 w-[130px]">
-                                                                                        <SelectValue />
-                                                                                    </SelectTrigger>
-                                                                                    <SelectContent>
-                                                                                        <SelectItem value="PENDING">Pending</SelectItem>
-                                                                                        <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                                                                                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                                                                                    </SelectContent>
-                                                                                </Select>
-                                                                                <Button
-                                                                                    variant="destructive"
-                                                                                    size="sm"
-                                                                                    onClick={() => cancelAppointment(a.id)}
-                                                                                    disabled={actionLoading}
-                                                                                    className="transition-colors hover:bg-destructive/80"
-                                                                                >
-                                                                                    Cancel
-                                                                                </Button>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
+                                                                                Delete
+                                                                            </Button>
+                                                                        </div>
+                                                                    )}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        )
+                                                    })}
                                                 </React.Fragment>
                                             ))
                                         )}
@@ -781,73 +626,6 @@ export default function AppointmentAdmin() {
                                 />
                             </div>
                         </div>
-                        {bookingSlot && (
-                            <div className="fixed inset-0 bg-black/20 backdrop-blur-md z-40">
-                                <Dialog open={!!bookingSlot} onOpenChange={(open) => !open && setBookingSlot(null)}>
-                                    <DialogContent className="max-w-[95vw] sm:max-w-lg">
-                                        <DialogHeader>
-                                            <DialogTitle>Book appointment</DialogTitle>
-                                            <DialogDescription>
-                                                {bookingSlot ? `${format(new Date(bookingSlot.date), "PPP")} · ${bookingSlot.timeSlot}` : ""}
-                                            </DialogDescription>
-                                        </DialogHeader>
-
-                                        <div className="grid gap-2 sm:gap-3">
-                                            <div className="space-y-1">
-                                                <Label htmlFor="name">Name</Label>
-                                                <Input
-                                                    id="name"
-                                                    value={userName}
-                                                    onChange={(e) => setUserName(e.target.value)}
-                                                    placeholder="Jane Doe"
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label htmlFor="email">Email</Label>
-                                                <Input
-                                                    id="email"
-                                                    type="email"
-                                                    value={userEmail}
-                                                    onChange={(e) => setUserEmail(e.target.value)}
-                                                    placeholder="jane@example.com"
-                                                />
-                                                <div className="mb-2 text-xs text-muted-foreground">
-                                                    An email confirmation will be sent to the user.
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label htmlFor="agenda">Agenda</Label>
-                                                <Input
-                                                    id="agenda"
-                                                    value={agenda ?? ""}
-                                                    onChange={(e) => setAgenda(e.target.value)}
-                                                    placeholder="Enter agenda"
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label htmlFor="phone">Phone (optional)</Label>
-                                                <Input
-                                                    id="phone"
-                                                    value={userPhone}
-                                                    onChange={(e) => setUserPhone(e.target.value)}
-                                                    placeholder="+1 555 555 5555"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <DialogFooter className="gap-2 flex flex-col-reverse sm:flex-row sm:justify-end">
-                                            <Button variant="ghost" onClick={() => setBookingSlot(null)}>
-                                                Close
-                                            </Button>
-                                            <Button onClick={bookNow} disabled={actionLoading}>
-                                                {actionLoading ? <Spinner className="w-4 h-4 mr-2" /> : null}
-                                                {actionLoading ? "Booking..." : "Book now"}
-                                            </Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
-                            </div>
-                        )}
                     </div>
                 </CardContent>
             </Card>
