@@ -110,28 +110,6 @@ export default function ResearchDetailPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this research paper?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/admin/research/${params.id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        alert('Research paper deleted successfully');
-        router.push('/research');
-      } else {
-        alert('Failed to delete research paper');
-      }
-    } catch (error) {
-      console.error('Error deleting research:', error);
-      alert('Failed to delete research paper');
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -242,15 +220,6 @@ export default function ResearchDetailPage() {
                 />
               </svg>
               {showPreview ? 'Hide Preview' : 'Preview PDF'}
-            </button>
-          )}
-
-          {isAdmin && (
-            <button
-              onClick={handleDelete}
-              className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700"
-            >
-              Delete
             </button>
           )}
         </div>
