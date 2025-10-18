@@ -93,6 +93,12 @@ export const adminNavItems = [
     icon: MessageSquareWarning,
   },
   {
+    title: "Appointment Type Management",
+    description: "Create, update, and manage appointment types.",
+    href: "/admin/appointment-types",
+    icon: Bookmark,
+  },
+  {
     title: "Contact Us Messages",
     description: "View and respond to messages submitted via the Contact Us form.",
     href: "/admin/contact-us",

@@ -137,7 +137,7 @@ export default function BookAppointmentsPage() {
     React.useEffect(() => {
         const fetchAppointmentTypes = async () => {
             try {
-                const res = await fetch("/api/appointment-type");
+                const res = await fetch("/api/appointment-type?activeOnly=true");
                 const data = await res.json();
                 if (res.ok && data.appointmentTypes && data.appointmentTypes.length > 0) {
                     setAppointmentType(data.appointmentTypes);
