@@ -1,12 +1,11 @@
 'use client';
 import { useRazorpayPayment } from '@/lib/useRazorpayPayment';
 
-export default function ServicePayButton({ serviceId, amount, description, className }: { serviceId: string, amount: number, description: string, className?: string }) {
+export default function ServicePayButton({ serviceId, description, className }: { serviceId: string, description: string, className?: string }) {
     const { startPayment, isProcessing } = useRazorpayPayment();
 
     const handlePay = () => {
         startPayment({
-            amount,
             paymentFor: 'SERVICE',
             serviceId,
             description,
