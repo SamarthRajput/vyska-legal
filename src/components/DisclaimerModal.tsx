@@ -5,7 +5,6 @@ export default function DisclaimerModal() {
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // add refs for focus management
   const modalRef = useRef<HTMLDivElement | null>(null);
   const acceptButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -39,32 +38,29 @@ export default function DisclaimerModal() {
     checkConsent();
   }, []);
 
-  // --- NEW: ensure mobile viewport meta exists so mobile browsers don't auto-zoom ---
+  // Ensure mobile viewport meta exists
   useEffect(() => {
     if (typeof document === 'undefined') return;
     let meta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
     if (!meta) {
       meta = document.createElement('meta');
       meta.name = 'viewport';
-      meta.content = 'width=device-width, initial-scale=1';
+      meta.content = 'width=device-width, initial-scale=1, maximum-scale=5';
       document.head.appendChild(meta);
     } else {
-      // ensure it contains width=device-width; keep other parts if present
       if (!/width=device-width/.test(meta.content)) {
-        meta.content = 'width=device-width, initial-scale=1';
+        meta.content = 'width=device-width, initial-scale=1, maximum-scale=5';
       }
     }
   }, []);
-  // --- end new effect ---
 
-  // manage focus trapping, keyboard (Escape) and body scroll when modal open
+  // Focus trap and keyboard management
   useEffect(() => {
     if (!showModal) return;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
-    // focus the primary action
     setTimeout(() => acceptButtonRef.current?.focus(), 0);
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -72,7 +68,6 @@ export default function DisclaimerModal() {
         e.preventDefault();
         handleDeny();
       } else if (e.key === 'Tab') {
-        // simple focus trap
         const container = modalRef.current;
         if (!container) return;
         const focusable = Array.from(
@@ -137,105 +132,206 @@ export default function DisclaimerModal() {
 
   return (
     <div
-      // responsive: bottom-sheet on small, centered on larger screens
-      // add horizontal padding on mobile (px-4) so modal never touches edges,
-      // hide horizontal overflow to prevent scrolling caused by shadows/borders
-      className="fixed inset-0 backdrop-blur-sm bg-white/30 dark:bg-black/30 flex items-end sm:items-center justify-center z-50 px-4 sm:p-4 overflow-x-hidden animate-in fade-in duration-300"
+      // Mobile: full screen with safe area, Tablet+: centered overlay
+      className="fixed inset-0 backdrop-blur-sm bg-white/30 dark:bg-black/30 
+                 flex items-end sm:items-center justify-center z-50 
+                 p-0 sm:p-4 md:p-6 lg:p-8
+                 overflow-x-hidden overflow-y-auto
+                 animate-in fade-in duration-300"
       aria-hidden={false}
+      onClick={(e) => {
+        // Close on backdrop click (desktop only for better UX)
+        if (e.target === e.currentTarget && window.innerWidth >= 640) {
+          handleDeny();
+        }
+      }}
     >
       <div
-        // role + aria for accessibility; ref for focus trap
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="disclaimer-title"
-        // ensure modal fills available width within backdrop padding (w-full),
-        // but cap to a mobile-friendly max (420px) and keep desktop max width
-        // prevent horizontal overflow while allowing vertical scrolling
-        // added min-w-0 to avoid flex children forcing an overflow on small screens
-        className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-[420px] sm:max-w-lg mx-auto box-border min-w-0 max-h-[90vh] overflow-y-auto overflow-x-hidden p-6 sm:p-8 border border-gray-200 dark:border-gray-700 animate-in zoom-in-95 duration-300"
+        // Responsive width: full on mobile, constrained on larger screens
+        // Mobile: bottom sheet, Tablet+: centered card
+        className="bg-white dark:bg-gray-900 
+                   w-full sm:w-[90vw] md:w-[600px] lg:w-[650px] xl:w-[700px]
+                   max-w-full sm:max-w-[95vw] md:max-w-[90vw] lg:max-w-4xl
+                   max-h-[90vh] sm:max-h-[85vh] md:max-h-[80vh]
+                   overflow-y-auto overflow-x-hidden
+                   rounded-t-3xl sm:rounded-2xl md:rounded-3xl
+                   shadow-2xl
+                   mx-0 sm:mx-auto
+                   box-border min-w-0
+                   border-t-4 sm:border sm:border-gray-200 dark:sm:border-gray-700
+                   border-blue-500 dark:border-blue-400
+                   animate-in zoom-in-95 sm:zoom-in-100 duration-300
+                   safe-bottom"
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* small-screen close button */}
-        <div className="flex items-start justify-between mb-2">
-          <div className="w-0" />
-          <button
-            onClick={handleDeny}
-            aria-label="Close disclaimer"
-            className="sm:hidden text-gray-500 dark:text-gray-300 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="flex justify-center mb-6">
-          <div className="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-full">
-            <svg
-              className="w-8 h-8 text-blue-600 dark:text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        {/* Content wrapper with responsive padding */}
+        <div className="p-5 xs:p-6 sm:p-7 md:p-8 lg:p-10">
+          
+          {/* Close button - visible on all screens, positioned better */}
+          <div className="flex items-start justify-between mb-3 sm:mb-4 -mt-1">
+            <div className="w-0" />
+            <button
+              onClick={handleDeny}
+              aria-label="Close disclaimer"
+              disabled={isSubmitting}
+              className="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200
+                         p-2 -mr-2 rounded-lg
+                         hover:bg-gray-100 dark:hover:bg-gray-800
+                         transition-colors duration-200
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         touch-manipulation"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-              />
-            </svg>
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-        </div>
 
-        <h2 id="disclaimer-title" className="text-2xl sm:text-3xl font-bold text-center mb-4 text-gray-900 dark:text-white">
-          Welcome to Vyska Legal
-        </h2>
+          {/* Icon - responsive sizing */}
+          <div className="flex justify-center mb-4 sm:mb-5 md:mb-6">
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-3 sm:p-4 md:p-5 rounded-full">
+              <svg
+                className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-blue-600 dark:text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+            </div>
+          </div>
 
-        <p className="text-center text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-          Before you continue, please review and accept our terms to access the website.
-        </p>
-
-        <p className="text-xs text-center text-gray-500 dark:text-gray-400 mb-6">
-          By clicking &quot;Accept & Continue&quot;, you agree to our{' '}
-          <a href="/terms" className="text-blue-600 dark:text-blue-400 hover:underline">Terms of Service</a>
-          {' '}and{' '}
-          <a href="/privacy" className="text-blue-600 dark:text-blue-400 hover:underline">Privacy Policy</a>
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            ref={acceptButtonRef}
-            onClick={handleAccept}
-            disabled={isSubmitting}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+          {/* Title - responsive typography */}
+          <h2 
+            id="disclaimer-title" 
+            className="text-xl xs:text-2xl sm:text-3xl md:text-4xl 
+                       font-bold text-center 
+                       mb-3 sm:mb-4 
+                       text-gray-900 dark:text-white
+                       leading-tight"
           >
-            {isSubmitting ? (
-              <>
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Processing...
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Accept & Continue
-              </>
-            )}
-          </button>
-          <button
-            onClick={handleDeny}
-            disabled={isSubmitting}
-            className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold px-6 py-3 rounded-lg shadow hover:shadow-md transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            Decline
-          </button>
+            Welcome to Vyska Legal
+          </h2>
+
+          {/* Description - responsive text size and spacing */}
+          <p className="text-center text-sm sm:text-base md:text-lg
+                        text-gray-600 dark:text-gray-300 
+                        mb-3 sm:mb-4 
+                        leading-relaxed
+                        px-2 sm:px-0">
+            Before you continue, please review and accept our terms to access the website.
+          </p>
+
+          {/* Terms link - responsive text */}
+          <p className="text-xs sm:text-sm 
+                        text-center 
+                        text-gray-500 dark:text-gray-400 
+                        mb-5 sm:mb-6 md:mb-7
+                        leading-relaxed
+                        px-1 sm:px-0">
+            By clicking &quot;Accept & Continue&quot;, you agree to our{' '}
+            <a 
+              href="/terms" 
+              className="text-blue-600 dark:text-blue-400 
+                         hover:underline hover:text-blue-700 dark:hover:text-blue-300
+                         font-medium
+                         transition-colors duration-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Terms of Service
+            </a>
+            {' '}and{' '}
+            <a 
+              href="/privacy" 
+              className="text-blue-600 dark:text-blue-400 
+                         hover:underline hover:text-blue-700 dark:hover:text-blue-300
+                         font-medium
+                         transition-colors duration-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Privacy Policy
+            </a>
+          </p>
+
+          {/* Action buttons - responsive layout and sizing */}
+          <div className="flex flex-col-reverse xs:flex-col sm:flex-row gap-3 sm:gap-4">
+            <button
+              ref={acceptButtonRef}
+              onClick={handleAccept}
+              disabled={isSubmitting}
+              className="flex-1 
+                         bg-gradient-to-r from-blue-600 to-blue-700 
+                         hover:from-blue-700 hover:to-blue-800
+                         active:from-blue-800 active:to-blue-900
+                         text-white font-semibold 
+                         px-5 sm:px-6 md:px-8
+                         py-3 sm:py-3.5 md:py-4
+                         text-sm sm:text-base md:text-lg
+                         rounded-lg sm:rounded-xl
+                         shadow-lg hover:shadow-xl
+                         transform hover:scale-[1.02] active:scale-[0.98]
+                         transition-all duration-200
+                         disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+                         flex items-center justify-center gap-2 sm:gap-3
+                         touch-manipulation
+                         min-h-[44px] sm:min-h-[48px]"
+            >
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" aria-hidden>
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Accept & Continue</span>
+                </>
+              )}
+            </button>
+            
+            <button
+              onClick={handleDeny}
+              disabled={isSubmitting}
+              className="flex-1 
+                         bg-gray-200 dark:bg-gray-700 
+                         hover:bg-gray-300 dark:hover:bg-gray-600
+                         active:bg-gray-400 dark:active:bg-gray-500
+                         text-gray-700 dark:text-gray-200 font-semibold 
+                         px-5 sm:px-6 md:px-8
+                         py-3 sm:py-3.5 md:py-4
+                         text-sm sm:text-base md:text-lg
+                         rounded-lg sm:rounded-xl
+                         shadow hover:shadow-md
+                         transform hover:scale-[1.02] active:scale-[0.98]
+                         transition-all duration-200
+                         disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+                         flex items-center justify-center gap-2 sm:gap-3
+                         touch-manipulation
+                         min-h-[44px] sm:min-h-[48px]"
+            >
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span>Decline</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -7,7 +7,7 @@ export default function WhyVyskaExists() {
     ]
 
     return (
-        <section className="relative overflow-hidden bg-gray-50">
+        <section className="relative overflow-hidden bg-gray-50 overflow-x-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-2">
                 <div className="relative bg-gray-50 flex items-center py-12 sm:py-16 md:py-20 lg:py-0 px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
                     <div className="space-y-4 sm:space-y-6 md:space-y-8 w-full">

@@ -38,7 +38,7 @@ export default function Services() {
 
     return (
         <section 
-            className="py-12 sm:py-16 md:py-20 lg:py-24 xl:py-28 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16"
+            className="py-12 sm:py-16 md:py-20 lg:py-24 xl:py-28 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 overflow-x-hidden"
             style={{
                 background: 'linear-gradient(180deg, #EAEFFF 0%, #AFC3FF 100%)'
             }}

@@ -34,7 +34,7 @@ export default function FAQSection() {
     }
 
     return (
-        <section className="bg-gray-100 py-16 md:py-20 lg:py-24 px-6 sm:px-8 md:px-12">
+        <section className="bg-gray-100 py-16 md:py-20 lg:py-24 px-6 sm:px-8 md:px-12 overflow-x-hidden">
             <div className="max-w-4xl mx-auto">
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-gray-900 mb-12 md:mb-16">
                     Before You Book—Here's What You Should Know
