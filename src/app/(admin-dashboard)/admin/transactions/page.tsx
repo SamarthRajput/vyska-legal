@@ -62,10 +62,8 @@ const Transactions = () => {
     const [searchInput, setSearchInput] = useState("");
     const [search, setSearch] = useState("");
 
-    // NEW: selected transaction for modal
     const [selectedTxn, setSelectedTxn] = useState<TransactionData | null>(null);
 
-    // Fetch data from backend API
     const fetchTransactions = async () => {
         try {
             setLoading(true);
@@ -85,10 +83,8 @@ const Transactions = () => {
         }
     };
 
-    // debounce the input -> updates "search" after delay
     useEffect(() => {
         const handler = setTimeout(() => {
-            // if typing changed searchInput, reset to page 1
             if (searchInput !== search) {
                 setPagination((p) => ({ ...p, page: 1 }));
                 setSearch(searchInput);
@@ -133,7 +129,6 @@ const Transactions = () => {
                     ) : null}
                 </div>
 
-                {/* Active search pill */}
                 {search ? (
                     <div className="flex items-center gap-2 text-sm text-gray-700">
                         <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
@@ -350,47 +345,115 @@ const Transactions = () => {
                                 <X />
                             </button>
                         </div>
-                        <div className="p-4 space-y-3">
-                            <div>
-                                <div className="text-xs text-gray-500">Order ID</div>
-                                <div className="font-mono text-sm text-blue-600">{selectedTxn.payment.orderId}</div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 space-y-4">
+                            {/* Top meta: order + event */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <div className="text-xs text-gray-500">User</div>
+                                    <div className="text-xs text-gray-500">Order ID</div>
+                                    <div className="font-mono text-sm text-blue-600">{selectedTxn.payment.orderId}</div>
+                                    <div className="text-xs text-gray-400 mt-1">Order created: {new Date(selectedTxn.payment.createdAt || selectedTxn.createdAt).toLocaleString()}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500">Event</div>
+                                    <div className="text-sm font-medium">{selectedTxn.eventType}</div>
+                                    <div className="text-xs text-gray-400 mt-1">Recorded at: {new Date(selectedTxn.createdAt).toLocaleString()}</div>
+                                </div>
+                            </div>
+
+                            {/* Payment details */}
+                            <div className="border rounded p-3 bg-gray-50">
+                                <div className="text-sm font-semibold mb-2">Payment Details</div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                                    <div>
+                                        <div className="text-xs text-gray-500">Payment internal id</div>
+                                        <div className="font-mono text-xs">{selectedTxn.payment.id}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500">Gateway payment id</div>
+                                        <div className="text-xs">{selectedTxn.payment.paymentId || "-"}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500">Status</div>
+                                        <div className="text-sm font-medium">{selectedTxn.payment.status}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500">Amount</div>
+                                        <div>₹{Number(selectedTxn.payment.amount?.valueOf?.() || 0).toLocaleString("en-IN")} <span className="text-xs text-gray-400">({selectedTxn.payment.currency})</span></div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500">Method</div>
+                                        <div className="text-xs">{selectedTxn.payment.method || "-"}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500">Purpose</div>
+                                        <div className="text-xs">{selectedTxn.payment.paymentFor}</div>
+                                    </div>
+                                    <div className="sm:col-span-3">
+                                        <div className="text-xs text-gray-500">Description</div>
+                                        <div className="text-xs text-gray-700">{selectedTxn.payment.description || "-"}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* User details */}
+                            <div className="border rounded p-3">
+                                <div className="text-sm font-semibold mb-2">User</div>
+                                <div className="text-sm">
                                     <div className="font-medium">{selectedTxn.payment.user.name}</div>
                                     <div className="text-xs text-gray-500">{selectedTxn.payment.user.email}</div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-gray-500">Status</div>
-                                    <div className="font-medium">{selectedTxn.payment.status}</div>
+                                    <div className="text-xs text-gray-400 mt-1">User ID: {selectedTxn.payment.user.id} · Role: {selectedTxn.payment.user.role}</div>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-3 gap-4">
-                                <div>
-                                    <div className="text-xs text-gray-500">Amount</div>
-                                    <div>₹{Number(selectedTxn.payment.amount?.valueOf?.() || 0).toLocaleString("en-IN")} <span className="text-xs text-gray-400">{selectedTxn.payment.currency}</span></div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-gray-500">Method</div>
-                                    <div>{selectedTxn.payment.method || "-"}</div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-gray-500">Type</div>
-                                    <div>{selectedTxn.payment.paymentFor === "SERVICE" ? "Service" : "Appointment"}</div>
-                                </div>
+
+                            {/* Appointment or Service (if any) */}
+                            <div className="border rounded p-3 bg-gray-50">
+                                <div className="text-sm font-semibold mb-2">Linked Item</div>
+                                {selectedTxn.payment.appointment ? (
+                                    <div className="text-sm space-y-1">
+                                        <div className="text-xs text-gray-500">Appointment ID</div>
+                                        <div className="text-xs font-mono">{selectedTxn.payment.appointment.id}</div>
+                                        <div className="text-xs text-gray-500">User (appointment)</div>
+                                        <div className="text-xs">{selectedTxn.payment.appointment.userName} · {selectedTxn.payment.appointment.userEmail}</div>
+                                        <div className="text-xs text-gray-500">Agenda</div>
+                                        <div className="text-xs">{selectedTxn.payment.appointment.agenda || "-"}</div>
+                                        <div className="text-xs text-gray-500">Status</div>
+                                        <div className="text-xs">{selectedTxn.payment.appointment.status}</div>
+                                    </div>
+                                ) : selectedTxn.payment.service ? (
+                                    <div className="text-sm space-y-1">
+                                        <div className="text-xs text-gray-500">Service ID</div>
+                                        <div className="text-xs font-mono">{selectedTxn.payment.service.id}</div>
+                                        <div className="text-xs text-gray-500">Title</div>
+                                        <div className="text-xs">{selectedTxn.payment.service.title}</div>
+                                        <div className="text-xs text-gray-500">Price</div>
+                                        <div className="text-xs">₹{selectedTxn.payment.service.price}</div>
+                                    </div>
+                                ) : (
+                                    <div className="text-xs text-gray-500">No linked appointment or service</div>
+                                )}
                             </div>
-                            <div>
-                                <div className="text-xs text-gray-500">Event</div>
-                                <div className="text-sm">{selectedTxn.eventType}</div>
-                            </div>
-                            <div>
-                                <div className="text-xs text-gray-500">Timestamp</div>
-                                <div className="text-sm">{new Date(selectedTxn.createdAt).toLocaleString()}</div>
-                            </div>
-                            <div>
-                                <div className="text-xs text-gray-500 mb-2">Raw Data</div>
-                                <pre className="bg-gray-100 p-3 rounded text-xs overflow-auto max-h-64">{JSON.stringify(selectedTxn.rawData, null, 2)}</pre>
+
+                            {/* Raw data quick scan + full JSON */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="border rounded p-3 overflow-auto max-h-56">
+                                    <div className="text-sm font-semibold mb-2">Raw Data (key → value)</div>
+                                    <div className="text-xs space-y-1">
+                                        {selectedTxn.rawData && typeof selectedTxn.rawData === "object" ? (
+                                            Object.entries(selectedTxn.rawData).slice(0, 50).map(([k, v]) => (
+                                                <div key={k} className="flex gap-2">
+                                                    <div className="w-36 text-xs text-gray-500">{k}</div>
+                                                    <div className="text-xs text-gray-800 truncate">{typeof v === "object" ? JSON.stringify(v) : String(v)}</div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-xs text-gray-500">No structured raw data</div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="border rounded p-3 bg-gray-50 overflow-auto max-h-56">
+                                    <div className="text-sm font-semibold mb-2">Raw JSON</div>
+                                    <pre className="bg-transparent text-xs">{JSON.stringify(selectedTxn.rawData ?? {}, null, 2)}</pre>
+                                </div>
                             </div>
                         </div>
                     </div>
