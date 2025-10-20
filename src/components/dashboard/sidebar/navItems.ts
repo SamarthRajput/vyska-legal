@@ -87,6 +87,12 @@ export const adminNavItems = [
     icon: ImageIcon,
   },
   {
+    title: "Appointment Management",
+    description: "Oversee all appointments scheduled on the platform.",
+    href: "/admin/appointments-overview",
+    icon: Bell,
+  },
+  {
     title: "Appointment Section",
     description: "Create slots, review availability, and manage bookings.",
     href: "/admin/appointments",

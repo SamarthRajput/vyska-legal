@@ -59,7 +59,7 @@ const Pagination: React.FC<PaginationProps> = ({
                     {/* Next */}
                     <button
                         className="flex-1 sm:flex-none px-3 py-1 rounded border text-sm flex items-center justify-center gap-1 disabled:opacity-50 cursor-pointer transition-colors bg-white hover:bg-gray-100"
-                        disabled={pagination.page === pagination.totalPages}
+                        disabled={pagination.page >= pagination.totalPages}
                         onClick={() => handlePageChange(pagination.page + 1)}
                         title="Go to next page"
                     >
