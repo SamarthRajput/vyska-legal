@@ -11,7 +11,7 @@ export default async function RootLayout({
     const user = await getCurrentUser();
 
     // Check if user exists and is user 
-    if (!user) {
+    if (!user || user.role !== "USER") {
         return <ShowError message="Access Denied. You must be signed in to view this page" ></ShowError>
     }
 

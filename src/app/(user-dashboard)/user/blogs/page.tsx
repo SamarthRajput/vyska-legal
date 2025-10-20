@@ -9,11 +9,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, X, Filter, SortAsc, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, AlertCircle, Send } from 'lucide-react';
+import { Search, X, Filter, SortAsc, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, AlertCircle, Send, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import getExcerpt from '@/lib/getExcerpt';
 import MarkdownRender from '@/components/blog/MarkdownRender';
 import Pagination from '@/components/Pagination';
+import { useRouter } from 'next/navigation';
 
 interface Author {
     name: string;
@@ -48,6 +49,7 @@ interface PaginationData {
 }
 
 const MyBlogs = () => {
+    const router = useRouter();
     const [blogs, setBlogs] = React.useState<Blog[]>([]);
     const [pagination, setPagination] = React.useState<PaginationData | null>(null);
     const [loading, setLoading] = React.useState<boolean>(false);
@@ -135,7 +137,12 @@ const MyBlogs = () => {
     };
 
     const handleEdit = (id: string) => {
-        window.location.href = `/blog/edit/${id}`;
+        router.push(`/blog/edit/${id}`);
+    };
+
+
+    const handleCreateBlog = () => {
+        router.push('/blog/write');
     };
 
     const openDetailView = (blog: Blog) => {
@@ -159,6 +166,7 @@ const MyBlogs = () => {
         );
     };
 
+
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -169,9 +177,11 @@ const MyBlogs = () => {
         });
     };
 
+
     const getInitials = (name: string) => {
         return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     };
+
 
     const hasActiveFilters = search !== '' || filter !== 'all';
 
@@ -182,9 +192,16 @@ const MyBlogs = () => {
 
     return (
         <div className="container mx-auto py-4 sm:py-8 px-4 max-w-7xl">
-            <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl font-bold mb-2">My Blogs</h1>
-                <p className="text-sm sm:text-base text-muted-foreground">Manage all your blog posts</p>
+            {/* Header Section with Create Button */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <Button 
+                    onClick={handleCreateBlog}
+                    size="default"
+                    className="w-full sm:w-auto"
+                >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Blog
+                </Button>
             </div>
 
             {error && (
@@ -274,10 +291,15 @@ const MyBlogs = () => {
             ) : !blogs.length ? (
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center py-16">
-                        <p className="text-muted-foreground text-base sm:text-lg">No blogs found</p>
-                        {hasActiveFilters && (
-                            <Button variant="outline" className="mt-4" onClick={clearAllFilters}>
+                        <p className="text-muted-foreground text-base sm:text-lg mb-4">No blogs found</p>
+                        {hasActiveFilters ? (
+                            <Button variant="outline" onClick={clearAllFilters}>
                                 Clear filters
+                            </Button>
+                        ) : (
+                            <Button onClick={handleCreateBlog}>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Create Your First Blog
                             </Button>
                         )}
                     </CardContent>

@@ -36,12 +36,14 @@ const HelpPage = () => {
                   Get instant replies, get information anytime
                 </p>
                 
-                <Button 
-                  variant="outline" 
-                  className="w-full sm:w-auto px-6 py-2 border-gray-300 hover:bg-gray-50 cursor-pointer"
-                >
-                  Chat now
-                </Button>
+                <a href="https://wa.me/1234567890">
+                  <Button 
+                    variant="outline" 
+                    className="w-full sm:w-auto px-6 py-2 border-gray-300 hover:bg-gray-50 cursor-pointer"
+                  >
+                      Chat now
+                  </Button>
+                </a>
               </CardContent>
             </Card>
 
@@ -62,12 +64,14 @@ const HelpPage = () => {
                   Connect directly with our team for quick help
                 </p>
                 
-                <Button 
-                  variant="outline" 
-                  className="w-full sm:w-auto px-6 py-2 border-gray-300 hover:bg-gray-50 cursor-pointer"
-                >
-                  Call now
-                </Button>
+                <a href="">
+                  <Button 
+                    variant="outline" 
+                    className="w-full sm:w-auto px-6 py-2 border-gray-300 hover:bg-gray-50 cursor-pointer"
+                  >
+                    Call now
+                  </Button>
+                </a>
               </CardContent>
             </Card>
 
@@ -88,12 +92,14 @@ const HelpPage = () => {
                   Send us your feedback or detailed queries
                 </p>
                 
-                <Button 
-                  variant="outline" 
-                  className="w-full sm:w-auto px-6 py-2 border-gray-300 hover:bg-gray-50 cursor-pointer"
-                >
-                  Send mail
-                </Button>
+                <a href="mailto:service@vyskalegal.com">
+                  <Button 
+                    variant="outline" 
+                    className="w-full sm:w-auto px-6 py-2 border-gray-300 hover:bg-gray-50 cursor-pointer"
+                  >
+                    Send mail
+                  </Button>
+                </a>
               </CardContent>
             </Card>
           </div>

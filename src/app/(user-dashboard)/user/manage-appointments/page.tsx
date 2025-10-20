@@ -29,7 +29,7 @@ interface AppointmentType {
   title: string;
   description: string | null;
   price: number;
-};
+}
 interface AppointmentPayment {
   status: "SUCCESS" | "PENDING" | "FAILED";
   method: string | null;
@@ -46,7 +46,7 @@ interface AppointmentPayment {
   paymentFor: "APPOINTMENT" | "SUBSCRIPTION";
   serviceId: string | null;
   appointmentId: string | null;
-};
+}
 interface Slots {
   id: string;
   date: string;
@@ -57,19 +57,19 @@ interface Slots {
 }
 
 const SkeletonCard = () => (
-  <li className="border rounded-lg p-4 shadow-sm flex flex-col gap-2 bg-white animate-pulse">
-    <div className="flex justify-between items-center">
+  <li className="border rounded-lg p-3 sm:p-4 shadow-sm flex flex-col gap-2 bg-white animate-pulse">
+    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
       <div className="h-4 w-24 bg-gray-200 rounded" />
       <div className="h-4 w-16 bg-gray-200 rounded" />
     </div>
     <div className="space-y-2 mt-2">
-      <div className="h-3 w-32 bg-gray-200 rounded" />
-      <div className="h-3 w-24 bg-gray-200 rounded" />
-      <div className="h-3 w-40 bg-gray-200 rounded" />
+      <div className="h-3 w-full sm:w-32 bg-gray-200 rounded" />
+      <div className="h-3 w-3/4 sm:w-24 bg-gray-200 rounded" />
+      <div className="h-3 w-full sm:w-40 bg-gray-200 rounded" />
     </div>
-    <div className="flex gap-2 mt-2">
-      <div className="h-8 w-16 bg-gray-200 rounded" />
-      <div className="h-8 w-20 bg-gray-200 rounded" />
+    <div className="flex flex-col sm:flex-row gap-2 mt-2">
+      <div className="h-8 w-full sm:w-16 bg-gray-200 rounded" />
+      <div className="h-8 w-full sm:w-20 bg-gray-200 rounded" />
     </div>
   </li>
 );
@@ -82,16 +82,18 @@ const ErrorModal = ({
   onClose: () => void;
 }) => (
   <div
-    className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+    className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4"
     role="alertdialog"
     aria-modal="true"
     tabIndex={-1}
   >
-    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm flex flex-col items-center">
+    <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-sm flex flex-col items-center">
       <span className="text-red-600 text-2xl mb-2">⚠️</span>
-      <div className="text-red-700 font-semibold mb-4 text-center">{message}</div>
+      <div className="text-red-700 font-semibold mb-4 text-center text-sm sm:text-base">
+        {message}
+      </div>
       <button
-        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition text-sm sm:text-base w-full sm:w-auto"
         onClick={onClose}
         autoFocus
       >
@@ -111,34 +113,34 @@ const CancelConfirmationModal = ({
   loading: boolean;
 }) => (
   <div
-    className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+    className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
     role="alertdialog"
     aria-modal="true"
     tabIndex={-1}
   >
-    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm flex flex-col items-center">
-      <span className="text-red-600 text-3xl mb-2">⚠️</span>
-      <div className="text-red-700 font-bold mb-2 text-center text-lg">
+    <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-sm md:max-w-md flex flex-col items-center max-h-[90vh] overflow-y-auto">
+      <span className="text-red-600 text-2xl sm:text-3xl mb-2">⚠️</span>
+      <div className="text-red-700 font-bold mb-2 text-center text-base sm:text-lg">
         Cancel Appointment
       </div>
-      <div className="mb-3 text-sm text-gray-700 bg-yellow-100 rounded px-3 py-2 text-center border border-yellow-300">
+      <div className="mb-3 text-xs sm:text-sm text-gray-700 bg-yellow-100 rounded px-2 sm:px-3 py-2 text-center border border-yellow-300">
         <strong>Important:</strong> No refund will be provided if you cancel this appointment.<br />
         <span className="text-blue-700 font-medium">You can reschedule instead if you wish to change your slot.</span>
       </div>
-      <div className="mb-4 text-sm text-gray-800 text-center">
+      <div className="mb-4 text-xs sm:text-sm text-gray-800 text-center">
         Are you sure you want to cancel this appointment? <br />
         If you cancel, you will need to book a new appointment if you wish to see us later.
       </div>
-      <div className="flex gap-2 w-full">
+      <div className="flex flex-col sm:flex-row gap-2 w-full">
         <button
-          className="flex-1 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition"
+          className="flex-1 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition text-sm sm:text-base"
           onClick={onCancel}
           disabled={loading}
         >
           No, Go Back
         </button>
         <button
-          className="flex-1 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+          className="flex-1 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition text-sm sm:text-base"
           onClick={onConfirm}
           disabled={loading}
           autoFocus
@@ -159,10 +161,9 @@ const BookAppointments = () => {
   const [showRescheduleModal, setShowRescheduleModal] = React.useState(false);
   const [showCancelModal, setShowCancelModal] = React.useState(false);
   const [cancelId, setCancelId] = React.useState<string | null>(null);
-  const [rescheduleCount, setRescheduleCount] = React.useState<number>(0); // Track reschedules left
+  const [rescheduleCount, setRescheduleCount] = React.useState<number>(0);
   const router = useRouter();
 
-  // Focus management for modals
   const rescheduleModalRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -312,7 +313,6 @@ const BookAppointments = () => {
   };
 
   const isPastAppointment = (date: string, timeSlot: string) => {
-    // date: "YYYY-MM-DD", timeSlot: "hh:mm-hh:mm"
     try {
       const [start, end] = timeSlot.split("-");
       const [endHour, endMinute] = end.split(":").map(Number);
@@ -324,24 +324,25 @@ const BookAppointments = () => {
     }
   };
 
-  // Prefetch /book-appointments on hover/focus
   const handlePrefetch = React.useCallback(() => {
     router.prefetch?.("/book-appointments");
   }, [router]);
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-2 sm:px-4">
+    <div className="max-w-3xl mx-auto py-4 sm:py-8 px-3 sm:px-4">
       {/* CTA Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 bg-green-50 border border-green-200 rounded-lg p-4 shadow">
+      <div className="flex flex-col gap-3 sm:gap-4 mb-6 sm:mb-8 bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 shadow">
         <div>
-          <h2 className="text-xl font-bold text-green-900 mb-1">Manage Your Appointments</h2>
-          <p className="text-green-800 text-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-green-900 mb-1">
+            Manage Your Appointments
+          </h2>
+          <p className="text-green-800 text-xs sm:text-sm">
             View, reschedule, or cancel your appointments. Need a new one? Book below!
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
-            className="px-5 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700 transition focus:outline-none focus:ring-2 focus:ring-green-400"
+            className="px-4 sm:px-5 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700 transition focus:outline-none focus:ring-2 focus:ring-green-400 text-sm sm:text-base w-full sm:w-auto"
             onClick={() => router.push("/user/blogs")}
             onMouseEnter={handlePrefetch}
             onFocus={handlePrefetch}
@@ -350,96 +351,87 @@ const BookAppointments = () => {
             Manage Blogs
           </button>
           <button
-            className="px-5 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="px-4 sm:px-5 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base w-full sm:w-auto"
             onClick={() => router.push("/book-appointments")}
             onMouseEnter={handlePrefetch}
             onFocus={handlePrefetch}
             type="button"
           >
-            <div className="flex items-center gap-2">
-              <Plus className="w-5 h-5" aria-hidden="true" />{" "}
-              Book New Appointment
+            <div className="flex items-center justify-center gap-2">
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+              <span>Book New Appointment</span>
             </div>
           </button>
         </div>
       </div>
 
       {loading && (
-        <ul className="space-y-4">
+        <ul className="space-y-3 sm:space-y-4">
           {[...Array(3)].map((_, i) => (
             <SkeletonCard key={i} />
           ))}
         </ul>
       )}
 
-      {/* Error Modal */}
-      {error && (
-        <ErrorModal
-          message={error}
-          onClose={() => setError(null)}
-        />
-      )}
+      {error && <ErrorModal message={error} onClose={() => setError(null)} />}
 
-      {/* Appointments List */}
       {!loading && !error && (
         <>
-          {/* {/* <pre className="text-xs text-gray-500 mb-4"> */}
-          {/* {JSON.stringify(appointments)} */}
-          {/* </pre> */}
           {appointments.length === 0 ? (
-            <div className="text-gray-500 text-center py-8">
+            <div className="text-gray-500 text-center py-8 text-sm sm:text-base">
               No appointments found.
             </div>
           ) : (
-            <ul className="space-y-4">
+            <ul className="space-y-3 sm:space-y-4">
               {appointments.map((appointment) => {
                 const past = isPastAppointment(appointment.slot?.date, appointment.slot?.timeSlot);
                 const payment = appointment.payment;
-                // Determine if cancel/reschedule should be shown
                 const canModify =
                   !past &&
-                  (
-                    !payment ||
-                    payment.status === "SUCCESS"
-                  );
+                  (!payment || payment.status === "SUCCESS");
                 const canReschedule = canModify && appointment.noofrescheduled <= 2;
                 const reschedulesLeft = 2 - appointment.noofrescheduled;
+
                 return (
                   <li
                     key={appointment.id}
-                    className="border rounded-lg p-4 shadow-sm flex flex-col gap-2 bg-white transition hover:shadow-md"
+                    className="border rounded-lg p-3 sm:p-4 shadow-sm flex flex-col gap-2 bg-white transition hover:shadow-md"
                   >
+                    {/* Header */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                      <div>
-                        <span className="font-semibold text-base text-gray-800">
+                      <div className="w-full sm:w-auto break-words">
+                        <span className="font-semibold text-sm sm:text-base text-gray-800 block sm:inline">
                           {appointment.userName}
                         </span>
-                        <span className="ml-2 text-xs text-gray-500 break-all">
+                        <span className="ml-0 sm:ml-2 text-xs text-gray-500 break-all block sm:inline mt-1 sm:mt-0">
                           {appointment.userEmail}
                         </span>
                       </div>
                       {past ? (
                         <span
-                          className="px-2 py-1 rounded text-xs font-medium capitalize bg-gray-200 text-gray-700"
+                          className="px-2 py-1 rounded text-xs font-medium capitalize bg-gray-200 text-gray-700 self-start sm:self-auto"
                           title="Status: completed"
                         >
                           completed
                         </span>
                       ) : (
                         <span
-                          className={`px-2 py-1 rounded text-xs font-medium capitalize ${appointment.status === "CONFIRMED"
-                            ? "bg-green-100 text-green-700"
-                            : appointment.status === "PENDING"
+                          className={`px-2 py-1 rounded text-xs font-medium capitalize self-start sm:self-auto ${
+                            appointment.status === "CONFIRMED"
+                              ? "bg-green-100 text-green-700"
+                              : appointment.status === "PENDING"
                               ? "bg-yellow-100 text-yellow-700"
                               : "bg-red-100 text-red-700"
-                            }`}
+                          }`}
                           title={`Status: ${appointment.status.toLowerCase()}`}
                         >
                           {appointment.status.toLowerCase()}
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-700 flex flex-wrap gap-x-6 gap-y-1">
+
+                    {/* Details */}
+                    <div className="text-xs sm:text-sm text-gray-700 flex flex-col sm:flex-row sm:flex-wrap gap-y-1 sm:gap-x-6">
                       <div>
                         <span className="font-medium">Date:</span>{" "}
                         {formatDate(appointment.slot?.date)}
@@ -449,28 +441,29 @@ const BookAppointments = () => {
                         {appointment.slot?.timeSlot}
                       </div>
                       {appointment.userPhone && (
-                        <div>
+                        <div className="break-all">
                           <span className="font-medium">Phone:</span>{" "}
                           {appointment.userPhone}
                         </div>
                       )}
                     </div>
-                    {/* Agenda always on a new line with different bg color */}
+
+                    {/* Agenda */}
                     {appointment.agenda && (
-                      <div className="mt-2 px-3 py-2 rounded bg-blue-50 text-blue-800 text-sm w-fit">
+                      <div className="mt-2 px-2 sm:px-3 py-2 rounded bg-blue-50 text-blue-800 text-xs sm:text-sm w-full">
                         <span className="font-medium">Message from user:</span>{" "}
-                        {appointment.agenda}
+                        <span className="break-words">{appointment.agenda}</span>
                       </div>
                     )}
 
-                    {/* Show Join Meeting button if meetUrl exists */}
+                    {/* Join Meeting */}
                     {appointment.meetUrl && (
                       <div className="mt-2">
                         <a
                           href={appointment.meetUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-block px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition text-sm font-medium"
+                          className="inline-block px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition text-xs sm:text-sm font-medium w-full sm:w-auto text-center"
                           title="Join Meeting"
                         >
                           Join Meeting
@@ -478,11 +471,11 @@ const BookAppointments = () => {
                       </div>
                     )}
 
-                    {/* Payment Information */}
-                    <div className="mt-2 px-3 py-2 rounded bg-gray-50 text-gray-800 text-sm w-fit flex flex-col gap-1">
+                    {/* Payment Info */}
+                    <div className="mt-2 px-2 sm:px-3 py-2 rounded bg-gray-50 text-gray-800 text-xs sm:text-sm w-full flex flex-col gap-1">
                       <span className="font-medium">Payment Info:</span>
                       {payment ? (
-                        <div className="flex flex-col gap-0.5">
+                        <div className="flex flex-col gap-0.5 break-words">
                           <span>
                             <span className="font-medium">Status:</span>{" "}
                             <span
@@ -490,8 +483,8 @@ const BookAppointments = () => {
                                 payment.status === "SUCCESS"
                                   ? "text-green-700"
                                   : payment.status === "PENDING"
-                                    ? "text-yellow-700"
-                                    : "text-red-700"
+                                  ? "text-yellow-700"
+                                  : "text-red-700"
                               }
                             >
                               {payment.status.toLowerCase()}
@@ -507,22 +500,22 @@ const BookAppointments = () => {
                             </span>
                           )}
                           {payment.paymentId && (
-                            <span>
+                            <span className="break-all">
                               <span className="font-medium">Payment ID:</span> {payment.paymentId}
                             </span>
                           )}
                           {payment.orderId && (
-                            <span>
+                            <span className="break-all">
                               <span className="font-medium">Order ID:</span> {payment.orderId}
                             </span>
                           )}
                           {payment.description && (
-                            <span>
+                            <span className="break-words">
                               <span className="font-medium">Description:</span> {payment.description}
                             </span>
                           )}
                           <span>
-                            <span className="font-medium">Payment done :</span>{" "}
+                            <span className="font-medium">Payment done:</span>{" "}
                             {formatDate(payment.createdAt)}
                           </span>
                         </div>
@@ -531,12 +524,12 @@ const BookAppointments = () => {
                       )}
                     </div>
 
-                    {/* Cancel/Reschedule buttons */}
+                    {/* Actions */}
                     {canModify && (
                       <>
-                        <div className="flex flex-wrap gap-2 mt-2">
+                        <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-2">
                           <button
-                            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm transition focus:outline-none focus:ring-2 focus:ring-red-300"
+                            className="px-3 py-1.5 sm:py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs sm:text-sm transition focus:outline-none focus:ring-2 focus:ring-red-300 w-full sm:w-auto"
                             onClick={() => handleCancelClick(appointment.id)}
                             disabled={loading}
                             title="Cancel this appointment"
@@ -544,10 +537,11 @@ const BookAppointments = () => {
                             Cancel
                           </button>
                           <button
-                            className={`px-3 py-1 rounded text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-300 border ${canReschedule
-                              ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-600"
-                              : "bg-gray-100 text-gray-400 border-gray-400 cursor-not-allowed"
-                              }`}
+                            className={`px-3 py-1.5 sm:py-1 rounded text-xs sm:text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-300 border w-full sm:w-auto ${
+                              canReschedule
+                                ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-600"
+                                : "bg-gray-100 text-gray-400 border-gray-400 cursor-not-allowed"
+                            }`}
                             onClick={() => canReschedule && handleReschedule(appointment.id)}
                             disabled={loading || !canReschedule}
                             title={
@@ -561,7 +555,7 @@ const BookAppointments = () => {
                             Reschedule
                           </button>
                         </div>
-                        <div className="mt-2 px-3 py-2 rounded bg-yellow-50 border border-yellow-200 text-yellow-900 text-xs font-medium w-fit">
+                        <div className="mt-2 px-2 sm:px-3 py-2 rounded bg-yellow-50 border border-yellow-200 text-yellow-900 text-xs font-medium w-full">
                           <span className="font-semibold text-red-600">Note:</span> No refund will be provided if you cancel. You can reschedule your appointment instead.
                         </div>
                       </>
@@ -577,25 +571,26 @@ const BookAppointments = () => {
       {/* Reschedule Modal */}
       {showRescheduleModal && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition"
           role="dialog"
           aria-modal="true"
           tabIndex={-1}
         >
           <div
-            className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md outline-none"
+            className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-md outline-none max-h-[90vh] overflow-y-auto"
             ref={rescheduleModalRef}
             tabIndex={0}
           >
-            <h3 className="text-lg font-bold mb-4 text-center">
+            <h3 className="text-base sm:text-lg font-bold mb-4 text-center">
               Select a new slot
             </h3>
             {rescheduleCount > 0 && (
-              <div className="mb-2 text-sm text-yellow-700 bg-yellow-100 rounded px-3 py-2 text-center">
-                <strong>Note:</strong> If you reschedule, your approved appointment will change to <span className="font-semibold">pending</span> and our admin team will review it.
+              <div className="mb-2 text-xs sm:text-sm text-yellow-700 bg-yellow-100 rounded px-2 sm:px-3 py-2 text-center">
+                <strong>Note:</strong> If you reschedule, your approved appointment will change to{" "}
+                <span className="font-semibold">pending</span> and our admin team will review it.
               </div>
             )}
-            <div className="mb-4 text-sm text-blue-700 bg-blue-100 rounded px-3 py-2 text-center">
+            <div className="mb-4 text-xs sm:text-sm text-blue-700 bg-blue-100 rounded px-2 sm:px-3 py-2 text-center">
               {rescheduleCount === 2 && "You can reschedule this appointment up to 2 times."}
               {rescheduleCount === 1 && "You can reschedule this appointment 1 more time."}
               {rescheduleCount === 0 && (
@@ -609,7 +604,7 @@ const BookAppointments = () => {
                 ))}
               </div>
             ) : availableSlots.length === 0 ? (
-              <div className="text-gray-500 text-center">
+              <div className="text-gray-500 text-center text-sm">
                 No available slots.
               </div>
             ) : (
@@ -617,16 +612,14 @@ const BookAppointments = () => {
                 {availableSlots.map((slot) => (
                   <li
                     key={slot.id}
-                    className="flex justify-between items-center border-b pb-2"
+                    className="flex flex-col sm:flex-row justify-between sm:items-center border-b pb-2 gap-2"
                   >
-                    <div>
-                      <span className="font-medium">
-                        {formatDate(slot.date)}
-                      </span>
+                    <div className="text-xs sm:text-sm">
+                      <span className="font-medium">{formatDate(slot.date)}</span>
                       <span className="ml-2">{slot.timeSlot}</span>
                     </div>
                     <button
-                      className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition focus:outline-none focus:ring-2 focus:ring-green-300 disabled:bg-gray-300 disabled:text-gray-500"
+                      className="px-3 py-1.5 sm:px-2 sm:py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition focus:outline-none focus:ring-2 focus:ring-green-300 disabled:bg-gray-300 disabled:text-gray-500 w-full sm:w-auto"
                       onClick={() => handleConfirmReschedule(slot.id)}
                       disabled={loading || rescheduleCount === 0}
                       title={
@@ -643,7 +636,7 @@ const BookAppointments = () => {
               </ul>
             )}
             <button
-              className="mt-4 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition w-full"
+              className="mt-4 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition w-full text-sm sm:text-base"
               onClick={() => {
                 setShowRescheduleModal(false);
                 setRescheduleId(null);
@@ -657,7 +650,6 @@ const BookAppointments = () => {
         </div>
       )}
 
-      {/* Cancel Confirmation Modal */}
       {showCancelModal && (
         <CancelConfirmationModal
           onConfirm={handleCancelConfirm}

@@ -38,8 +38,8 @@ export default function Navbar() {
                         <Link href="/about" className="text-lg text-gray-700 hover:text-blue-600 transition-colors">
                             About
                         </Link>
-                        <Link href="/services" className="text-lg text-gray-700 hover:text-blue-600 transition-colors">
-                            Services
+                        <Link href="/research" className="text-lg text-gray-700 hover:text-blue-600 transition-colors">
+                            Research
                         </Link>
                         <Link href="/blogs" className="text-lg text-gray-700 hover:text-blue-600 transition-colors">
                             Blog
@@ -106,12 +106,12 @@ export default function Navbar() {
                         About
                     </Link>
                     <Link
-                        href="/services"
+                        href="/research"
                         className="block py-2 text-lg text-gray-700 hover:text-blue-600 transition-colors"
                         onClick={() => setMenuOpen(false)}
                         role="menuitem"
                     >
-                        Services
+                        Research
                     </Link>
                     <Link
                         href="/blogs"
