@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { UserRole } from '@prisma/client';
+import { PaymentStatus, UserRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getUser } from '@/lib/getUser';
 
@@ -77,8 +77,41 @@ export async function GET(request: NextRequest) {
             take: 5,
         });
 
-        // --- Activity Logs (Optional) ---
-        // If you implement an activity table, fetch latest activities here
+        const totalPayments = await prisma.payment.count();
+
+        // Count by status
+        const paymentsByStatus = await prisma.payment.groupBy({
+            by: ['status'],
+            _count: { status: true },
+        });
+
+        // Total revenue (only successful payments)
+        const successfulPayments = await prisma.payment.findMany({
+            where: { status: PaymentStatus.SUCCESS },
+            select: { amount: true },
+        });
+        const totalRevenue = successfulPayments.reduce(
+            (sum, p) => sum + Number(p.amount),
+            0
+        );
+
+        // Optional: Revenue by type (service / appointment)
+        const revenueByType = await prisma.payment.groupBy({
+            by: ['paymentFor'],
+            where: { status: PaymentStatus.SUCCESS },
+            _sum: { amount: true },
+        });
+
+        // Recent 5 payments
+        const recentPayments = await prisma.payment.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+            include: {
+                user: true,
+                service: true,
+                appointment: { include: { appointmentType: true } },
+            },
+        });
 
         return NextResponse.json({
             users: {
@@ -112,6 +145,13 @@ export async function GET(request: NextRequest) {
                 total: totalContacts,
                 byStatus: contactsByStatus,
                 recent: recentContacts,
+            },
+            payments: {
+                total: totalPayments,
+                byStatus: paymentsByStatus,
+                revenue: totalRevenue,
+                revenueByType: revenueByType,
+                recent: recentPayments,
             },
         });
     } catch (error) {

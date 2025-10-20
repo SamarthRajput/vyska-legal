@@ -1,8 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Enums for status (adjust as per your actual enums)
 type AppointmentStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
 type ContactStatus = "NEW" | "IN_PROGRESS" | "RESOLVED";
 type BlogStatus = "APPROVED" | "REJECTED" | "PENDING";
 type UserRole = "ADMIN" | "USER";
+// payment related types
+type PaymentStatus = "SUCCESS" | "FAILED" | "PENDING" | "REFUNDED";
+type PaymentFor = "APPOINTMENT" | "SERVICE" | "SUBSCRIPTION" | "OTHER";
+
+
+interface User {
+    name: string;
+    id: string;
+    clerkId: string;
+    email: string;
+    role: UserRole;
+    profilePicture: string | null;
+    createdAt: string;
+    updatedAt: string;
+};
+
 export interface AdminOverview {
     users: {
         total: number;
@@ -99,16 +116,78 @@ export interface AdminOverview {
             status: BlogStatus;
             authorId: string;
             rejectionReason: string | null;
-            author: {
-                name: string;
-                id: string;
-                clerkId: string;
-                email: string;
-                role: UserRole;
-                profilePicture: string | null;
-                createdAt: string;
-                updatedAt: string;
-            };
+            author: User
         }[];
     };
+    payments: {
+        total: number;
+        byStatus: {
+            status: PaymentStatus;
+            _count: { status: number };
+        }[];
+        revenue: number;
+        revenueByType: {
+            _sum: { amount: string | number };
+            paymentFor: PaymentFor;
+        }[];
+        recent: {
+            id: string;
+            orderId?: string | null;
+            paymentId?: string | null;
+            signature?: string | null;
+            amount: string | number;
+            currency: string;
+            status: PaymentStatus;
+            paymentFor: PaymentFor;
+            method: string | null;
+            description: string | null;
+            createdAt: string;
+            updatedAt: string;
+            userId?: string | null;
+            serviceId?: string | null;
+            appointmentId?: string | null;
+            user?: User | null;
+            service?: any | null;
+            appointment?: {
+                id: string;
+                userName: string;
+                userEmail: string;
+                userPhone: string | null;
+                status: AppointmentStatus;
+                agenda?: string | null;
+                meetUrl?: string | null;
+                noofrescheduled?: number;
+                createdAt: string;
+                updatedAt: string;
+                slotId: string | null;
+                userId: string | null;
+                appointmentTypeId?: string;
+                appointmentType?: {
+                    id: string;
+                    title: string;
+                    description: string;
+                    price: string | number;
+                    isActive: boolean;
+                    createdAt: string;
+                    updatedAt: string;
+                } | null;
+            } | null;
+        }[];
+    };
+}
+
+export interface PaymentsData {
+    total: number;
+    byStatus: { [status: string]: number } | { status: string; _count?: { status: number } }[];
+    revenue: number;
+    revenueByType: { [type: string]: number } | { _sum: { amount: string | number }; paymentFor: PaymentFor }[];
+    recent: {
+        id: string;
+        amount: number | string;
+        status: string;
+        method: string | null;
+        date?: string | Date;
+        userId?: string;
+        type?: string;
+    }[];
 }

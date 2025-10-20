@@ -32,7 +32,7 @@ export default function AdminPage() {
     useEffect(() => {
         fetch("/api/admin/overview")
             .then((res) => res.json())
-            .then((res: AdminOverview) => {
+            .then((res) => {
                 setData(res);
                 setLoading(false);
             })
@@ -60,13 +60,14 @@ export default function AdminPage() {
 
     return (
         <div className="p-2 sm:p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-6">
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-7">
                 <SummaryCard title="Total Users" value={data.users.total} icon="users" />
                 <SummaryCard title="Total Blogs" value={data.blogs.total} icon="blog" />
                 <SummaryCard title="Appointments" value={data.appointments.total} icon="calendar" />
                 <SummaryCard title="Contacts" value={data.contacts.total} icon="mail" />
                 <SummaryCard title="Services" value={data.services.total} icon="service" />
                 <SummaryCard title="Team Members" value={data.teamMembers.total} icon="team" />
+                <SummaryCard title="Payments" value={`₹${Number(data.payments.total)}`} icon="service" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="h-full">
@@ -214,6 +215,75 @@ export default function AdminPage() {
                     />
                 </CardContent>
             </Card>
+            {/* new payment charts row  */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="h-full">
+                    <CardHeader>
+                        <CardTitle>Payments by Status</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={data.payments.byStatus}>
+                                <XAxis dataKey="status" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="_count.status" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+
+                <Card className="h-full">
+                    <CardHeader>
+                        <CardTitle>Revenue by Type</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ResponsiveContainer width="100%" height={250}>
+                            <PieChart>
+                                <Pie
+                                    data={data.payments.revenueByType.map((r) => ({
+                                        name: r.paymentFor,
+                                        value: Number(r._sum?.amount ?? 0),
+                                    }))}
+                                    dataKey="value"
+                                    outerRadius={100}
+                                    label
+                                >
+                                    {["#06B6D4", "#34D399", "#F59E0B", "#EF4444"].map((c, i) => (
+                                        <Cell key={i} fill={c} />
+                                    ))}
+                                </Pie>
+                                <Tooltip formatter={(value: number) => `₹${Number(value).toFixed(2)}`} />
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                        <div className="mt-4 text-sm text-gray-600">Total Revenue: <span className="font-semibold">₹{Number(data.payments.revenue).toLocaleString()}</span></div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* new , recent payment table  */}
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Recent Payments</CardTitle>
+                    <ViewMoreLink href="/admin/transactions" />
+                </CardHeader>
+                <CardContent>
+                    <RecentTable
+                        headers={["Payment ID", "User", "Amount", "Status", "For", "Method", "Created At"]}
+                        rows={data.payments.recent.map((p, idx) => [
+                            p.orderId ?? p.paymentId ?? p.id,
+                            p.user ? <AuthorCell author={p.user} key={p.id + "-user"} /> : (p.userId ?? "-"),
+                            <AmountCell amount={p.amount} currency={p.currency} key={p.id + "-amount"} />,
+                            <StatusBadge status={p.status} key={p.id + "-status"} />,
+                            <PaymentForBadge forType={p.paymentFor} key={p.id + "-for"} />,
+                            p.method ?? "-",
+                            new Date(p.createdAt).toLocaleString(),
+                        ])}
+                    />
+                </CardContent>
+            </Card>
+
             <div className="mt-8 flex flex-col items-center justify-center gap-4 p-6 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-100 shadow">
                 <h2 className="text-xl font-semibold text-indigo-700">Want to grow your team or services?</h2>
                 <p className="text-gray-600 text-center max-w-md">
@@ -446,3 +516,22 @@ const SkeletonDashboard = () => (
         <div className="bg-gray-100 rounded-xl h-72" />
     </div>
 );
+
+//  helper components for payments rendering
+const AmountCell = ({ amount, currency }: { amount: string | number; currency: string }) => {
+    const num = typeof amount === "string" ? parseFloat(amount) : Number(amount || 0);
+    return (
+        <div title={`${currency} ${num}`}>
+            <span className="font-medium text-gray-800">₹{num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+            <div className="text-xs text-gray-500">{currency}</div>
+        </div>
+    );
+};
+
+const PaymentForBadge = ({ forType }: { forType: string }) => {
+    const classes = "px-2 py-1 rounded text-xs font-semibold ";
+    let color = "bg-gray-100 text-gray-700";
+    if (forType === "APPOINTMENT") color = "bg-indigo-100 text-indigo-700";
+    if (forType === "SERVICE") color = "bg-blue-100 text-blue-700";
+    return <span className={`${classes}${color}`}>{forType}</span>;
+};
