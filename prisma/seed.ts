@@ -130,41 +130,41 @@ async function main() {
     });
 
     console.log('Team members created');
-    const slot1 = await prisma.appointmentSlot.create({
-        data: {
-            date: new Date('2025-10-15T09:00:00Z'),
-            timeSlot: '09:00-09:30',
-            isBooked: false,
-        },
-    });
+    // const slot1 = await prisma.appointmentSlot.create({
+    //     data: {
+    //         date: new Date('2025-10-15T09:00:00Z'),
+    //         timeSlot: '09:00-09:30',
+    //         isBooked: false,
+    //     },
+    // });
 
-    const slot2 = await prisma.appointmentSlot.create({
-        data: {
-            date: new Date('2025-10-16T11:00:00Z'),
-            timeSlot: '11:00-11:30',
-            isBooked: false,
-        },
-    });
+    // const slot2 = await prisma.appointmentSlot.create({
+    //     data: {
+    //         date: new Date('2025-10-16T11:00:00Z'),
+    //         timeSlot: '11:00-11:30',
+    //         isBooked: false,
+    //     },
+    // });
 
-    // 2️⃣ Create appointments using the slot IDs
-    await prisma.appointment.createMany({
-        data: [
-            {
-                userName: 'Rohit Kumar',
-                userEmail: 'rohit@example.com',
-                userPhone: '9876543210',
-                slotId: slot1.id,
-                status: 'CONFIRMED',
-            },
-            {
-                userName: 'Rohit Kumar',
-                userEmail: 'rohit@example.com',
-                userPhone: '9876543210',
-                slotId: slot2.id,
-                status: 'PENDING',
-            },
-        ],
-    });
+    // // 2️⃣ Create appointments using the slot IDs
+    // await prisma.appointment.createMany({
+    //     data: [
+    //         {
+    //             userName: 'Rohit Kumar',
+    //             userEmail: 'rohit@example.com',
+    //             userPhone: '9876543210',
+    //             slotId: slot1.id,
+    //             status: 'CONFIRMED',
+    //         },
+    //         {
+    //             userName: 'Rohit Kumar',
+    //             userEmail: 'rohit@example.com',
+    //             userPhone: '9876543210',
+    //             slotId: slot2.id,
+    //             status: 'PENDING',
+    //         },
+    //     ],
+    // });
 
     console.log('Seed completed!');
     console.log('✅ Seed data created successfully!')
