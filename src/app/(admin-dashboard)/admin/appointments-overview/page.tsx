@@ -1,7 +1,6 @@
-// todo: add custom delete approval modal (Internet is slow)
 "use client";
 import Pagination from '@/components/Pagination';
-import { X } from 'lucide-react';
+import { X, Loader } from 'lucide-react';
 import React from 'react'
 import { toast } from 'sonner';
 
@@ -14,7 +13,7 @@ interface Pagination {
 
 export interface AppointmentSlot {
     id: string;
-    date: string; // ISO Date string
+    date: string;
     timeSlot: string;
     isBooked: boolean;
     createdAt: string;
@@ -25,7 +24,7 @@ export interface AppointmentType {
     id: string;
     title: string;
     description?: string;
-    price: string; // Decimal from Prisma returned as string
+    price: string;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
@@ -36,7 +35,7 @@ export interface Payment {
     orderId: string;
     paymentId?: string;
     signature?: string;
-    amount: string; // Decimal as string
+    amount: string;
     currency: string;
     status: "PENDING" | "SUCCESS" | "FAILED" | "CANCELLED";
     method?: string;
@@ -67,8 +66,6 @@ export interface Appointment {
     noofrescheduled: number;
     createdAt: string;
     updatedAt: string;
-
-    // Relations
     slot: AppointmentSlot;
     appointmentType: AppointmentType;
     User?: User;
@@ -95,7 +92,14 @@ const AppointmentManagement = () => {
 
     const [selectedAppointment, setSelectedAppointment] = React.useState<Appointment | null>(null);
     const [modalMeetingUrl, setModalMeetingUrl] = React.useState<string>('');
-    const [updating, setUpdating] = React.useState<boolean>(false);
+    const [saving, setSaving] = React.useState<boolean>(false);
+    const [deleting, setDeleting] = React.useState<boolean>(false);
+
+    const [deleteModalOpen, setDeleteModalOpen] = React.useState<boolean>(false);
+    const [deleteTarget, setDeleteTarget] = React.useState<Appointment | null>(null);
+
+    const [savingMeeting, setSavingMeeting] = React.useState<boolean>(false);
+    const [rescheduleLoading, setRescheduleLoading] = React.useState<Record<string, 'inc' | 'dec' | undefined>>({});
 
     const modalOpen = Boolean(selectedAppointment);
 
@@ -107,7 +111,18 @@ const AppointmentManagement = () => {
     const closeModal = () => {
         setSelectedAppointment(null);
         setModalMeetingUrl('');
-        setUpdating(false);
+        setSaving(false);
+    };
+
+    const openDeleteModal = (app: Appointment) => {
+        setDeleteTarget(app);
+        setDeleteModalOpen(true);
+    };
+
+    const closeDeleteModal = () => {
+        setDeleteModalOpen(false);
+        setDeleteTarget(null);
+        setDeleting(false);
     };
 
     React.useEffect(() => {
@@ -168,8 +183,14 @@ const AppointmentManagement = () => {
             toast.error('Cannot increment and decrement reschedule simultaneously.');
             return;
         }
+
+        const isMeetingUpdate = typeof meetingUrl !== 'undefined' && meetingUrl !== undefined;
         try {
-            setUpdating(true);
+            setSaving(true);
+            if (isMeetingUpdate) setSavingMeeting(true);
+            if (incrementReschedule) setRescheduleLoading(prev => ({ ...prev, [appointmentId]: 'inc' }));
+            if (decrementReschedule) setRescheduleLoading(prev => ({ ...prev, [appointmentId]: 'dec' }));
+
             const response = await fetch(`/api/admin/appointments`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -189,11 +210,8 @@ const AppointmentManagement = () => {
             const data = await response.json();
             const updated: Appointment = data.appointment;
 
-            // Update appointments list
             setAppointments((prev) => prev.map(a => a.id === updated.id ? updated : a));
-            // Update currently opened modal appointment if it's the same
             setSelectedAppointment((curr) => (curr && curr.id === updated.id ? updated : curr));
-            // If modalMeetingUrl was changed, reflect it
             setModalMeetingUrl(updated.meetUrl || '');
             toast.success(data.message || 'Appointment updated successfully');
         } catch (err) {
@@ -206,20 +224,20 @@ const AppointmentManagement = () => {
                 toast.error(message);
             }
         } finally {
-            setUpdating(false);
+            setSaving(false);
+            setSavingMeeting(false);
+            setRescheduleLoading(prev => {
+                const next = { ...prev };
+                delete next[appointmentId];
+                return next;
+            });
         }
     };
 
-    // --- Implement delete functionality ---
     const deleteAppointment = async (appointmentId: string) => {
         if (!appointmentId) return;
-        const confirmed = window.confirm(
-            'Are you sure you want to delete this appointment? Only appointments without payment or with PENDING payment can be deleted. This action cannot be undone.'
-        );
-        if (!confirmed) return;
-
         try {
-            setUpdating(true);
+            setDeleting(true);
             const response = await fetch(`/api/admin/appointments`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
@@ -230,16 +248,14 @@ const AppointmentManagement = () => {
 
             if (!response.ok) {
                 const msg = body?.error || body?.message || 'Failed to delete appointment';
-                toast.error(msg);
                 throw new Error(msg);
             }
 
-            // Remove from appointments list
             setAppointments((prev) => prev.filter(a => a.id !== appointmentId));
-            // If modal was open for this appointment, close it
             setSelectedAppointment((curr) => (curr && curr.id === appointmentId ? null : curr));
             setModalMeetingUrl('');
             toast.success(body.message || 'Appointment deleted successfully');
+            closeDeleteModal();
         } catch (err) {
             if (err instanceof Error) {
                 console.error(err.message, err);
@@ -250,7 +266,7 @@ const AppointmentManagement = () => {
                 toast.error(message);
             }
         } finally {
-            setUpdating(false);
+            setDeleting(false);
         }
     };
 
@@ -320,7 +336,6 @@ const AppointmentManagement = () => {
                     )}
                 </div>
 
-                {/* Active filters chips below search row */}
                 <div className="flex flex-wrap items-center gap-2">
                     {(search || status !== 'all') && (
                         <>
@@ -346,11 +361,9 @@ const AppointmentManagement = () => {
                 </div>
             </div>
 
-            {/* Content area */}
             <div>
                 {loading && (
                     <>
-                        {/* Table skeleton for md+ */}
                         <div className="hidden md:block overflow-x-auto rounded-md border">
                             <table className="min-w-full">
                                 <thead className="bg-gray-50">
@@ -383,7 +396,6 @@ const AppointmentManagement = () => {
                             </table>
                         </div>
 
-                        {/* Card skeletons for mobile */}
                         <div className="md:hidden space-y-3">
                             {Array.from({ length: 4 }).map((_, i) => (
                                 <div key={i} className="border rounded-md p-3 bg-white shadow-sm animate-pulse">
@@ -407,7 +419,6 @@ const AppointmentManagement = () => {
 
                 {!loading && !error && appointments.length > 0 && (
                     <>
-                        {/* Responsive table for md+; cards for small screens */}
                         <div className="hidden md:block overflow-x-auto rounded-md border">
                             <table className="min-w-full divide-y">
                                 <thead className="bg-gray-50">
@@ -461,7 +472,6 @@ const AppointmentManagement = () => {
                                             <td className="px-4 py-3 text-sm">{formatDateTime(app.createdAt)}</td>
                                             <td className="px-4 py-3 text-sm">
                                                 <div className="flex flex-col">
-                                                    {/* Wired the View button to open modal */}
                                                     <button onClick={() => openModal(app)} className="text-sky-600 text-sm">View</button>
                                                 </div>
                                             </td>
@@ -471,7 +481,6 @@ const AppointmentManagement = () => {
                             </table>
                         </div>
 
-                        {/* Cards for small screens */}
                         <div className="md:hidden space-y-3">
                             {appointments.map(app => (
                                 <div key={app.id} className="border rounded-md p-3 bg-white shadow-sm">
@@ -495,7 +504,6 @@ const AppointmentManagement = () => {
 
                                     <div className="mt-3 flex gap-2">
                                         <button onClick={() => openModal(app)} className="text-sky-600 text-sm">View</button>
-                                        {/* Removed Confirm button as requested */}
                                         {isToday(app.slot?.date) && app.meetUrl && (
                                             <a href={app.meetUrl} target="_blank" rel="noreferrer" className="text-white bg-sky-600 px-3 py-1 rounded text-sm">
                                                 Join
@@ -506,7 +514,6 @@ const AppointmentManagement = () => {
                             ))}
                         </div>
 
-                        {/* Pagination */}
                         <div className="mt-4">
                             <Pagination
                                 pagination={pagination}
@@ -516,7 +523,6 @@ const AppointmentManagement = () => {
                             />
                         </div>
 
-                        {/* --- NEW: footer note about status derivation --- */}
                         <div className="mt-2 text-xs text-gray-500 italic">
                             Note: Appointment status is derived from payment status — if payment is cancelled or failed the appointment is marked cancelled. If payment succeeds the appointment status becomes success. Pending payments may be auto-deleted after a few hours.
                         </div>
@@ -524,7 +530,6 @@ const AppointmentManagement = () => {
                 )}
             </div>
 
-            {/* --- NEW: Modal showing all appointment details --- */}
             {modalOpen && selectedAppointment && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center"
@@ -535,7 +540,6 @@ const AppointmentManagement = () => {
                     <div className="relative max-w-3xl w-full mx-4 bg-white rounded-lg shadow-lg z-10 overflow-auto max-h-[90vh]">
                         <div className="flex items-start justify-between p-4 border-b">
                             <div className="flex items-center gap-3">
-                                {/* profile image if available */}
                                 {selectedAppointment.User?.profilePicture ? (
                                     <img src={selectedAppointment.User.profilePicture} alt="Profile" className="h-12 w-12 rounded-full object-cover" />
                                 ) : (
@@ -553,7 +557,6 @@ const AppointmentManagement = () => {
                         </div>
 
                         <div className="p-4 space-y-3 text-sm text-gray-700">
-                            {/* Client info block */}
                             <div>
                                 <strong>Client:</strong>
                                 <div className="text-xs text-gray-500">{selectedAppointment.User?.name || selectedAppointment.userName}</div>
@@ -562,14 +565,12 @@ const AppointmentManagement = () => {
                                 {selectedAppointment.User?.createdAt && <div className="text-xs text-gray-500">User created: {formatDateTime(selectedAppointment.User.createdAt)}</div>}
                             </div>
 
-                            {/* Slot details */}
                             <div>
                                 <strong>Slot:</strong>
                                 <div className="text-xs text-gray-500">Date: {formatDate(selectedAppointment.slot?.date)} {selectedAppointment.slot?.timeSlot ? `• ${selectedAppointment.slot.timeSlot}` : ''}</div>
                                 <div className="text-xs text-gray-500">Booked: {selectedAppointment.slot?.isBooked ? 'Yes' : 'No'}</div>
                             </div>
 
-                            {/* Appointment type */}
                             <div>
                                 <strong>Appointment Type:</strong>
                                 <div className="text-xs text-gray-500">Title: {selectedAppointment.appointmentType?.title || '—'}</div>
@@ -577,7 +578,6 @@ const AppointmentManagement = () => {
                                 <div className="text-xs text-gray-500">Price: {formatCurrency(selectedAppointment.appointmentType?.price)}</div>
                             </div>
 
-                            {/* Payment details */}
                             <div>
                                 <strong>Payment:</strong>
                                 {selectedAppointment.payment ? (
@@ -588,7 +588,6 @@ const AppointmentManagement = () => {
                                         <div>Amount: {formatCurrency(selectedAppointment.payment.amount, selectedAppointment.payment.currency)}</div>
                                         {selectedAppointment.payment.method && <div>Method: {selectedAppointment.payment.method}</div>}
                                         {selectedAppointment.payment.paymentId && <div>Payment ID: {selectedAppointment.payment.paymentId}</div>}
-                                        {/* {selectedAppointment.payment.signature && <div>Signature: {selectedAppointment.payment.signature}</div>} */}
                                         {selectedAppointment.payment.description && <div>Description: {selectedAppointment.payment.description}</div>}
                                     </div>
                                 ) : (
@@ -596,13 +595,11 @@ const AppointmentManagement = () => {
                                 )}
                             </div>
 
-                            {/* Agenda and meeting */}
                             <div>
                                 <strong>Any message from client:</strong>
                                 <div className="text-xs text-gray-500">{selectedAppointment.agenda || '—'}</div>
                             </div>
 
-                            {/* Meeting URL editable field + Save */}
                             <div>
                                 <strong>Meeting URL:</strong>
                                 <div className="mt-1 flex gap-2">
@@ -615,10 +612,10 @@ const AppointmentManagement = () => {
                                     />
                                     <button
                                         onClick={() => selectedAppointment && updateAppointment(selectedAppointment.id, { meetingUrl: modalMeetingUrl })}
-                                        disabled={updating}
+                                        disabled={savingMeeting || deleting || Boolean(selectedAppointment && rescheduleLoading[selectedAppointment.id])}
                                         className="inline-flex items-center gap-2 bg-sky-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
                                     >
-                                        {updating ? 'Saving...' : 'Save'}
+                                        {savingMeeting ? <Loader className="h-4 w-4 animate-spin" /> : 'Save'}
                                     </button>
                                 </div>
                                 {isToday(selectedAppointment.slot?.date) && modalMeetingUrl && (
@@ -630,7 +627,6 @@ const AppointmentManagement = () => {
                                 )}
                             </div>
 
-                            {/* Reschedule management controls */}
                             <div>
                                 <strong>Reschedule count:</strong>
                                 <div className="mt-1 flex items-center gap-2">
@@ -642,33 +638,32 @@ const AppointmentManagement = () => {
                                             }
                                             selectedAppointment && updateAppointment(selectedAppointment.id, { decrementReschedule: true });
                                         }}
-                                        disabled={updating || selectedAppointment.noofrescheduled <= 0}
+                                        disabled={Boolean(selectedAppointment && rescheduleLoading[selectedAppointment.id]) || savingMeeting || selectedAppointment.noofrescheduled <= 0}
                                         className="px-2 py-1 bg-gray-100 rounded text-sm"
                                         title="Decrement reschedule"
                                     >
-                                        -
+                                        {selectedAppointment && rescheduleLoading[selectedAppointment.id] === 'dec' ? <Loader className="h-4 w-4 animate-spin" /> : '-'}
                                     </button>
                                     <span className="text-xs text-gray-600">Current: {selectedAppointment.noofrescheduled}</span>
                                     <button
                                         onClick={() => selectedAppointment && updateAppointment(selectedAppointment.id, { incrementReschedule: true })}
-                                        disabled={updating}
+                                        disabled={Boolean(selectedAppointment && rescheduleLoading[selectedAppointment.id]) || savingMeeting}
                                         className="px-2 py-1 bg-gray-100 rounded text-sm"
                                         title="Increment reschedule"
                                     >
-                                        +
+                                        {selectedAppointment && rescheduleLoading[selectedAppointment.id] === 'inc' ? <Loader className="h-4 w-4 animate-spin" /> : '+'}
                                     </button>
 
                                 </div>
                             </div>
 
-                            {/* Delete action */}
                             <div className="mt-3">
                                 <button
-                                    onClick={() => selectedAppointment && deleteAppointment(selectedAppointment.id)}
-                                    disabled={updating}
+                                    onClick={() => selectedAppointment && openDeleteModal(selectedAppointment)}
+                                    disabled={deleting}
                                     className="inline-flex items-center gap-2 bg-red-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
                                 >
-                                    {updating ? 'Processing...' : 'Delete appointment'}
+                                    {deleting ? 'Processing...' : 'Delete appointment'}
                                 </button>
                                 <div className="text-xs text-gray-500 mt-2">
                                     Note: Only appointments without payment or with PENDING payment can be deleted here. Appointments with successful payments cannot be deleted from this panel.
@@ -681,11 +676,62 @@ const AppointmentManagement = () => {
                                 <div>Reschedules left: {selectedAppointment.noofrescheduled}</div>
                             </div>
 
-                            {/* Raw data behind details toggle */}
                             <details className="text-xs text-gray-600">
                                 <summary className="cursor-pointer">Show raw data</summary>
                                 <pre className="bg-gray-50 p-2 rounded overflow-auto mt-2">{JSON.stringify(selectedAppointment, null, 2)}</pre>
                             </details>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {deleteModalOpen && deleteTarget && (
+                <div className="fixed inset-0 z-60 flex items-center justify-center" role="dialog" aria-modal="true">
+                    <div className="absolute inset-0 bg-black opacity-40" onClick={closeDeleteModal} />
+                    <div className="relative max-w-lg w-full mx-4 bg-white rounded-lg shadow-lg z-10 overflow-hidden">
+                        <div className="p-4 border-b flex items-start justify-between">
+                            <div>
+                                <h3 className="text-lg font-semibold">Confirm Delete</h3>
+                                <p className="text-sm text-gray-600 mt-1">This will permanently delete the appointment if allowed.</p>
+                            </div>
+                            <button onClick={closeDeleteModal} className="text-gray-600 hover:text-gray-800 p-1" aria-label="Close">
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <div className="p-4 text-sm text-gray-700 space-y-3">
+                            <div>
+                                <strong>Client:</strong>
+                                <div className="text-xs text-gray-500">{deleteTarget.User?.name || deleteTarget.userName} • {deleteTarget.User?.email || deleteTarget.userEmail}</div>
+                            </div>
+                            <div>
+                                <strong>Slot:</strong>
+                                <div className="text-xs text-gray-500">{formatDate(deleteTarget.slot?.date)} {deleteTarget.slot?.timeSlot ? `• ${deleteTarget.slot.timeSlot}` : ''}</div>
+                            </div>
+                            <div>
+                                <strong>Payment status:</strong>
+                                <div className="text-xs text-gray-500">{deleteTarget.payment ? deleteTarget.payment.status : 'No payment'}</div>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                                <button
+                                    onClick={closeDeleteModal}
+                                    disabled={deleting}
+                                    className="px-3 py-1 rounded border bg-white text-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => deleteAppointment(deleteTarget.id)}
+                                    disabled={deleting}
+                                    className="px-3 py-1 rounded bg-red-600 text-white text-sm disabled:opacity-50"
+                                >
+                                    {deleting ? 'Deleting...' : 'Confirm Delete'}
+                                </button>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                                Only appointments without payment or with PENDING payment can be deleted. Appointments with successful payments cannot be deleted from this panel.
+                            </div>
                         </div>
                     </div>
                 </div>

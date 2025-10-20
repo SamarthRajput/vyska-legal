@@ -140,7 +140,8 @@ export async function DELETE(request: NextRequest) {
         }
         // if appointment status is pending and no payment exists then only the appointment will get delete
         // if payment done then admin can not cancelled the appointment.
-        if (appointment.status !== "PENDING") {
+        // Only allow deletion when the appointment is still pending.
+        if (appointment.status === "CONFIRMED") {
             return NextResponse.json({ error: "Only pending appointments can be deleted." }, { status: 400 });
         }
         // check payment
