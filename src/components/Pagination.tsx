@@ -39,7 +39,7 @@ const Pagination: React.FC<PaginationProps> = ({
                         className="flex-1 sm:flex-none px-3 py-1 rounded border text-sm flex items-center justify-center gap-1 disabled:opacity-50 cursor-pointer transition-colors bg-white hover:bg-gray-100"
                         disabled={pagination.page === 1}
                         onClick={() => handlePageChange(pagination.page - 1)}
-                        title="Go to previous page"
+                        title={pagination.page === 1 ? "You're already on the first page" : "Go to previous page"}
                     >
                         <ChevronLeft /> <span className="hidden sm:inline">Previous</span>
                     </button>
@@ -53,7 +53,7 @@ const Pagination: React.FC<PaginationProps> = ({
                         onChange={(e) => handlePageChange(Number(e.target.value))}
                         className="w-full sm:w-14 px-2 py-1 border rounded text-sm text-center"
                         style={{ minWidth: 0 }}
-                        title="Current page number"
+                        title={`Page ${pagination.page} of ${pagination.totalPages} — enter a number between 1 and ${pagination.totalPages}`}
                     />
 
                     {/* Next */}
@@ -61,7 +61,7 @@ const Pagination: React.FC<PaginationProps> = ({
                         className="flex-1 sm:flex-none px-3 py-1 rounded border text-sm flex items-center justify-center gap-1 disabled:opacity-50 cursor-pointer transition-colors bg-white hover:bg-gray-100"
                         disabled={pagination.page >= pagination.totalPages}
                         onClick={() => handlePageChange(pagination.page + 1)}
-                        title="Go to next page"
+                        title={pagination.page >= pagination.totalPages ? "You're already on the last page" : "Go to next page"}
                     >
                         <span className="hidden sm:inline">Next</span> <ChevronRight />
                     </button>
