@@ -87,7 +87,7 @@ const AppointmentManagement = () => {
     });
     const [search, setSearch] = React.useState<string>('');
     const [status, setStatus] = React.useState<'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'all'>('all');
-    const [loading, setLoading] = React.useState<boolean>(false)
+    const [loading, setLoading] = React.useState<boolean>(true)
     const [error, setError] = React.useState<string | null>(null)
 
     const [selectedAppointment, setSelectedAppointment] = React.useState<Appointment | null>(null);
@@ -312,11 +312,13 @@ const AppointmentManagement = () => {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="flex-1 border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        title="Search appointments"
                     />
                     <select
                         value={status}
                         onChange={(e) => setStatus(e.target.value as 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'all')}
                         className="border p-2 rounded-md"
+                        title="Filter by status"
                     >
                         <option value="all">All Statuses</option>
                         <option value="PENDING">Pending</option>
@@ -343,7 +345,7 @@ const AppointmentManagement = () => {
                             {search && (
                                 <span className="flex items-center gap-2 bg-gray-100 text-sm px-2 py-1 rounded">
                                     {search}
-                                    <button onClick={() => setSearch('')} className="text-red-500">
+                                    <button onClick={() => setSearch('')} className="text-red-500" title="Clear search">
                                         <X className="h-4 w-4" />
                                     </button>
                                 </span>
@@ -351,7 +353,7 @@ const AppointmentManagement = () => {
                             {status !== 'all' && (
                                 <span className="flex items-center gap-2 bg-gray-100 text-sm px-2 py-1 rounded">
                                     {status}
-                                    <button onClick={() => setStatus('all')} className="text-red-500">
+                                    <button onClick={() => setStatus('all')} className="text-red-500" title="Clear status filter">
                                         <X className="h-4 w-4" />
                                     </button>
                                 </span>
@@ -472,7 +474,7 @@ const AppointmentManagement = () => {
                                             <td className="px-4 py-3 text-sm">{formatDateTime(app.createdAt)}</td>
                                             <td className="px-4 py-3 text-sm">
                                                 <div className="flex flex-col">
-                                                    <button onClick={() => openModal(app)} className="text-sky-600 text-sm">View</button>
+                                                    <button onClick={() => openModal(app)} className="text-sky-600 text-sm" title="View appointment details">View</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -503,9 +505,9 @@ const AppointmentManagement = () => {
                                     </div>
 
                                     <div className="mt-3 flex gap-2">
-                                        <button onClick={() => openModal(app)} className="text-sky-600 text-sm">View</button>
+                                        <button onClick={() => openModal(app)} className="text-sky-600 text-sm" title="View appointment details">View</button>
                                         {isToday(app.slot?.date) && app.meetUrl && (
-                                            <a href={app.meetUrl} target="_blank" rel="noreferrer" className="text-white bg-sky-600 px-3 py-1 rounded text-sm">
+                                            <a href={app.meetUrl} target="_blank" rel="noreferrer" className="text-white bg-sky-600 px-3 py-1 rounded text-sm" title="Join meeting">
                                                 Join
                                             </a>
                                         )}
@@ -551,7 +553,7 @@ const AppointmentManagement = () => {
                                 </div>
                             </div>
 
-                            <button onClick={closeModal} className="text-gray-600 hover:text-gray-800 p-1" aria-label="Close">
+                            <button onClick={closeModal} className="text-gray-600 hover:text-gray-800 p-1" aria-label="Close" title="Close dialog">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
@@ -609,18 +611,20 @@ const AppointmentManagement = () => {
                                         onChange={(e) => setModalMeetingUrl(e.target.value)}
                                         className="flex-1 border p-2 rounded-md text-sm"
                                         placeholder="https://..."
+                                        title="Meeting URL"
                                     />
                                     <button
                                         onClick={() => selectedAppointment && updateAppointment(selectedAppointment.id, { meetingUrl: modalMeetingUrl })}
                                         disabled={savingMeeting || deleting || Boolean(selectedAppointment && rescheduleLoading[selectedAppointment.id])}
                                         className="inline-flex items-center gap-2 bg-sky-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                                        title="Save meeting URL"
                                     >
                                         {savingMeeting ? <Loader className="h-4 w-4 animate-spin" /> : 'Save'}
                                     </button>
                                 </div>
                                 {isToday(selectedAppointment.slot?.date) && modalMeetingUrl && (
                                     <div className="mt-2">
-                                        <a href={modalMeetingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-sky-600 text-white px-3 py-1 rounded">
+                                        <a href={modalMeetingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-sky-600 text-white px-3 py-1 rounded" title="Join meeting">
                                             Join Meeting
                                         </a>
                                     </div>
@@ -662,6 +666,7 @@ const AppointmentManagement = () => {
                                     onClick={() => selectedAppointment && openDeleteModal(selectedAppointment)}
                                     disabled={deleting}
                                     className="inline-flex items-center gap-2 bg-red-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                                    title="Delete appointment"
                                 >
                                     {deleting ? 'Processing...' : 'Delete appointment'}
                                 </button>
@@ -694,7 +699,7 @@ const AppointmentManagement = () => {
                                 <h3 className="text-lg font-semibold">Confirm Delete</h3>
                                 <p className="text-sm text-gray-600 mt-1">This will permanently delete the appointment if allowed.</p>
                             </div>
-                            <button onClick={closeDeleteModal} className="text-gray-600 hover:text-gray-800 p-1" aria-label="Close">
+                            <button onClick={closeDeleteModal} className="text-gray-600 hover:text-gray-800 p-1" aria-label="Close" title="Close dialog">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
@@ -718,6 +723,7 @@ const AppointmentManagement = () => {
                                     onClick={closeDeleteModal}
                                     disabled={deleting}
                                     className="px-3 py-1 rounded border bg-white text-sm"
+                                    title="Cancel delete"
                                 >
                                     Cancel
                                 </button>
@@ -725,6 +731,7 @@ const AppointmentManagement = () => {
                                     onClick={() => deleteAppointment(deleteTarget.id)}
                                     disabled={deleting}
                                     className="px-3 py-1 rounded bg-red-600 text-white text-sm disabled:opacity-50"
+                                    title="Confirm delete appointment"
                                 >
                                     {deleting ? 'Deleting...' : 'Confirm Delete'}
                                 </button>
