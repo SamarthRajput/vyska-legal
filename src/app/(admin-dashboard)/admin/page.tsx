@@ -67,8 +67,8 @@ export default function AdminPage() {
                 <SummaryCard title="Contacts" value={data.contacts.total} icon="mail" />
                 <SummaryCard title="Services" value={data.services.total} icon="service" />
                 <SummaryCard title="Team Members" value={data.teamMembers.total} icon="team" />
-                <SummaryCard title="Payments Counts" value={`₹${Number(data.payments.total)}`} icon="service" />
-                <SummaryCard title="Total Payments" value={`₹${Number(data.payments.revenue.)}`} icon="service" />
+                <SummaryCard title="Payments Counts" value={`${Number(data.payments.total)}`} icon="service" />
+                <SummaryCard title="Total Payments" value={`₹${Number(data.payments.revenue)}`} icon="service" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="h-full">
