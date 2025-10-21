@@ -3,7 +3,7 @@
 "use client";
 import getExcerpt from '@/lib/getExcerpt';
 import Link from 'next/link';
-import React from 'react'
+import React, { useEffect, useState } from 'react';
 
 interface Pagination {
     page: number;
@@ -30,17 +30,36 @@ interface Blog {
     author: Author;
 }
 
-const AllBlogs = () => {
-    const [blogs, setBlogs] = React.useState<Blog[]>([]);
-    const [pagination, setPagination] = React.useState<Pagination | null>(null);
-    const [loading, setLoading] = React.useState<boolean>(false);
-    const [error, setError] = React.useState<string | null>(null);
-    const [page, setPage] = React.useState<number>(1);
-    const [limit, setLimit] = React.useState<number>(10);
-    const [search, setSearch] = React.useState<string>("");
-    const [debouncedSearch, setDebouncedSearch] = React.useState<string>("");
+interface UserProfile {
+    canWriteBlog: boolean;
+}
 
-    React.useEffect(() => {
+const AllBlogs = () => {
+    const [blogs, setBlogs] = useState<Blog[]>([]);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+    const [page, setPage] = useState<number>(1);
+    const [limit, setLimit] = useState<number>(10);
+    const [search, setSearch] = useState<string>("");
+    const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+    const [canWriteBlog, setCanWriteBlog] = useState<boolean>(false);
+
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                const res = await fetch('/api/user/me');
+                if (!res.ok) throw new Error('Failed to fetch user profile');
+                const data: UserProfile = await res.json();
+                setCanWriteBlog(data.canWriteBlog ?? false);
+            } catch (_error) {
+                setCanWriteBlog(false);
+            }
+        };
+        fetchUserProfile();
+    }, []);
+
+    useEffect(() => {
         const handler = setTimeout(() => {
             setDebouncedSearch(search);
         }, 500);
@@ -58,7 +77,7 @@ const AllBlogs = () => {
         setPage(1);
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
         const fetchBlogs = async () => {
             setLoading(true);
             setError(null);
@@ -105,32 +124,32 @@ const AllBlogs = () => {
         if (!pagination) return [];
         const { totalPages, page: currentPage } = pagination;
         const pages: (number | string)[] = [];
-        
+
         if (totalPages <= 7) {
             for (let i = 1; i <= totalPages; i++) {
                 pages.push(i);
             }
         } else {
             pages.push(1);
-            
+
             if (currentPage > 3) {
                 pages.push('...');
             }
-            
+
             const start = Math.max(2, currentPage - 1);
             const end = Math.min(totalPages - 1, currentPage + 1);
-            
+
             for (let i = start; i <= end; i++) {
                 pages.push(i);
             }
-            
+
             if (currentPage < totalPages - 2) {
                 pages.push('...');
             }
-            
+
             pages.push(totalPages);
         }
-        
+
         return pages;
     };
 
@@ -145,16 +164,18 @@ const AllBlogs = () => {
                     <p className="text-base sm:text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto mb-6 md:mb-8 text-blue-50 leading-relaxed px-4">
                         Dive into articles, insights, and stories from our community and experts
                     </p>
-                    <Link
-                        href="/blog/write"
-                        className="hidden md:inline-flex items-center gap-2 bg-white text-blue-700 px-6 md:px-8 py-3 md:py-4 rounded-xl hover:bg-blue-50 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-4 focus:ring-white/50"
-                        aria-label="Create a new blog"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Write a Blog
-                    </Link>
+                    {canWriteBlog && (
+                        <Link
+                            href="/blog/write"
+                            className="hidden md:inline-flex items-center gap-2 bg-white text-blue-700 px-6 md:px-8 py-3 md:py-4 rounded-xl hover:bg-blue-50 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-4 focus:ring-white/50"
+                            aria-label="Create a new blog"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Write a Blog
+                        </Link>
+                    )}
                 </div>
             </header>
 
@@ -455,7 +476,9 @@ const AllBlogs = () => {
 
             <Link
                 href="/blog/write"
-                className="fixed bottom-6 right-6 z-50 md:hidden bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-2xl p-4 flex items-center justify-center hover:shadow-3xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-400 group"
+                className={`fixed bottom-6 right-6 z-50 md:hidden bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-2xl p-4 flex items-center justify-center hover:shadow-3xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-400 group ${
+                    !canWriteBlog ? 'hidden' : ''
+                }`}
                 aria-label="Create a new blog"
                 title="Create Blog"
             >
@@ -480,4 +503,4 @@ const AllBlogs = () => {
     )
 }
 
-export default AllBlogs
+export default AllBlogs;

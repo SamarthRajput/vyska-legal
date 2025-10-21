@@ -75,7 +75,7 @@ export async function PUT(
         { status: 401 }
       );
     }
-    
+
     const existingUser = await getCurrentUser();
     if (!existingUser || existingUser.role !== UserRole.ADMIN) {
       return NextResponse.json(
@@ -83,19 +83,25 @@ export async function PUT(
         { status: 403 }
       );
     }
-    
+
     if (!userId) {
-      console.error("User ID is required.");
       return NextResponse.json({ error: "User ID is required." }, { status: 400 });
     }
-    
+
     const body = await request.json();
-    const { role } = body;
-    const normalizedRole = role?.toUpperCase();
+    const { role, canWriteBlog } = body;
     
-    if (!normalizedRole || (normalizedRole !== "ADMIN" && normalizedRole !== "USER")) {
+    const normalizedRole = role?.toUpperCase();
+    if (role && !["ADMIN", "USER"].includes(normalizedRole)) {
       return NextResponse.json(
         { error: "Invalid role. Must be 'ADMIN' or 'USER'." },
+        { status: 400 }
+      );
+    }
+
+    if (canWriteBlog !== undefined && typeof canWriteBlog !== "boolean") {
+      return NextResponse.json(
+        { error: "'canWriteBlog' must be a boolean." },
         { status: 400 }
       );
     }
@@ -105,17 +111,22 @@ export async function PUT(
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    // Update role in DB
+    const updateData: any = {};
+    if (normalizedRole) {
+      updateData.role = normalizedRole === "ADMIN" ? UserRole.ADMIN : UserRole.USER;
+    }
+    if (canWriteBlog !== undefined) {
+      updateData.canWriteBlog = canWriteBlog;
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: {
-        role: normalizedRole === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      },
+      data: updateData,
     });
 
     return NextResponse.json(
       {
-        message: "User role updated successfully.",
+        message: "User updated successfully.",
         user: updatedUser,
       },
       { status: 200 }

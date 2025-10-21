@@ -27,6 +27,7 @@ model User {
   name               String
   email              String        @unique
   role               UserRole      @default(USER)
+  canWriteBlog       Boolean       @default(false)
   profilePicture     String?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
