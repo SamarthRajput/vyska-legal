@@ -340,16 +340,7 @@ const BookAppointments = () => {
             View, reschedule, or cancel your appointments. Need a new one? Book below!
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <button
-            className="px-4 sm:px-5 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700 transition focus:outline-none focus:ring-2 focus:ring-green-400 text-sm sm:text-base w-full sm:w-auto"
-            onClick={() => router.push("/user/blogs")}
-            onMouseEnter={handlePrefetch}
-            onFocus={handlePrefetch}
-            type="button"
-          >
-            Manage Blogs
-          </button>
+        <div className="flex sm:flex-row">
           <button
             className="px-4 sm:px-5 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base w-full sm:w-auto"
             onClick={() => router.push("/book-appointments")}
