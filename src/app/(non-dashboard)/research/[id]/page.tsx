@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { pdf } from '@react-pdf/renderer';
 import ResearchPaperPDF from '@/components/ResearchPaperPDF';
 import MarkdownRender from '@/components/blog/MarkdownRender';
+import ShareButtons from '@/components/ShareButtons';
 
 const PDFViewer = dynamic(
   () => import('@react-pdf/renderer').then((mod) => mod.PDFViewer),
@@ -155,6 +156,11 @@ export default function ResearchDetailPage() {
     },
   };
 
+  const researchUrl =
+    typeof window !== 'undefined'
+      ? window.location.href
+      : `/research/${research.id}`;
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
@@ -163,32 +169,39 @@ export default function ResearchDetailPage() {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6 break-words leading-tight">
             {research.title}
           </h1>
-          
+
           {/* Author Info */}
-          <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-            {research.createdBy.profilePicture ? (
-              <img
-                src={research.createdBy.profilePicture}
-                alt={research.createdBy.name}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm sm:text-base">
-                {research.createdBy.name.charAt(0).toUpperCase()}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              {research.createdBy.profilePicture ? (
+                <img
+                  src={research.createdBy.profilePicture}
+                  alt={research.createdBy.name}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm sm:text-base">
+                  {research.createdBy.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base truncate">
+                  {research.createdBy.name}
+                </p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                  {new Date(research.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </p>
               </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base truncate">
-                {research.createdBy.name}
-              </p>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                {new Date(research.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </p>
             </div>
+            <ShareButtons
+              title={research.title}
+              url={researchUrl}
+              excerpt={research.description ?? undefined}
+            />
           </div>
 
           {/* Action Buttons */}

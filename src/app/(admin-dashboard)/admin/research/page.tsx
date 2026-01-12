@@ -1,197 +1,189 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { EditorSection } from '@/components/blog/BlogEditor';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import TitleInputSection from '@/components/blog/TitleInputSection';
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-export default function CreateResearchPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    content: '',
-  });
-  const [file, setFile] = useState<File | null>(null);
-  const [thumbnail, setThumbnail] = useState<File | null>(null);
-  const [mode, setMode] = useState<'write' | 'upload'>('write');
+interface Research {
+  id: string;
+  title: string;
+  description: string | null;
+  content: string | null;
+  fileUrl: string | null;
+  thumbnailUrl: string | null;
+  createdAt: string;
+  createdBy: {
+    id: string;
+    name: string;
+    email: string;
+    profilePicture: string | null;
+  };
+}
 
-  useEffect(() => {
-    checkAdminStatus();
-  }, []);
+export default function ResearchManagementPage() {
+    const router = useRouter();
+    const [researchPapers, setResearchPapers] = useState<Research[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filter, setFilter] = useState("all");
+    const [sortBy, setSortBy] = useState("createdAt");
+    const [isDeleting, setIsDeleting] = useState(false);
 
-  const checkAdminStatus = async () => {
-    try {
-      const response = await fetch('/api/auth/check-admin');
-      const data = await response.json();
-      
-      if (!data.isAdmin) {
-        router.push('/');
+    useEffect(() => {
+      fetchResearchPapers();
+    }, [searchQuery, filter, sortBy]);
+
+    const fetchResearchPapers = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams({
+          page: "1",
+          limit: "100",
+          ...(searchQuery && { search: searchQuery }),
+          ...(filter && { filter }),
+          ...(sortBy && { sortBy }),
+        });
+
+        const response = await fetch(`/api/admin/research?${params}`);
+        if (response.ok) {
+          const data = await response.json();
+          setResearchPapers(data);
+        }
+      } catch (error) {
+        console.error("Error fetching research papers:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleSelectAll = () => {
+      if (selectedIds.size === researchPapers.length) {
+        setSelectedIds(new Set());
+      } else {
+        setSelectedIds(new Set(researchPapers.map((r) => r.id)));
+      }
+    };
+
+    const handleSelectOne = (id: string) => {
+      const newSelected = new Set(selectedIds);
+      if (newSelected.has(id)) {
+        newSelected.delete(id);
+      } else {
+        newSelected.add(id);
+      }
+      setSelectedIds(newSelected);
+    };
+
+    const handleBulkDelete = async () => {
+      if (selectedIds.size === 0) return;
+
+      const confirmMessage = `Are you sure you want to delete ${selectedIds.size} research paper${
+        selectedIds.size > 1 ? "s" : ""
+      }?`;
+
+      if (!confirm(confirmMessage)) return;
+
+      setIsDeleting(true);
+      try {
+        const deletePromises = Array.from(selectedIds).map((id) =>
+          fetch(`/api/admin/research/${id}`, { method: "DELETE" })
+        );
+
+        await Promise.all(deletePromises);
+        alert(`Successfully deleted ${selectedIds.size} research paper(s)`);
+        setSelectedIds(new Set());
+        fetchResearchPapers();
+      } 
+      catch (error) {
+        console.error("Error deleting research papers:", error);
+        alert("Failed to delete some research papers");
+      } 
+      finally {
+        setIsDeleting(false);
+      }
+    };
+
+    const handleDeleteOne = async (id: string) => {
+      if (!confirm("Are you sure you want to delete this research paper?")) {
         return;
       }
-      
-      setIsAdmin(true);
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-      router.push('/');
-    } finally {
-      setCheckingAuth(false);
-    }
-  };
 
-  const handleContentChange = (value: string) => {
-    setFormData({ ...formData, content: value });
-  };
+      try {
+        const response = await fetch(`/api/admin/research/${id}`, {
+          method: "DELETE",
+        });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const data = new FormData();
-      data.append('title', formData.title);
-      data.append('description', formData.description);
-      
-      if (mode === 'write') {
-        data.append('content', formData.content);
-      } else if (file) {
-        data.append('file', file);
+        if (response.ok) {
+          alert("Research paper deleted successfully");
+          fetchResearchPapers();
+        } else {
+          alert("Failed to delete research paper");
+        }
+      } catch (error) {
+        console.error("Error deleting research:", error);
+        alert("Failed to delete research paper");
       }
-      
-      if (thumbnail) {
-        data.append('thumbnail', thumbnail);
-      }
-
-      const response = await fetch('/api/admin/research', {
-        method: 'POST',
-        body: data,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create research paper');
-      }
-
-      const result = await response.json();
-      toast.success('Research paper created successfully!');
-      router.push(`/research/${result.id}`);
-    } catch (error: unknown) {
-      console.error('Error:', error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Failed to create research paper'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (checkingAuth) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return null;
-  }
+    };
 
   return (
-    <div className="max-w-6xl mx-auto p-3 sm:p-6 lg:p-8">
-      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">
-        Create Research Paper
-      </h1>
-
-      {/* Mode Toggle */}
-      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row gap-2 sm:gap-4">
-        <button
-          type="button"
-          onClick={() => setMode('write')}
-          className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-all text-sm sm:text-base ${
-            mode === 'write'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          ✍️ Write Paper
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode('upload')}
-          className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-all text-sm sm:text-base ${
-            mode === 'upload'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          📤 Upload PDF
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-        <TitleInputSection
-          title={formData.title}
-          setTitle={(newTitle) => setFormData({ ...formData, title: newTitle })}
-          content={formData.content}
-        />
-
-        <div>
-          <label className="block text-sm font-semibold mb-2">
-            Abstract <span className="text-gray-500">(Optional)</span>
-          </label>
-          <textarea
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            rows={5}
-            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-            placeholder="Write a brief abstract summarizing your research paper (200-300 words recommended)..."
-          />
-        </div>
-
-        {mode === 'write' ? (
-          <div>
-            <label className="block text-sm font-semibold mb-2">
-              Paper Content <span className="text-red-500">*</span>
-            </label>
-            <EditorSection
-              contentMd={formData.content}
-              handleContentChange={handleContentChange}
-            />
-            <p className="text-xs sm:text-sm text-gray-500 mt-2">
-              💡 Tip: Use Markdown formatting for headers (# ## ###), bold (**text**), 
-              italic (*text*), lists, and code blocks
-            </p>
-          </div>
-        ) : (
-          <div>
-            <label className="block text-sm font-semibold mb-2">
-              Upload PDF <span className="text-red-500">*</span>
-            </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-8 text-center hover:border-blue-500 transition-colors">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Filters, Search, and Create Button */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            {/* Search */}
+            <div className="md:col-span-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Search
+              </label>
               <input
-                type="file"
-                accept=".pdf"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="hidden"
-                id="pdf-upload"
-                required={mode === 'upload'}
+                type="text"
+                placeholder="Search by title, description..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              <label
-                htmlFor="pdf-upload"
-                className="cursor-pointer flex flex-col items-center"
+            </div>
+
+            {/* Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filter
+              </label>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Papers</option>
+                <option value="withFile">With Uploaded File</option>
+                <option value="withoutFile">Without File</option>
+              </select>
+            </div>
+
+            {/* Sort */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Sort By
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="createdAt">Date Created</option>
+                <option value="title">Title (A-Z)</option>
+              </select>
+            </div>
+
+            {/* Create Button */}
+            <div>
+              <button
+                onClick={() => router.push("/admin/research/create")}
+                className="w-full px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 flex items-center justify-center gap-2"
               >
                 <svg
-                  className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mb-3 sm:mb-4"
+                  className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -200,83 +192,187 @@ export default function CreateResearchPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    d="M12 4v16m8-8H4"
                   />
                 </svg>
-                {file ? (
-                  <span className="text-blue-600 font-medium text-sm sm:text-base break-all px-2">
-                    {file.name}
-                  </span>
-                ) : (
-                  <>
-                    <span className="text-gray-600 font-medium text-sm sm:text-base">
-                      Click to upload PDF
-                    </span>
-                    <span className="text-gray-400 text-xs sm:text-sm mt-1">
-                      or drag and drop
-                    </span>
-                  </>
-                )}
-              </label>
+                Create New Paper
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Bulk Actions Bar */}
+        {selectedIds.size > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+            <span className="text-blue-800 font-medium">
+              {selectedIds.size} paper{selectedIds.size > 1 ? "s" : ""} selected
+            </span>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
+              >
+                Clear Selection
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={isDeleting}
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isDeleting ? "Deleting..." : "Delete Selected"}
+              </button>
             </div>
           </div>
         )}
 
-        <div>
-          <label className="block text-sm font-semibold mb-2">
-            Thumbnail Image <span className="text-gray-500">(Optional)</span>
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setThumbnail(e.target.files?.[0] || null)}
-            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 file:mr-3 sm:file:mr-4 file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4 file:rounded-md file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 text-sm sm:text-base"
-          />
-          {thumbnail && (
-            <p className="text-xs sm:text-sm text-green-600 mt-2 break-all">
-              ✓ {thumbnail.name} selected
-            </p>
+        {/* Research Papers Table */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : researchPapers.length === 0 ? (
+            <div className="text-center py-12">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                No research papers found
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Get started by creating a new research paper.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={
+                          researchPapers.length > 0 &&
+                          selectedIds.size === researchPapers.length
+                        }
+                        onChange={handleSelectAll}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                      />
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Title
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Author
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date Created
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {researchPapers.map((paper) => (
+                    <tr
+                      key={paper.id}
+                      className={`hover:bg-gray-50 transition-colors ${
+                        selectedIds.has(paper.id) ? "bg-blue-50" : ""
+                      }`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(paper.id)}
+                          onChange={() => handleSelectOne(paper.id)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          {paper.thumbnailUrl && (
+                            <img
+                              src={paper.thumbnailUrl}
+                              alt={paper.title}
+                              className="h-10 w-10 rounded object-cover mr-3"
+                            />
+                          )}
+                          <div>
+                            <div className="text-sm font-medium text-gray-900 line-clamp-1">
+                              {paper.title}
+                            </div>
+                            {paper.description && (
+                              <div className="text-sm text-gray-500 line-clamp-1">
+                                {paper.description}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          {paper.createdBy.profilePicture && (
+                            <img
+                              src={paper.createdBy.profilePicture}
+                              alt={paper.createdBy.name}
+                              className="h-8 w-8 rounded-full mr-2"
+                            />
+                          )}
+                          <div className="text-sm text-gray-900">
+                            {paper.createdBy.name}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(paper.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() =>
+                            router.push(`/research/${paper.id}`)
+                          }
+                          className="text-blue-600 hover:text-blue-800 mr-4"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleDeleteOne(paper.id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 sm:py-4 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl text-sm sm:text-base"
-        >
-          {loading ? (
-            <span className="flex items-center justify-center">
-              <svg
-                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              <span className="hidden sm:inline">Creating Research Paper...</span>
-              <span className="sm:hidden">Creating...</span>
-            </span>
-          ) : (
-            <span>
-              <span className="hidden sm:inline">📝 Publish Research Paper</span>
-              <span className="sm:hidden">📝 Publish Paper</span>
-            </span>
-          )}
-        </button>
-      </form>
+        {researchPapers.length > 0 && (
+          <div className="mt-6 bg-white rounded-lg shadow-md p-4">
+            <div className="flex items-center justify-between text-sm text-gray-600">
+              <span>Total: {researchPapers.length} research papers</span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

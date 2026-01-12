@@ -52,8 +52,13 @@ export default function Footer() {
                             </h4>
                             <ul className="space-y-3">
                                 <li>
-                                    <Link href="/services" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                        Services
+                                    <Link href="/user" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                        User Dashboard
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/admin" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                        Admin Dashboard
                                     </Link>
                                 </li>
                                 <li>
@@ -64,11 +69,6 @@ export default function Footer() {
                                 <li>
                                     <Link href="/blogs" className="text-gray-700 hover:text-blue-600 transition-colors">
                                         Blogs
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/faq" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                        FAQ
                                     </Link>
                                 </li>
                             </ul>
