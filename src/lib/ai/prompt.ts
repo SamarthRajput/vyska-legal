@@ -1,5 +1,58 @@
 import type { ContinuationRequest, OutlineRequest, ToneRewriteRequest, ToneType } from './types';
 
+interface TitleRequest {
+  content?: string;
+  currentTitle?: string;
+}
+
+export const createTitlePrompt = ({ content, currentTitle }: TitleRequest): string => {
+  if (currentTitle?.trim() && content?.trim()) {
+    return `Based on the current title and blog content below, generate 3 improved, engaging, SEO-friendly titles. The new titles should be better than the current one while staying true to the content.
+
+Current Title: "${currentTitle}"
+
+Blog Content:
+${content}
+
+Requirements:
+- Titles should be between 40-60 characters for optimal SEO
+- Make them more catchy and engaging than the current title
+- Ensure they accurately reflect the content
+- Use action words and power words when appropriate
+- Focus on click-worthiness while maintaining accuracy
+
+Return only the 3 improved titles, each on a new line:`;
+
+  } else if (currentTitle?.trim()) {
+    return `Improve and enhance the following title to make it more engaging, SEO-friendly, and click-worthy. Generate 3 variations:
+
+Current Title: "${currentTitle}"
+
+Requirements:
+- Titles should be between 40-60 characters for optimal SEO
+- Make them more catchy and engaging
+- Use action words and power words
+- Focus on click-worthiness
+- Maintain the core meaning of the original title
+
+Return only the 3 improved titles, each on a new line:`;
+
+  } else {
+    return `Based on the following blog content, generate 3 engaging, SEO-friendly titles:
+
+${content}
+
+Requirements:
+- Titles should be between 40-60 characters for optimal SEO
+- Make them catchy and engaging
+- Ensure they accurately reflect the content
+- Use action words when appropriate
+
+Return only the titles, each on a new line:`;
+  }
+};
+
+
 export const createContinuationPrompt = ({
   previousContext,
   currentParagraph,

@@ -1,62 +1,17 @@
 'use client'
 import { useEffect, useRef, useState } from 'react';
+import { useConsent } from '@/hooks/useConsent';
+import { toast } from 'sonner';
 
 export default function DisclaimerModal() {
-  const [showModal, setShowModal] = useState(false);
+  const { hasConsented, isLoading, saveConsent, denyConsent } = useConsent();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const modalRef = useRef<HTMLDivElement | null>(null);
   const acceptButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  useEffect(() => {
-    const checkConsent = async () => {
-      const hasConsented = localStorage.getItem('disclaimerConsent');
-      const cookieConsent = document.cookie.includes('consent=accepted');
-
-      if (hasConsented === 'accepted' || cookieConsent) {
-        setShowModal(false);
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/check-consent');
-        const data = await response.json();
-
-        if (data.hasConsented) {
-          localStorage.setItem('disclaimerConsent', 'accepted');
-          document.cookie = `consent=accepted; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-          setShowModal(false);
-        } else {
-          setShowModal(true);
-        }
-      } catch (error) {
-        console.error('Error checking consent:', error);
-        setShowModal(true);
-      }
-    };
-
-    checkConsent();
-  }, []);
-
-  // Ensure mobile viewport meta exists
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    let meta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.name = 'viewport';
-      meta.content = 'width=device-width, initial-scale=1, maximum-scale=5';
-      document.head.appendChild(meta);
-    } else {
-      if (!/width=device-width/.test(meta.content)) {
-        meta.content = 'width=device-width, initial-scale=1, maximum-scale=5';
-      }
-    }
-  }, []);
-
   // Focus trap and keyboard management
   useEffect(() => {
-    if (!showModal) return;
+    if (hasConsented || isLoading) return;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -66,7 +21,7 @@ export default function DisclaimerModal() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        handleDeny();
+        denyConsent();
       } else if (e.key === 'Tab') {
         const container = modalRef.current;
         if (!container) return;
@@ -93,42 +48,18 @@ export default function DisclaimerModal() {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [showModal]);
+  }, [hasConsented, isLoading, denyConsent]);
 
   const handleAccept = async () => {
     setIsSubmitting(true);
-
-    try {
-      const response = await fetch('/api/consent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          consent: true,
-          timestamp: new Date().toISOString()
-        })
-      });
-
-      if (response.ok) {
-        localStorage.setItem('disclaimerConsent', 'accepted');
-        document.cookie = `consent=accepted; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-        setShowModal(false);
-      } else {
-        throw new Error('Failed to save consent');
-      }
-    } catch (error) {
-      console.error('Error saving consent:', error);
-      alert('Failed to submit consent. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+    const success = await saveConsent();
+    if (!success) {
+      toast.error('Failed to submit consent. Please try again.');
     }
+    setIsSubmitting(false);
   };
 
-  const handleDeny = () => {
-    localStorage.setItem('disclaimerConsent', 'denied');
-    window.history.back();
-  };
-
-  if (!showModal) return null;
+  if (hasConsented || isLoading) return null;
 
   return (
     <div
@@ -140,9 +71,8 @@ export default function DisclaimerModal() {
                  animate-in fade-in duration-300"
       aria-hidden={false}
       onClick={(e) => {
-        // Close on backdrop click (desktop only for better UX)
         if (e.target === e.currentTarget && window.innerWidth >= 640) {
-          handleDeny();
+          denyConsent();
         }
       }}
     >
@@ -170,12 +100,12 @@ export default function DisclaimerModal() {
       >
         {/* Content wrapper with responsive padding */}
         <div className="p-5 xs:p-6 sm:p-7 md:p-8 lg:p-10">
-          
+
           {/* Close button - visible on all screens, positioned better */}
           <div className="flex items-start justify-between mb-3 sm:mb-4 -mt-1">
             <div className="w-0" />
             <button
-              onClick={handleDeny}
+              onClick={denyConsent}
               aria-label="Close disclaimer"
               disabled={isSubmitting}
               className="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200
@@ -212,8 +142,8 @@ export default function DisclaimerModal() {
           </div>
 
           {/* Title - responsive typography */}
-          <h2 
-            id="disclaimer-title" 
+          <h2
+            id="disclaimer-title"
             className="text-xl xs:text-2xl sm:text-3xl md:text-4xl 
                        font-bold text-center 
                        mb-3 sm:mb-4 
@@ -240,8 +170,8 @@ export default function DisclaimerModal() {
                         leading-relaxed
                         px-1 sm:px-0">
             By clicking &quot;Accept & Continue&quot;, you agree to our{' '}
-            <a 
-              href="/terms" 
+            <a
+              href="/terms"
               className="text-blue-600 dark:text-blue-400 
                          hover:underline hover:text-blue-700 dark:hover:text-blue-300
                          font-medium
@@ -252,8 +182,8 @@ export default function DisclaimerModal() {
               Terms of Service
             </a>
             {' '}and{' '}
-            <a 
-              href="/privacy" 
+            <a
+              href="/privacy"
               className="text-blue-600 dark:text-blue-400 
                          hover:underline hover:text-blue-700 dark:hover:text-blue-300
                          font-medium
@@ -305,9 +235,9 @@ export default function DisclaimerModal() {
                 </>
               )}
             </button>
-            
+
             <button
-              onClick={handleDeny}
+              onClick={denyConsent}
               disabled={isSubmitting}
               className="flex-1 
                          bg-gray-200 dark:bg-gray-700 

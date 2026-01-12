@@ -257,8 +257,15 @@ const BookAppointments = () => {
           )
         );
       } else {
-        toast.error(data.error || data.message || "Failed to reschedule");
-        setError(data.error || "Failed to reschedule");
+        let errorMessage = data.error || data.message || "Failed to reschedule";
+        if (data.details) {
+          const fieldErrors = Object.entries(data.details)
+            .map(([field, errors]: [string, any]) => `${field}: ${errors.join(', ')}`)
+            .join('; ');
+          if (fieldErrors) errorMessage += ` (${fieldErrors})`;
+        }
+        toast.error(errorMessage);
+        setError(errorMessage);
       }
     } catch (err) {
       setError("Failed to reschedule");
@@ -416,13 +423,12 @@ const BookAppointments = () => {
                         </span>
                       ) : (
                         <span
-                          className={`px-2 py-1 rounded text-xs font-medium capitalize self-start sm:self-auto ${
-                            appointment.status === "CONFIRMED"
-                              ? "bg-green-100 text-green-700"
-                              : appointment.status === "PENDING"
+                          className={`px-2 py-1 rounded text-xs font-medium capitalize self-start sm:self-auto ${appointment.status === "CONFIRMED"
+                            ? "bg-green-100 text-green-700"
+                            : appointment.status === "PENDING"
                               ? "bg-yellow-100 text-yellow-700"
                               : "bg-red-100 text-red-700"
-                          }`}
+                            }`}
                           title={`Status: ${appointment.status.toLowerCase()}`}
                         >
                           {appointment.status.toLowerCase()}
@@ -483,8 +489,8 @@ const BookAppointments = () => {
                                 payment.status === "SUCCESS"
                                   ? "text-green-700"
                                   : payment.status === "PENDING"
-                                  ? "text-yellow-700"
-                                  : "text-red-700"
+                                    ? "text-yellow-700"
+                                    : "text-red-700"
                               }
                             >
                               {payment.status.toLowerCase()}
@@ -537,11 +543,10 @@ const BookAppointments = () => {
                             Cancel
                           </button>
                           <button
-                            className={`px-3 py-1.5 sm:py-1 rounded text-xs sm:text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-300 border w-full sm:w-auto ${
-                              canReschedule
-                                ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-600"
-                                : "bg-gray-100 text-gray-400 border-gray-400 cursor-not-allowed"
-                            }`}
+                            className={`px-3 py-1.5 sm:py-1 rounded text-xs sm:text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-300 border w-full sm:w-auto ${canReschedule
+                              ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-600"
+                              : "bg-gray-100 text-gray-400 border-gray-400 cursor-not-allowed"
+                              }`}
                             onClick={() => canReschedule && handleReschedule(appointment.id)}
                             disabled={loading || !canReschedule}
                             title={

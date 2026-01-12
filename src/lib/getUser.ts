@@ -11,23 +11,26 @@ export async function getUser() {
     const clerkUser = await currentUser()
     if (!clerkUser) return null
 
-    // Find user in Prisma
-    let user = await prisma.user.findUnique({
-        where: { clerkId: clerkUser.id },
-    })
+    const name = clerkUser.firstName || 'No Name';
+    const email = clerkUser.emailAddresses[0].emailAddress;
+    const profilePicture = clerkUser.imageUrl || undefined;
 
-    // Create user in Prisma if not found
-    if (!user) {
-        user = await prisma.user.create({
-            data: {
-                clerkId: clerkUser.id,
-                name: clerkUser.firstName || 'No Name',
-                email: clerkUser.emailAddresses[0].emailAddress,
-                profilePicture: clerkUser.imageUrl || undefined,
-                role: 'USER',
-            },
-        })
-    }
+    // Use upsert to prevent race conditions
+    const user = await prisma.user.upsert({
+        where: { clerkId: clerkUser.id },
+        update: {
+            name,
+            email,
+            profilePicture,
+        },
+        create: {
+            clerkId: clerkUser.id,
+            name,
+            email,
+            profilePicture,
+            role: 'USER',
+        },
+    });
 
     return user
 }
