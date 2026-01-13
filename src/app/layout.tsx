@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from '@clerk/nextjs'
 import Script from "next/script";
 import DisclaimerModal from "@/components/DisclaimerModal";
+import { prisma } from "@/lib/prisma";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,11 +31,13 @@ export const metadata: Metadata = {
   description: "Vyska Legal - Your trusted legal resources and services app",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const companyInfo = await prisma.companyInfo.findFirst();
+
   return (
     <html lang="en" className={lato.variable}>
       <head>
@@ -45,7 +48,10 @@ export default function RootLayout({
       >
         <Script src="https://checkout.razorpay.com/v1/checkout.js" />
         <ClerkProvider>
-          <DisclaimerModal />
+          <DisclaimerModal
+            message={companyInfo?.disclaimerMessage}
+            points={companyInfo?.disclaimerPoints}
+          />
           <Toaster />
           {children}
         </ClerkProvider>

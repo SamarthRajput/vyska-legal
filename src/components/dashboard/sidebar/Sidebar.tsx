@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { User, Menu, X } from "lucide-react";
+import { User, Menu, X, ChevronDown, ChevronRight } from "lucide-react";
 import { navItems, adminNavItems } from "./navItems";
 
 interface SidebarProps {
@@ -28,6 +28,12 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const pathname = usePathname();
   const router = useRouter();
+  const [openSubmenus, setOpenSubmenus] = React.useState<Record<string, boolean>>({});
+
+  const toggleSubmenu = (title: string) => {
+    setOpenSubmenus(prev => ({ ...prev, [title]: !prev[title] }));
+  };
+
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
@@ -93,8 +99,64 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Nav Items */}
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        {menuItems.map(({ href, icon: Icon, title, exact }) => {
-          const active = isActive(href, exact);
+        {menuItems.map((item) => {
+          const { href, icon: Icon, title, exact, children } = item as any;
+          const active = isActive(href, exact) || (children && children.some((c: any) => isActive(c.href, c.exact)));
+          const hasChildren = !!children;
+          const isMenuOpen = hasChildren && (openSubmenus[title] || active);
+
+          if (hasChildren) {
+            return (
+              <div key={title} className="space-y-1">
+                <button
+                  onClick={() => toggleSubmenu(title)}
+                  className={cn(
+                    "w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200 group text-slate-600 hover:bg-slate-100 hover:text-slate-800",
+                    isCollapsed && !isMobile && "justify-center px-2",
+                    active && "bg-sky-50 text-sky-900"
+                  )}
+                  title={isCollapsed && !isMobile ? title : undefined}
+                >
+                  <Icon className={cn(
+                    "w-5 h-5 flex-shrink-0 transition-colors",
+                    active && "text-sky-600"
+                  )} />
+                  {(!isCollapsed || isMobile) && (
+                    <>
+                      <span className="ml-3 font-medium truncate flex-1 text-left">{title}</span>
+                      {isMenuOpen ? <ChevronDown className="w-4 h-4 ml-2" /> : <ChevronRight className="w-4 h-4 ml-2" />}
+                    </>
+                  )}
+                </button>
+
+                {isMenuOpen && (!isCollapsed || isMobile) && (
+                  <div className="pl-4 space-y-1">
+                    {children.map((child: any) => {
+                      const childActive = isActive(child.href, child.exact);
+                      const ChildIcon = child.icon;
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          onClick={isMobile ? onClose : undefined}
+                          className={cn(
+                            "flex items-center px-4 py-2 rounded-lg transition-all duration-200 text-sm",
+                            childActive
+                              ? "bg-sky-100 text-sky-700 shadow-sm"
+                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                          )}
+                        >
+                          <ChildIcon className={cn("w-4 h-4 mr-3", childActive && "text-sky-600")} />
+                          <span className="font-medium truncate">{child.title}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <Link
               key={href}
@@ -121,6 +183,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </Link>
           );
         })}
+
       </nav>
 
       {/* User Info */}

@@ -4,41 +4,23 @@ import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-export default function ClientTestimonials() {
+interface Testimonial {
+    id: string;
+    name: string;
+    caseType: string;
+    message: string;
+    imageUrl?: string | null;
+}
+
+export default function ClientTestimonials({ testimonials = [] }: { testimonials?: Testimonial[] }) {
     const [currentPage, setCurrentPage] = useState(0)
     const [isMobile, setIsMobile] = useState(false)
     const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-    const testimonials = [
-        {
-            id: 1,
-            name: "Neha & Rakesh",
-            caseType: "Adoption Case",
-            image: "/neha.png",
-            testimonial: "They handled our adoption case with so much care. on every hearing—they were there. We're finally a family, and we couldn't have done it without them."
-        },
-        {
-            id: 2,
-            name: "Arjun sharma",
-            caseType: "Business Law Case",
-            image: "/neha.png",
-            testimonial: "We needed quick legal advice on a vendor contract. The team was sharp, responsive, and helped us avoid a costly mistake. Definitely our go-to now."
-        },
-        {
-            id: 3,
-            name: "Shivam taneja",
-            caseType: "Property Case",
-            image: "/neha.png",
-            testimonial: "I needed a will and property agreement done quickly. They were clear, professional, and didn't drown me in legal jargon. Just did what I needed."
-        },
-        {
-            id: 4,
-            name: "Test Client",
-            caseType: "Criminal Case",
-            image: "/neha.png",
-            testimonial: "Amazing service and support throughout my case."
-        }
-    ]
+    if (!testimonials || testimonials.length === 0) {
+        return null;
+    }
+
 
     useEffect(() => {
         const checkMobile = () => {
@@ -99,19 +81,19 @@ export default function ClientTestimonials() {
                             className="relative rounded-2xl sm:rounded-3xl overflow-visible flex flex-col"
                             style={{ backgroundColor: '#F0F4FF' }}
                         >
-                                <div className="absolute right-2 sm:right-2 md:right-2 z-10">
-                                    <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 relative rounded-full overflow-hidden border-3 sm:border-4 border-white shadow-xl sm:shadow-2xl">
-                                        <Image
-                                            src={testimonial.image}
-                                            alt={testimonial.name}
-                                            fill
-                                            className="object-cover"
-                                        />
-                                    </div>
+                            <div className="absolute right-2 sm:right-2 md:right-2 z-10">
+                                <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 relative rounded-full overflow-hidden border-3 sm:border-4 border-white shadow-xl sm:shadow-2xl">
+                                    <Image
+                                        src={testimonial.imageUrl || '/default-profile.png'}
+                                        alt={testimonial.name}
+                                        fill
+                                        className="object-cover"
+                                    />
                                 </div>
-                            <div 
+                            </div>
+                            <div
                                 className="relative px-4 sm:px-5 md:px-6 py-4 sm:py-5 rounded-t-2xl sm:rounded-t-3xl"
-                                style={{ 
+                                style={{
                                     backgroundColor: '#224099',
                                     clipPath: 'polygon(0 0, 85% 0, 95% 100%, 0 100%)'
                                 }}
@@ -127,11 +109,12 @@ export default function ClientTestimonials() {
 
                             <div className="p-4 sm:p-5 md:p-6 lg:p-8 pt-16 sm:pt-18 md:pt-20 lg:pt-24 flex-1">
                                 <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-900 leading-relaxed">
-                                    {testimonial.testimonial}
+                                    {testimonial.message}
                                 </p>
                             </div>
                         </div>
                     ))}
+
                 </div>
 
                 <div className="flex justify-end items-center gap-4 sm:gap-6">

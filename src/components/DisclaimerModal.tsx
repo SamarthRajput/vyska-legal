@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { FileText, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function DisclaimerModal() {
+export default function DisclaimerModal({ message, points }: { message?: string | null, points?: string[] }) {
   const { hasConsented, isLoading, saveConsent, denyConsent } = useConsent();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const pathname = usePathname();
@@ -38,6 +38,19 @@ export default function DisclaimerModal() {
     }
     setIsSubmitting(false);
   };
+
+  const defaultMessage = "The rules of the Bar Council of India prohibit law firms from soliciting work or advertising in any manner. By clicking on \"I AGREE\", the user acknowledges that:";
+  const defaultPoints = [
+    "The user wishes to gain more information about Us for his/her/their own information and use.",
+    "There has been no advertisement, personal communication, solicitation, invitation or inducement of any sort whatsoever from Us or any of our members to solicit any work through this website.",
+    "The information about Us is provided to the user only on his/her/their specific request and any information obtained or downloaded from this website is completely at the user’s volition and any transmission, receipt or use of this site would not create any lawyer-client relationship.",
+    "The information provided under this website is solely available at your request for informational purposes only, should not be interpreted as soliciting or advertisement.",
+    "We are not liable for any consequence of any action taken by the user relying on material / information provided under this website. In cases where the user has any legal issues, he/she in all cases must seek independent legal advice."
+  ];
+
+  // Use props if available (and points array is not empty), otherwise defaults
+  const displayMessage = message || defaultMessage;
+  const displayPoints = (points && points.length > 0) ? points : defaultPoints;
 
   return (
     <AnimatePresence>
@@ -78,24 +91,14 @@ export default function DisclaimerModal() {
           {/* Scrollable Content */}
           <div className="p-6 overflow-y-auto custom-scrollbar space-y-4 text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed bg-slate-50/30 dark:bg-slate-900/30">
             <p className="font-semibold text-slate-900 dark:text-white">
-              The rules of the Bar Council of India prohibit law firms from soliciting work or advertising in any manner. By clicking on {`"I AGREE"`}, the user acknowledges that:
+              {displayMessage}
             </p>
             <ul className="list-disc pl-5 space-y-2 marker:text-blue-500">
-              <li>
-                The user wishes to gain more information about Us for his/her/their own information and use.
-              </li>
-              <li>
-                There has been no advertisement, personal communication, solicitation, invitation or inducement of any sort whatsoever from Us or any of our members to solicit any work through this website.
-              </li>
-              <li>
-                The information about Us is provided to the user only on his/her/their specific request and any information obtained or downloaded from this website is completely at the user’s volition and any transmission, receipt or use of this site would not create any lawyer-client relationship.
-              </li>
-              <li>
-                The information provided under this website is solely available at your request for informational purposes only, should not be interpreted as soliciting or advertisement.
-              </li>
-              <li>
-                We are not liable for any consequence of any action taken by the user relying on material / information provided under this website. In cases where the user has any legal issues, he/she in all cases must seek independent legal advice.
-              </li>
+              {displayPoints.map((point, index) => (
+                <li key={index}>
+                  {point}
+                </li>
+              ))}
             </ul>
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-xs text-amber-800 dark:text-amber-200 mt-2">
               <strong>Note:</strong> This website is a resource for information purposes only. Vyska Legal is not intended to be a source of advertising or solicitation.
