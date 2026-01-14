@@ -1,17 +1,17 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 if (!process.env.GEMINI_API_KEY) {
     throw new Error("GEMINI_API_KEY is not defined");
 }
 
 class GeminiClient {
-    private static instance: GoogleGenerativeAI;
+    private static instance: GoogleGenAI;
 
     private constructor() { }
 
-    public static getInstance(): GoogleGenerativeAI {
+    public static getInstance(): GoogleGenAI {
         if (!GeminiClient.instance) {
-            GeminiClient.instance = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+            GeminiClient.instance = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
         }
         return GeminiClient.instance;
     }
@@ -27,12 +27,18 @@ export const generateGeminiResponse = async (prompt: string): Promise<string> =>
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
-            const genAI = GeminiClient.getInstance();
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            const ai = GeminiClient.getInstance();
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: prompt,
+                });
 
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            return response.text();
+                const text = response.text;
+                
+                if (!text) {
+                throw new Error("No text generated in response");
+                }
+                return text;
         } catch (error) {
             lastError = error;
             console.warn(`Gemini API attempt ${attempt} failed:`, error);

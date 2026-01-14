@@ -27,6 +27,10 @@ export async function POST(request: NextRequest) {
 
     const prompt = createOutlinePrompt(body);
     const response = await generateGeminiResponse(prompt);
+
+    if (!response || !response.trim()) {
+      throw new Error('No response generated from AI');
+    }
     
     const cleanedResponse = extractJSONFromResponse(response);
     

@@ -101,12 +101,17 @@ export default async function Footer() {
                             </h4>
                             <ul className="space-y-3">
                                 <li>
-                                    <Link href="/privacy" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                    <Link href="/disclaimer" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                        Disclaimer
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/privacy-policy" className="text-gray-700 hover:text-blue-600 transition-colors">
                                         Privacy policy
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/terms" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                    <Link href="/terms-services" className="text-gray-700 hover:text-blue-600 transition-colors">
                                         Terms & services
                                     </Link>
                                 </li>

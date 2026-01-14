@@ -35,17 +35,17 @@ export default function HeroCarousel({ slides = [] }: { slides?: HeroSlide[] }) 
         setCurrentSlide((prev) => (prev + 1) % slides.length)
     }
 
-    useEffect(() => {
-        timerRef.current = setInterval(() => {
-            goToNext()
-        }, 5000)
+    // useEffect(() => {
+    //     timerRef.current = setInterval(() => {
+    //         goToNext()
+    //     }, 5000)
 
-        return () => {
-            if (timerRef.current) {
-                clearInterval(timerRef.current)
-            }
-        }
-    }, [currentSlide])
+    //     return () => {
+    //         if (timerRef.current) {
+    //             clearInterval(timerRef.current)
+    //         }
+    //     }
+    // }, [currentSlide])
 
     const handleManualChange = (index: number) => {
         if (timerRef.current) {

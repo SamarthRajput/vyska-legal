@@ -95,7 +95,7 @@ export const adminNavItems = [
   {
     title: "Appointment Section",
     description: "Create slots, review availability, and manage bookings.",
-    href: "/admin/appointments",
+    href: "/admin/appointments-section",
     icon: MessageSquareWarning,
   },
   {

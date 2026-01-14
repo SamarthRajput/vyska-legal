@@ -45,10 +45,10 @@ const About = () => {
                 <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
                     <div className="flex-1">
                         <p className="mb-4 text-lg md:text-xl text-gray-700 leading-relaxed">
-                            At <span className="font-semibold italic">Vyska Legal</span>, we believe that justice, integrity, and innovation are the pillars of a progressive society. Established with a vision to redefine the way legal services are delivered, our firm combines deep legal expertise with a modern, client-centric approach.
+                            At <span className="font-semibold italic">Vyska Legal</span>, At Vyska Legal, we are a full-service law firm committed to delivering modern, ethical, and client-focused legal solutions. Incorporated as a Limited Liability Partnership in April 2023, the firm is rooted in Prayagraj, Uttar Pradesh, with a strategic focus on serving clients across the National Capital Region and beyond. Our practice is built on the belief that justice, integrity, and professional responsibility form the foundation of effective legal service.
                         </p>
                         <p className="mb-4 text-lg md:text-xl text-gray-700 leading-relaxed">
-                            We are committed to providing strategic, reliable, and result-oriented legal solutions to individuals, startups, and corporations across various sectors. From corporate compliance to intellectual property and litigation, our goal is to simplify legal complexities through expertise, research, and technology-driven insights.
+                            We combine deep legal expertise with contemporary business practices to assist individuals, startups, corporations, and institutions across a broad spectrum of legal matters. By integrating rigorous research, practical insight, and technology-enabled processes, we strive to simplify complex legal challenges while maintaining transparency, accountability, and the highest standards of professional conduct.
                         </p>
                     </div>
                     <div className="flex-1 flex justify-center">
@@ -67,22 +67,22 @@ const About = () => {
                     <div className="bg-white rounded-xl shadow p-6 border border-gray-100">
                         <h2 className="text-xl font-semibold mb-2 text-blue-900">Our Mission</h2>
                         <p className="text-gray-700 leading-relaxed">
-                            To empower businesses and individuals by providing accessible, transparent, and effective legal support while upholding the highest standards of ethics and professionalism.
+                            To empower our clients by providing accessible, high-quality, and ethical legal solutions tailored to their unique needs. We are dedicated to upholding justice, fostering trust, and delivering effective outcomes through innovation, collaboration, and unwavering professional integrity.
                         </p>
                     </div>
                     <div className="bg-white rounded-xl shadow p-6 border border-gray-100">
                         <h2 className="text-xl font-semibold mb-2 text-blue-900">Our Vision</h2>
                         <p className="text-gray-700 leading-relaxed">
-                            To be recognized as a leading legal firm known for innovation, research excellence, and a commitment to shaping the future of law in India and beyond.
+                            To be recognized as a leading law firm known for innovation, research excellence, and a strong commitment to shaping the future of legal practice in India and beyond, while consistently upholding the principles of ethics, accountability, and client trust.
                         </p>
                     </div>
                     <div className="bg-white rounded-xl shadow p-6 border border-gray-100">
                         <h2 className="text-xl font-semibold mb-2 text-blue-900">Our Values</h2>
                         <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                            <li><span className="font-semibold italic">Integrity</span> – We uphold honesty and ethical standards in every case.</li>
-                            <li><span className="font-semibold italic">Excellence</span> – We strive for perfection through research, preparation, and dedication.</li>
-                            <li><span className="font-semibold italic">Innovation</span> – We adapt and evolve with changing legal landscapes.</li>
-                            <li><span className="font-semibold italic">Client-Centric Approach</span> – We prioritize every client’s unique needs and goals.</li>
+                            <li><span className="font-semibold italic">Integrity</span> – Upholding honesty, transparency, and ethical conduct in all professional interactions.</li>
+                            <li><span className="font-semibold italic">Client-Centricity</span> – Prioritizing the needs, objectives, and interests of every client through personalized and clear legal advice.</li>
+                            <li><span className="font-semibold italic">Excellence</span> – Striving for the highest standards of legal practice through continuous learning, research, and professional development.</li>
+                            <li><span className="font-semibold italic">Innovation</span> – Embracing technology and modern legal tools to enhance efficiency and service delivery.</li>
                         </ul>
                     </div>
                 </div>
@@ -95,37 +95,37 @@ const About = () => {
                         <li className="flex items-start gap-3">
                             <span className="text-blue-600 text-xl mt-1">✔️</span>
                             <span>
-                                <span className="font-semibold">Experienced Legal Team:</span> Our lawyers bring years of expertise across diverse legal domains.
+                                <span className="font-semibold">Multi-disciplinary Legal Expertise:</span> Our team handles matters across corporate, civil, criminal, property, family, taxation, and technology law, enabling comprehensive legal support under one roof.
                             </span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-blue-600 text-xl mt-1">✔️</span>
                             <span>
-                                <span className="font-semibold">Transparent Communication:</span> We keep you informed at every stage of your case.
+                                <span className="font-semibold">Courtroom & Advisory Experience:</span> We actively represent clients before District Courts, High Courts, tribunals, and appellate forums, providing end-to-end litigation and advisory services.
                             </span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-blue-600 text-xl mt-1">✔️</span>
                             <span>
-                                <span className="font-semibold">Cutting-edge Research:</span> Our team leverages technology and research for optimal outcomes.
+                                <span className="font-semibold">Client-Focused Approach:</span> Every matter is approached with a clear understanding of the client’s objectives, ensuring practical, tailored, and timely legal solutions.
                             </span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-blue-600 text-xl mt-1">✔️</span>
                             <span>
-                                <span className="font-semibold">Personalized Solutions:</span> Every client receives tailored legal strategies.
+                                <span className="font-semibold">Transparent Processes:</span> From initial consultation to resolution, we emphasize clarity in communication, defined engagement terms, and ethical fee practices.
                             </span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-blue-600 text-xl mt-1">✔️</span>
                             <span>
-                                <span className="font-semibold">Prompt Response:</span> We value your time and respond quickly to your queries.
+                                <span className="font-semibold">Research-Driven & Technology-Enabled:</span> Our work is supported by advanced legal research tools, structured case management systems, and secure communication platforms.
                             </span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-blue-600 text-xl mt-1">✔️</span>
                             <span>
-                                <span className="font-semibold">Ethical Practice:</span> We adhere to the highest standards of legal ethics and confidentiality.
+                                <span className="font-semibold">Ethical & Professional Integrity:</span> We operate strictly in compliance with the Advocates Act, 1961 and Bar Council of India Rules, maintaining confidentiality, independence, and professional responsibility at all times.
                             </span>
                         </li>
                     </ul>
