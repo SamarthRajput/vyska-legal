@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 
-const TermsAndServices = () => {
+export default function TermsAndServices() {
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gradient-to-b from-white via-blue-50 to-white min-h-screen">
       <h1 className="text-3xl md:text-4xl font-extrabold text-blue-900 mb-8 text-center">
@@ -51,5 +51,3 @@ const TermsAndServices = () => {
     </main>
   );
 };
-
-export default TermsAndServices;
