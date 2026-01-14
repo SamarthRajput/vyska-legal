@@ -3,31 +3,17 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
-export default function FAQSection() {
+interface FAQ {
+    id: string;
+    question: string;
+    answer: string;
+}
+
+export default function FAQSection({ faqs = [] }: { faqs?: FAQ[] }) {
     const [openIndex, setOpenIndex] = useState<number | null>(null)
 
-    const faqs = [
-        {
-            id: 1,
-            question: "Is remote legal assistance available ?",
-            answer: "Yes! We offer remote consultations and document support across India. For court representation, we'll guide you based on your location and case type."
-        },
-        {
-            id: 2,
-            question: "What documents do I need for a divorce case?",
-            answer: "Typically, you'll need marriage certificate, ID proof & any evidence supporting your claims. We'll help you organize everything during your first session."
-        },
-        {
-            id: 3,
-            question: "Is my information kept confidential?",
-            answer: "Absolutely. Your data and case details are handled with strict confidentiality and legal compliance."
-        },
-        {
-            id: 4,
-            question: "What is your pricing structure?",
-            answer: "Fees vary by service. We offer transparent pricing upfront—starting from ₹2,500 for document drafting and ₹5,000 for consultations. Complex cases are quoted individually."
-        }
-    ]
+    if (!faqs || faqs.length === 0) return null;
+
 
     const toggleFAQ = (index: number) => {
         setOpenIndex(openIndex === index ? null : index)
@@ -61,11 +47,7 @@ export default function FAQSection() {
                                 )}
                             </button>
 
-                            <div
-                                className={`overflow-hidden transition-all duration-300 ${
-                                    openIndex === index ? 'max-h-96' : 'max-h-0'
-                                }`}
-                            >
+                            <div className={`overflow-hidden transition-all duration-300 ${openIndex === index ? 'max-h-96' : 'max-h-0'}`}>
                                 <div className="px-6 pb-6 pt-2">
                                     <p className="text-base md:text-lg text-gray-700 leading-relaxed">
                                         {faq.answer}

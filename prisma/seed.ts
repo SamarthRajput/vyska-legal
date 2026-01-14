@@ -1,295 +1,187 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-// pnpm dlx prisma migrate dev --name init
-// pnpm run prisma:seed
+// to run this seed file use this command in terminal
+// npx prisma db seed
 
 async function main() {
-    // Create Users
-    let admin = await prisma.user.findUnique({ where: { email: 'rohit@gmail.com' } });
-    if (!admin) {
-        admin = await prisma.user.create({
-            data: {
-                name: 'Admin User',
-                email: 'rohit@gmail.com',
-                clerkId: 'clerk-admin-id',
-                role: 'ADMIN',
-                profilePicture: 'https://i.pravatar.cc/150?img=1',
-            },
+    console.log('Start seeding...')
+
+    // deleting all data
+    await prisma.heroSlide.deleteMany();
+    await prisma.testimonial.deleteMany();
+    await prisma.fAQ.deleteMany();
+    await prisma.companyInfo.deleteMany();
+
+    // 1. Hero Slides
+    const heroSlideCount = await prisma.heroSlide.count();
+    if (heroSlideCount === 0) {
+        console.log('Seeding Hero Slides...');
+        await prisma.heroSlide.createMany({
+            data: [
+                {
+                    title: "Legal clarity begins with",
+                    highlight: "conversations",
+                    description: "We're here to listen, guide, and act—making legal decisions easier and more confident for you",
+                    buttonText: "Get help now",
+                    buttonLink: "/contact",
+                    imageUrl: "/grouppic.png",
+                    order: 1,
+                    type: "fullBackground",
+                    bgColor: "from-blue-900 via-blue-800 to-gray-900",
+                    isActive: true
+                },
+                {
+                    title: "When Everything's at Stake, We're",
+                    highlight: "With You",
+                    description: "Our team of legal experts stands united to protect your rights, with strategy, compassion & conviction.",
+                    buttonText: "Explore now",
+                    buttonLink: "/about",
+                    imageUrl: "/officepic.jpg",
+                    order: 2,
+                    type: "split",
+                    bgColor: "from-slate-900 to-gray-800",
+                    isActive: true
+                },
+                {
+                    title: "Serving people with",
+                    highlight: "Integrity",
+                    description: "Visit our office or connect online, our doors are open for everyone.",
+                    buttonText: "Visit us today",
+                    buttonLink: "/contact",
+                    imageUrl: "/doorpic.png",
+                    order: 3,
+                    type: "split",
+                    bgColor: "from-indigo-900 to-slate-900",
+                    isActive: true
+                }
+            ]
         });
-        console.log('Admin user created:', admin.email);
     } else {
-        console.log('Admin user already exists:', admin.email);
+        console.log('Hero Slides already exist, skipping.');
     }
 
-    let user1 = await prisma.user.findUnique({ where: { email: 'john@example.com' } });
-    if (!user1) {
-        user1 = await prisma.user.create({
-            data: {
-                name: 'John Doe',
-                email: 'john@example.com',
-                role: 'USER',
-                clerkId: 'clerk-user1-id',
-                profilePicture: 'https://i.pravatar.cc/150?img=2',
-            },
+    // 2. Testimonials
+    const testimonialCount = await prisma.testimonial.count();
+    if (testimonialCount === 0) {
+        console.log('Seeding Testimonials...');
+        await prisma.testimonial.createMany({
+            data: [
+                {
+                    name: "Neha & Rakesh",
+                    caseType: "Adoption Case",
+                    message: "They handled our adoption case with so much care. on every hearing—they were there. We're finally a family, and we couldn't have done it without them.",
+                    imageUrl: "/neha.png",
+                    order: 1,
+                    isActive: true
+                },
+                {
+                    name: "Arjun sharma",
+                    caseType: "Business Law Case",
+                    message: "We needed quick legal advice on a vendor contract. The team was sharp, responsive, and helped us avoid a costly mistake. Definitely our go-to now.",
+                    imageUrl: "/neha.png",
+                    order: 2,
+                    isActive: true
+                },
+                {
+                    name: "Shivam taneja",
+                    caseType: "Property Case",
+                    message: "I needed a will and property agreement done quickly. They were clear, professional, and didn't drown me in legal jargon. Just did what I needed.",
+                    imageUrl: "/neha.png",
+                    order: 3,
+                    isActive: true
+                },
+                {
+                    name: "Test Client",
+                    caseType: "Criminal Case",
+                    message: "Amazing service and support throughout my case.",
+                    imageUrl: "/neha.png",
+                    order: 4,
+                    isActive: true
+                }
+            ]
         });
-        console.log('Regular user created:', user1.email);
     } else {
-        console.log('Regular user already exists:', user1.email);
+        console.log('Testimonials already exist, skipping.');
     }
 
-    // Create Blogs
-    await prisma.blog.createMany({
-        data: [
-            {
-                title: 'Understanding Legal Contracts',
-                content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                status: 'APPROVED',
-                authorId: admin.id,
-            },
-            {
-                title: 'Tips for Drafting Legal Documents',
-                content: 'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-                status: 'PENDING',
-                authorId: user1.id,
-            },
-            {
-                title: title,
-                content: article,
-                status: 'APPROVED',
-                authorId: admin.id,
-            },
-        ],
-    })
+    // 3. FAQs
+    const faqCount = await prisma.fAQ.count();
+    if (faqCount === 0) {
+        console.log('Seeding FAQs...');
+        await prisma.fAQ.createMany({
+            data: [
+                {
+                    question: "Is remote legal assistance available ?",
+                    answer: "Yes! We offer remote consultations and document support across India. For court representation, we'll guide you based on your location and case type.",
+                    order: 1,
+                    isActive: true
+                },
+                {
+                    question: "What documents do I need for a divorce case?",
+                    answer: "Typically, you'll need marriage certificate, ID proof & any evidence supporting your claims. We'll help you organize everything during your first session.",
+                    order: 2,
+                    isActive: true
+                },
+                {
+                    question: "Is my information kept confidential?",
+                    answer: "Absolutely. Your data and case details are handled with strict confidentiality and legal compliance.",
+                    order: 3,
+                    isActive: true
+                },
+                {
+                    question: "What is your pricing structure?",
+                    answer: "Fees vary by service. We offer transparent pricing upfront—starting from ₹2,500 for document drafting and ₹5,000 for consultations. Complex cases are quoted individually.",
+                    order: 4,
+                    isActive: true
+                }
+            ]
+        });
+    } else {
+        console.log('FAQs already exist, skipping.');
+    }
 
-    // Create Services
-    await prisma.service.createMany({
-        data: [
-            {
-                title: 'Contract Review',
-                description: 'We review your contracts for clarity and legal compliance.',
-                price: 150.0,
-                iconUrl: 'https://img.icons8.com/ios-filled/50/000000/document.png',
-            },
-            {
-                title: 'Legal Consultation',
-                description: 'One-on-one consultation with our legal experts.',
-                price: 100.0,
-                iconUrl: 'https://img.icons8.com/ios-filled/50/000000/law.png',
-            },
-        ],
-    })
+    // 4. Company Info
+    const companyInfoCount = await prisma.companyInfo.count();
+    if (companyInfoCount === 0) {
+        console.log('Seeding Company Info...');
+        const companyInfo = await prisma.companyInfo.create({
+            data: {
+                email: "contact@vyskalegal.com",
+                phone: "+91 12345 67890",
+                whatsapp: "https://wa.me/911234567890",
+                address: "Sector 62, Noida, Uttar Pradesh, India",
+                yearsExperience: "25+",
+                successRate: "98%",
+                trustedClients: "150+",
+                casesWon: "500+",
+                headOffice: "New Delhi",
+                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.2219901290355!2d-74.00369368400567!3d40.71312937933019!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25a316e2f4d69%3A0x6d4b5e9a7fcbe08d!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sin!4v1697543210000!5m2!1sen!2sin",
+                disclaimerMessage: "The rules of the Bar Council of India prohibit law firms from soliciting work or advertising in any manner. By clicking on \"I AGREE\", the user acknowledges that:",
+                disclaimerPoints: [
+                    "The user wishes to gain more information about Us for his/her/their own information and use.",
+                    "There has been no advertisement, personal communication, solicitation, invitation or inducement of any sort whatsoever from Us or any of our members to solicit any work through this website.",
+                    "The information about Us is provided to the user only on his/her/their specific request and any information obtained or downloaded from this website is completely at the user’s volition and any transmission, receipt or use of this site would not create any lawyer-client relationship.",
+                    "The information provided under this website is solely available at your request for informational purposes only, should not be interpreted as soliciting or advertisement.",
+                    "We are not liable for any consequence of any action taken by the user relying on material / information provided under this website. In cases where the user has any legal issues, he/she in all cases must seek independent legal advice."
+                ]
+            }
+        });
+        console.log('Company Info seeded successfully.', companyInfo);
+    } else {
+        console.log('Company Info already exists, skipping.');
+    }
 
-    // // Create Research
-    // await prisma.research.createMany({
-    //     data: [
-    //         {
-    //             title: 'Corporate Law Whitepaper',
-    //             description: 'An in-depth analysis of corporate regulations.',
-    //             fileUrl: 'https://example.com/corporate-law.pdf',
-    //             uploadedById: admin.id,
-    //         },
-    //         {
-    //             title: 'Intellectual Property Research',
-    //             description: 'Study on recent trends in IP law.',
-    //             fileUrl: 'https://example.com/ip-research.pdf',
-    //             uploadedById: user1.id,
-    //         },
-    //     ],
-    // })
-    // Create Team Members
-    await prisma.teamMember.createMany({
-        data: [
-            {
-                name: 'Adv. Rohan Mehta',
-                role: 'Senior Corporate Lawyer',
-                biography:
-                    'Rohan Mehta has over 12 years of experience specializing in corporate law, mergers, and acquisitions. He has represented numerous Fortune 500 companies in regulatory matters.',
-                photoUrl: 'https://imgs.search.brave.com/2920ZlfBVr3zNhET70QktLKyjB1Y000bhlKxDoqqKjU/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4u/cGl4YWJheS5jb20v/cGhvdG8vMjAxNy8w/Ny8xOC8yMy8yMy9n/cm91cC0yNTE3NDI4/XzY0MC5wbmc',
-                createdById: admin.id,
-            },
-            {
-                name: 'Adv. Priya Sharma',
-                role: 'Intellectual Property Expert',
-                biography:
-                    'Priya Sharma focuses on intellectual property rights, patents, and trademarks. She has been instrumental in shaping IP policies for several startups.',
-                photoUrl: 'https://imgs.search.brave.com/wE1-b8ltCYbfQ4xSFlHHIAPUCzF3wAKKtPZ-7Od_kEc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/cHJlbWl1bS1wc2Qv/dXNlci1pY2VtYXR0/ZV8xNjE2NjktMjEx/LmpwZz9zZW10PWFp/c19oeWJyaWQmdz03/NDAmcT04MA',
-                createdById: admin.id,
-            },
-            {
-                name: 'Adv. Arjun Khanna',
-                role: 'Criminal Law Specialist',
-                biography:
-                    'With a decade of courtroom experience, Arjun Khanna is known for his strategic litigation skills and deep understanding of criminal jurisprudence.',
-                photoUrl: 'https://example.com/arjun-khanna.jpg',
-                createdById: admin.id,
-            },
-        ],
-    });
-
-    console.log('Team members created');
-    // const slot1 = await prisma.appointmentSlot.create({
-    //     data: {
-    //         date: new Date('2025-10-15T09:00:00Z'),
-    //         timeSlot: '09:00-09:30',
-    //         isBooked: false,
-    //     },
-    // });
-
-    // const slot2 = await prisma.appointmentSlot.create({
-    //     data: {
-    //         date: new Date('2025-10-16T11:00:00Z'),
-    //         timeSlot: '11:00-11:30',
-    //         isBooked: false,
-    //     },
-    // });
-
-    // // 2️⃣ Create appointments using the slot IDs
-    // await prisma.appointment.createMany({
-    //     data: [
-    //         {
-    //             userName: 'Rohit Kumar',
-    //             userEmail: 'rohit@example.com',
-    //             userPhone: '9876543210',
-    //             slotId: slot1.id,
-    //             status: 'CONFIRMED',
-    //         },
-    //         {
-    //             userName: 'Rohit Kumar',
-    //             userEmail: 'rohit@example.com',
-    //             userPhone: '9876543210',
-    //             slotId: slot2.id,
-    //             status: 'PENDING',
-    //         },
-    //     ],
-    // });
-
-    console.log('Seed completed!');
-    console.log('✅ Seed data created successfully!')
+    console.log('Seeding finished.')
 }
 
 main()
-    .catch((e) => {
-        console.error(e)
-        process.exit(1)
-    })
-    .finally(async () => {
+    .then(async () => {
         await prisma.$disconnect()
     })
-
-
-const title = 'The Evolution and Impact of Data Privacy Laws in India';
-const article = `
-
-### *Introduction*
-
-In the digital age, data has become one of the most valuable assets in the world. Every click, search, and transaction generates data, creating vast digital footprints that are stored, analyzed, and often monetized by organizations. However, this immense power of data has also brought forth a serious concern — *data privacy*.
-In India, where internet penetration has crossed 800 million users, the debate around personal data protection has grown significantly over the last decade. The journey from having almost no data protection law to the enactment of the *Digital Personal Data Protection Act, 2023* marks a monumental shift in India’s legal landscape.
-
----
-
-### *Historical Background of Data Privacy in India*
-
-Before the recent legislative developments, India’s data protection framework was scattered across various laws. The most significant among them was the *Information Technology (IT) Act, 2000*, and its subsequent amendment in 2008.
-
-Under Section 43A of the IT Act, companies were made liable to compensate individuals if they failed to protect their personal data. Additionally, the *Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011* provided a limited safeguard against misuse of sensitive personal data like passwords, medical records, and financial details.
-
-However, these provisions were narrow, lacked enforcement mechanisms, and were not comprehensive enough to address modern challenges like data profiling, algorithmic bias, or cross-border data transfers.
-
----
-
-### *The Turning Point: Justice K.S. Puttaswamy vs. Union of India (2017)*
-
-A landmark moment came with the Supreme Court’s judgment in *Justice K.S. Puttaswamy (Retd.) vs. Union of India*, 2017, where the Court unanimously declared *the right to privacy* as a *fundamental right* under Article 21 of the Constitution.
-
-The judgment recognized informational privacy — the right of an individual to control their personal data — as an essential component of the right to life and personal liberty. This ruling created the constitutional foundation for a comprehensive data protection regime in India.
-
----
-
-### *Journey Toward a Dedicated Data Protection Law*
-
-Following the Supreme Court’s ruling, the government established a committee chaired by Justice B.N. Srikrishna to draft a data protection law. The committee’s 2018 report emphasized the principles of consent, purpose limitation, and data minimization, leading to the *Personal Data Protection Bill, 2019 (PDP Bill)*.
-
-However, after years of debate and multiple revisions, the government withdrew the PDP Bill and introduced a simpler and more business-friendly version — the *Digital Personal Data Protection Act, 2023 (DPDP Act)*, which officially came into effect in August 2023.
-
----
-
-### *Key Provisions of the Digital Personal Data Protection Act, 2023*
-
-The DPDP Act, 2023, represents India’s first comprehensive data protection legislation. Some of its major provisions include:
-
-1. **Applicability**
-   The Act applies to the processing of digital personal data within India and to data processed outside India if related to offering goods or services to Indian citizens.
-
-2. **Consent Framework**
-   The Act mandates that personal data can be processed only with *free, specific, informed, and unambiguous consent* from individuals (called *Data Principals*).
-
-3. **Rights of Individuals**
-   The law grants individuals the right to:
-
-   * Access their personal data.
-   * Request correction or deletion.
-   * Withdraw consent.
-   * Seek grievance redressal.
-
-4. **Obligations of Data Fiduciaries**
-   Entities processing data (*Data Fiduciaries*) must ensure accuracy, implement security safeguards, and notify breaches.
-
-5. **Data Protection Board of India (DPBI)**
-   The Act establishes a Data Protection Board to monitor compliance, handle complaints, and impose penalties.
-
-6. **Penalties**
-   The law imposes heavy penalties — up to ₹250 crore for violations such as data breaches or failure to implement security safeguards.
-
-7. **Cross-Border Data Transfer**
-   The Act permits data transfer to countries notified by the government, balancing data sovereignty with global trade needs.
-
----
-![Data Privacy](https://imgs.search.brave.com/1pbIYxTnk8-S4C8Q9qPpXMPuqMd5xjE7yo4eB4RFzuY/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4u/Y3JlYXRlLnZpc3Rh/LmNvbS9hcGkvbWVk/aWEvc21hbGwvNjc4/NzExMDUvc3RvY2st/cGhvdG8tcHJpdmFj/eS1wb2xpY3k)
----
-
-### *Balancing Privacy with Innovation*
-
-While the DPDP Act is a milestone, it also seeks to maintain a delicate balance between individual privacy and the need for innovation. India’s booming digital economy, valued at over $200 billion, depends on the free flow of data across borders.
-
-The Act’s framework allows businesses — especially startups and tech companies — to innovate while still adhering to data protection norms. By simplifying compliance and introducing consent-based frameworks, India aims to position itself as a global hub for responsible digital innovation.
-
----
-
-### *Comparison with Global Data Protection Frameworks*
-
-The DPDP Act draws inspiration from global laws like the *European Union’s General Data Protection Regulation (GDPR)* but is comparatively less stringent.
-
-| Aspect                | GDPR (EU)                   | DPDP Act (India)           |
-| --------------------- | --------------------------- | -------------------------- |
-| Consent               | Explicit and detailed       | Simplified, broader        |
-| Right to be forgotten | Strongly enforced           | Limited scope              |
-| Regulator             | Independent authority       | Government-appointed Board |
-| Penalties             | Up to 4% of global turnover | Up to ₹250 crore           |
-
-This lighter regulatory approach is designed to foster digital growth while progressively strengthening privacy culture in India.
-
----
-
-### *Challenges Ahead*
-
-Despite its promise, several challenges lie ahead:
-
-1. **Implementation Gap** – Establishing the Data Protection Board and building compliance infrastructure will take time.
-2. **Public Awareness** – Many citizens are still unaware of their digital rights.
-3. **Government Exemptions** – The Act grants wide exemptions to government agencies, raising concerns about potential misuse.
-4. **Data Localization Ambiguity** – The absence of clear localization requirements may pose cybersecurity risks.
-
-Addressing these challenges will determine the law’s real-world success.
-
----
-
-### *Conclusion*
-
-India’s journey toward ensuring digital privacy reflects the nation’s evolving understanding of the relationship between technology and human rights. The *Digital Personal Data Protection Act, 2023* is not just a legal reform but a societal transformation — one that seeks to empower individuals, ensure accountability, and build trust in the digital ecosystem.
-
-As India continues to digitize everything from healthcare to governance, the protection of personal data will play a pivotal role in defining the future of its democracy and economy.
-Ultimately, a culture of *privacy by design* — where every digital innovation respects individual rights — will be the true measure of progress in the years to come.
-`;
+    .catch(async (e) => {
+        console.error(e)
+        await prisma.$disconnect()
+        process.exit(1)
+    })

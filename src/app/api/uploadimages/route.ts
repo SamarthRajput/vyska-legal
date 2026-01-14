@@ -21,6 +21,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Image file is required." }, { status: 400 });
     }
 
+    // Validation: Check file type
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json({ error: "Only image files are allowed." }, { status: 400 });
+    }
+
+    // Validation: Check file size (5MB limit)
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json({ error: "File size must be less than 5MB." }, { status: 400 });
+    }
+
     const filename = file.name;
 
     // Upload to Cloudinary
@@ -52,9 +63,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    return NextResponse.json({ 
-      message: "Image uploaded successfully.", 
-      url: imageUrl 
+    return NextResponse.json({
+      message: "Image uploaded successfully.",
+      url: imageUrl
     }, { status: 201 });
 
   } catch (error) {
@@ -82,7 +93,7 @@ export async function GET(request: Request) {
 
     // Get all blogs with thumbnails for this user
     const blogs = await prisma.blog.findMany({
-      where: { 
+      where: {
         authorId: dbUser.id,
         thumbnailUrl: { not: null }
       },
@@ -127,7 +138,7 @@ export async function DELETE(request: Request) {
     }
 
     const blog = await prisma.blog.findFirst({
-      where: { 
+      where: {
         id: blogId,
         authorId: dbUser.id,
       },

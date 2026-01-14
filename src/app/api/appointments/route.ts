@@ -2,6 +2,7 @@
 import { getUser } from "@/lib/getUser";
 import { createAppointmentAndBookSlot } from "@/lib/helper/bookSlot";
 import { prisma } from "@/lib/prisma";
+import { createAppointmentSchema } from "@/lib/validations/appointment";
 import { NextRequest, NextResponse } from "next/server";
 
 // POST to create an appointment for a slot
@@ -13,14 +14,17 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { agenda, slotId, appointmentTypeId, userId, phone } = body;
 
-        if (!slotId) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+        // Validate with Zod
+        const result = createAppointmentSchema.safeParse(body);
+        if (!result.success) {
+            return NextResponse.json({
+                error: "Invalid input",
+                details: result.error.flatten().fieldErrors
+            }, { status: 400 });
         }
-        if (agenda && typeof agenda !== "string" && agenda.length > 500) {
-            return NextResponse.json({ error: "Agenda must be a string up to 500 characters" }, { status: 400 });
-        }
+
+        const { agenda, slotId, appointmentTypeId, userId, phone } = result.data;
 
         let appointment;
         try {
@@ -61,6 +65,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Server error" }, { status: 500 });
     }
 }
+
 // DELETE to cancel an appointment
 export async function DELETE(request: NextRequest) {
     try {

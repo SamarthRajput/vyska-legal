@@ -59,7 +59,16 @@ export function useRazorpayPayment() {
                 });
 
                 const data = await res.json();
-                if (!data.success) throw new Error(data.message || 'Order creation failed');
+                if (!data.success) {
+                    let errorMessage = data.message || 'Order creation failed';
+                    if (data.details) {
+                        const fieldErrors = Object.entries(data.details)
+                            .map(([field, errors]: [string, any]) => `${field}: ${errors.join(', ')}`)
+                            .join('; ');
+                        if (fieldErrors) errorMessage += ` (${fieldErrors})`;
+                    }
+                    throw new Error(errorMessage);
+                }
 
                 const options = {
                     key: data.key,

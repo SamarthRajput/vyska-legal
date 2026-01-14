@@ -6,60 +6,53 @@ export async function syncUser() {
   const clerkUser = await currentUser();
   if (!clerkUser) return null;
 
-  const adminEmail = ['rohitkuyada@gmail.com'];
+  // Fetch admin emails from env, split by comma, and trim
+  const adminEmails = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim())
+    .filter((e) => e.length > 0);
 
   // Check if user exists in DB
   const existing = await prisma.user.findUnique({
     where: { clerkId: clerkUser.id },
   });
 
+  const email = clerkUser.emailAddresses[0]?.emailAddress ?? "";
+  const isAdmin = adminEmails.includes(email);
+  const correctRole = isAdmin ? UserRole.ADMIN : UserRole.USER;
+
   if (!existing) {
     // If not, create new
-    const newUser = await prisma.user.create({
+    return await prisma.user.create({
       data: {
         clerkId: clerkUser.id,
         name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`,
-        email: clerkUser.emailAddresses[0]?.emailAddress ?? "",
+        email,
         profilePicture: clerkUser.imageUrl ?? null,
-        role: adminEmail.includes(clerkUser.emailAddresses[0]?.emailAddress ?? "") ? UserRole.ADMIN : UserRole.USER,
+        role: correctRole,
       },
     });
-
   } else {
-    // If exists, update info
-    await prisma.user.update({
+    const dataToUpdate: any = {
+      name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`,
+      email,
+      profilePicture: clerkUser.imageUrl ?? null,
+    };
+
+    if (isAdmin && existing.role !== UserRole.ADMIN) {
+      dataToUpdate.role = UserRole.ADMIN;
+    }
+
+    return await prisma.user.update({
       where: { clerkId: clerkUser.id },
-      data: {
-        name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`,
-        email: clerkUser.emailAddresses[0]?.emailAddress ?? "",
-        profilePicture: clerkUser.imageUrl ?? null,
-        // If you want to update role dynamically, uncomment below
-        // role: adminEmail.includes(clerkUser.emailAddresses[0]?.emailAddress ?? "") ? UserRole.ADMIN : UserRole.USER,
-      },
+      data: dataToUpdate,
     });
   }
-
-  return clerkUser;
 }
 
 export async function getCurrentUser() {
-  await syncUser();
-  const clerkUser = await currentUser();
-  if (!clerkUser) return null;
-  
-  // Fetch user from DB
-  const updateAdmin = await prisma.user.updateMany({
-    where: { email: 'rohitkuyada@gmail.com' },
-    data: { role: UserRole.ADMIN },
-  });
-  // console.log("Updated Admins: ", updateAdmin);
-  const existing = await prisma.user.findUnique({
-    where: { clerkId: clerkUser.id },
-  });
-  if (!existing) {
-    return null;
-  }
-  return existing;
+  const user = await syncUser();
+  return user;
 }
 
 export async function isAdmin() {

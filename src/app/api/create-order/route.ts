@@ -4,6 +4,7 @@ import { getUser } from "@/lib/getUser";
 import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { createAppointmentAndBookSlot } from "@/lib/helper/bookSlot";
+import { createOrderSchema } from "@/lib/validations/payment";
 
 if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
     throw new Error("Please provide Razorpay credentials in .env.local file");
@@ -21,25 +22,32 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Access Denied. Please log in." }, { status: 401 });
         }
 
-        const { paymentFor, serviceId, description, agenda, slotId, appointmentTypeId } = await request.json();
+        const body = await request.json();
 
-        if (!paymentFor) {
-            return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
+        const result = createOrderSchema.safeParse(body);
+        if (!result.success) {
+            return NextResponse.json({
+                success: false,
+                message: "Invalid input",
+                details: result.error.flatten().fieldErrors
+            }, { status: 400 });
         }
 
-        if (!["APPOINTMENT", "SERVICE"].includes(paymentFor)) {
-            return NextResponse.json({ success: false, message: "Invalid paymentFor value" }, { status: 400 });
-        }
+        const { paymentFor, serviceId, description, agenda, slotId, appointmentTypeId } = result.data;
 
         let appointment = null;
         let payment = null;
         let amountNumber = 0;
 
         if (paymentFor === "APPOINTMENT") {
+            if (!slotId || !appointmentTypeId) {
+                return NextResponse.json({ success: false, message: "Missing slotId or appointmentTypeId for APPOINTMENT" }, { status: 400 });
+            }
+
             let result;
             try {
                 result = await createAppointmentAndBookSlot({
-                    agenda,
+                    agenda: agenda || "",
                     slotId,
                     userId: user.id,
                     appointmentTypeId,

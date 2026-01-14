@@ -1,10 +1,18 @@
-export default function WhyVyskaExists() {
+interface CompanyStats {
+    yearsExperience?: string | null;
+    successRate?: string | null;
+    trustedClients?: string | null;
+    casesWon?: string | null;
+}
+
+export default function WhyVyskaExists({ companyStats }: { companyStats?: CompanyStats | null }) {
     const stats = [
-        { value: "25+", label: "Years of experience" },
-        { value: "98%", label: "Success rate" },
-        { value: "150+", label: "Trusted clients" },
-        { value: "500+", label: "Cases won" }
+        { value: companyStats?.yearsExperience || "25+", label: "Years of experience" },
+        { value: companyStats?.successRate || "98%", label: "Success rate" },
+        { value: companyStats?.trustedClients || "150+", label: "Trusted clients" },
+        { value: companyStats?.casesWon || "500+", label: "Cases won" }
     ]
+
 
     return (
         <section className="relative overflow-hidden bg-gray-50 overflow-x-hidden">
@@ -44,7 +52,7 @@ export default function WhyVyskaExists() {
                 </div>
 
                 <div className="relative h-[400px] sm:h-[500px] md:h-[600px] lg:h-auto">
-                    <div 
+                    <div
                         className="hidden lg:block h-full"
                         style={{
                             clipPath: 'polygon(10% 0, 100% 0, 100% 100%, 0 100%)'

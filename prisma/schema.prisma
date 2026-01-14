@@ -255,3 +255,73 @@ model Consent {
   @@index([ip])
   @@index([createdAt])
 }
+
+model HeroSlide {
+  id          String   @id @default(cuid())
+  title       String
+  highlight   String?
+  description String?
+  buttonText  String?
+  buttonLink  String?
+  imageUrl    String
+  order       Int      @default(0)
+  type        String   @default("split")
+  bgColor     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Testimonial {
+  id          String   @id @default(cuid())
+  name        String
+  caseType    String
+  message     String   @db.Text
+  imageUrl    String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FAQ {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String   @db.Text
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CompanyInfo {
+  id              String   @id @default(cuid())
+  // Contact
+  email           String
+  phone           String
+  whatsapp        String?
+  address         String
+
+  // Socials
+  instagramUrl    String?
+  linkedinUrl     String?
+  twitterUrl      String?
+  facebookUrl     String?
+
+  // Stats
+  yearsExperience String?
+  successRate     String?
+  trustedClients  String?
+  casesWon        String?
+  
+  // Extra
+  headOffice      String?
+  mapUrl          String?
+  disclaimerMessage String? @db.Text
+  disclaimerPoints String[]
+  
+  // Meta
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

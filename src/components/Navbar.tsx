@@ -9,6 +9,16 @@ export default function Navbar() {
     const [menuOpen, setMenuOpen] = useState(false)
     const pathname = usePathname()
 
+    const navLinks = [
+        { name: 'Home', href: '/' },
+        { name: 'About', href: '/about' },
+        { name: 'Research', href: '/research' },
+        { name: 'Blog', href: '/blogs' },
+        { name: 'Contact', href: '/contact' },
+    ]
+
+    const isActive = (path: string) => pathname === path
+
     // Close mobile menu when route changes
     useEffect(() => {
         setMenuOpen(false)
@@ -16,7 +26,7 @@ export default function Navbar() {
 
     return (
         <nav className="bg-white border-b border-gray-200 shadow-sm fixed w-full z-20 top-0 left-0 font-lato">
-            <div className="max-w-8xl ml-4 mr-4 md:ml-10 md:mr-10 px-4 lg:px-8">
+            <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-20">
                     <div className="flex-shrink-0">
                         <Link href="/" className="flex items-center" aria-label="Vyska Legal Home">
@@ -26,27 +36,25 @@ export default function Navbar() {
                                 width={180}
                                 height={60}
                                 priority
-                                className="h-12 md:h-14 w-auto"
+                                className="h-10 sm:h-12 md:h-14 w-auto"
                             />
                         </Link>
                     </div>
 
+                    {/* Desktop Menu */}
                     <div className="hidden lg:flex items-center space-x-8">
-                        <Link href="/" className="text-lg text-gray-700 hover:text-blue-600 transition-colors">
-                            Home
-                        </Link>
-                        <Link href="/about" className="text-lg text-gray-700 hover:text-blue-600 transition-colors">
-                            About
-                        </Link>
-                        <Link href="/research" className="text-lg text-gray-700 hover:text-blue-600 transition-colors">
-                            Research
-                        </Link>
-                        <Link href="/blogs" className="text-lg text-gray-700 hover:text-blue-600 transition-colors">
-                            Blog
-                        </Link>
-                        <Link href="/contact" className="text-lg text-gray-700 hover:text-blue-600 transition-colors">
-                            Contact
-                        </Link>
+                        {navLinks.map((link) => (
+                            <Link
+                                key={link.name}
+                                href={link.href}
+                                className={`text-lg transition-colors ${isActive(link.href)
+                                        ? 'text-blue-600 font-semibold'
+                                        : 'text-gray-700 hover:text-blue-600'
+                                    }`}
+                            >
+                                {link.name}
+                            </Link>
+                        ))}
                     </div>
 
                     <div className="hidden lg:flex items-center space-x-4">
@@ -84,56 +92,31 @@ export default function Navbar() {
             {/* Mobile menu */}
             <div
                 id="mobile-menu"
-                className={`lg:hidden bg-white border-t border-gray-200 shadow-lg transition-transform origin-top ${menuOpen ? 'block' : 'hidden'}`}
+                className={`lg:hidden bg-white border-t border-gray-100 shadow-xl transition-all duration-300 origin-top overflow-hidden ${menuOpen ? 'max-h-[500px] opacity-100 py-4' : 'max-h-0 opacity-0 py-0'
+                    }`}
                 role="menu"
                 aria-hidden={!menuOpen}
             >
-                <div className="px-6 pt-4 pb-6 space-y-4">
-                    <Link
-                        href="/"
-                        className="block py-2 text-lg text-gray-700 hover:text-blue-600 transition-colors"
-                        onClick={() => setMenuOpen(false)}
-                        role="menuitem"
-                    >
-                        Home
-                    </Link>
-                    <Link
-                        href="/about"
-                        className="block py-2 text-lg text-gray-700 hover:text-blue-600 transition-colors"
-                        onClick={() => setMenuOpen(false)}
-                        role="menuitem"
-                    >
-                        About
-                    </Link>
-                    <Link
-                        href="/research"
-                        className="block py-2 text-lg text-gray-700 hover:text-blue-600 transition-colors"
-                        onClick={() => setMenuOpen(false)}
-                        role="menuitem"
-                    >
-                        Research
-                    </Link>
-                    <Link
-                        href="/blogs"
-                        className="block py-2 text-lg text-gray-700 hover:text-blue-600 transition-colors"
-                        onClick={() => setMenuOpen(false)}
-                        role="menuitem"
-                    >
-                        Blog
-                    </Link>
-                    <Link
-                        href="/contact"
-                        className="block py-2 text-lg text-gray-700 hover:text-blue-600 transition-colors"
-                        onClick={() => setMenuOpen(false)}
-                        role="menuitem"
-                    >
-                        Contact
-                    </Link>
+                <div className="px-5 space-y-1">
+                    {navLinks.map((link) => (
+                        <Link
+                            key={link.name}
+                            href={link.href}
+                            className={`block px-3 py-3 rounded-lg text-lg font-medium transition-colors ${isActive(link.href)
+                                    ? 'bg-blue-50 text-blue-600'
+                                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                                }`}
+                            onClick={() => setMenuOpen(false)}
+                            role="menuitem"
+                        >
+                            {link.name}
+                        </Link>
+                    ))}
 
-                    <div className="pt-4 border-t border-gray-200">
+                    <div className="pt-4 mt-2 border-t border-gray-100">
                         <Link
                             href="/book-appointments"
-                            className="block w-full text-center bg-blue-600 text-white px-6 py-2.5 rounded-md hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                            className="block w-full text-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-sm"
                             onClick={() => setMenuOpen(false)}
                             role="menuitem"
                         >

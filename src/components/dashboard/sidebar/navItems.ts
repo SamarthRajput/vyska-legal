@@ -105,9 +105,9 @@ export const adminNavItems = [
     icon: Bookmark,
   },
   {
-    title: 'Transactions Logs',
-    description: 'View and manage all payment transactions made on the platform.',
-    href: '/admin/transactions',
+    title: "Transactions Logs",
+    description: "View and manage all payment transactions made on the platform.",
+    href: "/admin/transactions",
     icon: BarChart3,
   },
   {
@@ -115,5 +115,33 @@ export const adminNavItems = [
     description: "View and respond to messages submitted via the Contact Us form.",
     href: "/admin/contact-us",
     icon: MessageSquareWarning,
+  },
+  {
+    title: "Global Settings",
+    description: "Manage website content and settings.",
+    href: "#",
+    icon: Settings,
+    children: [
+      {
+        title: "Hero Carousel",
+        href: "/admin/hero-slides",
+        icon: ImageIcon,
+      },
+      {
+        title: "Testimonials",
+        href: "/admin/testimonials",
+        icon: MessageSquareWarning,
+      },
+      {
+        title: "FAQs",
+        href: "/admin/faqs",
+        icon: HelpCircle,
+      },
+      {
+        title: "Company Info",
+        href: "/admin/company-info",
+        icon: Settings,
+      },
+    ]
   },
 ];
