@@ -74,12 +74,12 @@ export const adminNavItems = [
     icon: FileText,
     href: "/admin/team-members",
   },
-  {
-    title: "Services Management",
-    description: "Services provided by the firm.",
-    href: "/admin/services",
-    icon: Tags,
-  },
+  // {
+  //   title: "Services Management",
+  //   description: "Services provided by the firm.",
+  //   href: "/admin/services",
+  //   icon: Tags,
+  // },
   {
     title: "Research Library",
     description: "Access and moderate uploaded research files.",
@@ -95,7 +95,7 @@ export const adminNavItems = [
   {
     title: "Appointment Section",
     description: "Create slots, review availability, and manage bookings.",
-    href: "/admin/appointments",
+    href: "/admin/appointments-section",
     icon: MessageSquareWarning,
   },
   {
