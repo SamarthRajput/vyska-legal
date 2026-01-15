@@ -13,6 +13,7 @@ async function main() {
     await prisma.fAQ.deleteMany();
     await prisma.companyInfo.deleteMany();
     await prisma.teamMember.deleteMany();
+    await prisma.appointmentType.deleteMany();
 
     // 1. Hero Slides
     console.log('Seeding Hero Slides...');
@@ -249,6 +250,73 @@ async function main() {
                 role: "Support Staff",
                 biography: "Provides essential logistical and administrative support, ensuring smooth case management and court filings.",
                 photoUrl: null
+            }
+        ]
+    });
+
+        await prisma.appointmentType.createMany({
+        data: [
+            // 1. Consultation (per hour)
+            {
+                title: "Consultation",
+                subTitle: null,
+                description: "Initial legal consultation (per hour) - varies by lawyer seniority",
+                price: 5000.00,
+                isActive: true
+            },
+
+            // 2. Company Incorporation
+            {
+                title: "Company Incorporation",
+                subTitle: null,
+                description: "Complete company incorporation including drafting, filing & compliance",
+                price: 25000.00,
+                isActive: true
+            },
+
+            // 3. Contract Drafting
+            {
+                title: "Contract Drafting",
+                subTitle: null,
+                description: "Professional contract drafting based on complexity and requirements",
+                price: 15000.00,
+                isActive: true
+            },
+
+            // 4. Litigation (per appearance)
+            {
+                title: "Litigation",
+                subTitle: null,
+                description: "Court/tribunal appearance and representation (per appearance)",
+                price: 15000.00,
+                isActive: true
+            },
+
+            // 5. Retainer (per month)
+            {
+                title: "Retainer",
+                subTitle: null,
+                description: "Monthly retainer for ongoing advisory and compliance services",
+                price: 62500.00,
+                isActive: true
+            },
+
+            // 6. IP Registration (per mark)
+            {
+                title: "IP Registration",
+                subTitle: null,
+                description: "Trademark/IP registration including government fees (per mark)",
+                price: 14000.00,
+                isActive: true
+            },
+
+            // 7. Real Estate Due Diligence
+            {
+                title: "Real Estate Due Diligence",
+                subTitle: null,
+                description: "Comprehensive property due diligence based on value and scope",
+                price: 32500.00,
+                isActive: true
             }
         ]
     });
