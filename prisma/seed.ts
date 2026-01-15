@@ -254,7 +254,10 @@ async function main() {
         ]
     });
 
-        await prisma.appointmentType.createMany({
+
+    // 6. Service Appointment
+    console.log('Seeding Service Types...');
+    await prisma.appointmentType.createMany({
         data: [
             // 1. Consultation (per hour)
             {
