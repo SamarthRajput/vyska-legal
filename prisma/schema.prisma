@@ -102,6 +102,7 @@ model AppointmentSlot {
 model AppointmentType {
   id          String   @id @default(cuid())
   title       String
+  subTitle    String?
   description String?
   price       Decimal  @db.Decimal(10, 2)
   isActive    Boolean       @default(true)
