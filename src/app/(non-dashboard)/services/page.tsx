@@ -96,7 +96,7 @@ export default async function ServicesPage() {
                             </Link>
                         </div>
                         <p className="mt-8 text-sm text-blue-300/60">
-                            Or email us at <span className="text-blue-200">{companyInfo?.email || 'vyskalegal@outlook.com'}</span>
+                            Or email us at <a href={`mailto:${companyInfo?.email || 'vyskalegal@outlook.com'}`} className="text-blue-200">{companyInfo?.email || 'vyskalegal@outlook.com'}</a>
                         </p>
                     </div>
                 </div>

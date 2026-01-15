@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         }
 
         const { title, description, price, isActive } = await request.json();
-        if (!isValidString(title, 1, 100) || !isValidString(description, 1, 1000) || !isValidNumber(price) || typeof isActive !== "boolean") {
+        if (!isValidString(title, 1, 100) || !isValidString(description, 0, 1000) || !isValidNumber(price) || typeof isActive !== "boolean") {
             return NextResponse.json({ error: "Invalid input data" }, { status: 400 });
         }
 
@@ -67,7 +67,7 @@ export async function PUT(request: NextRequest) {
         }
 
         const { id, title, description, price, isActive } = await request.json();
-        if (!isValidString(id) || !isValidString(title, 1, 100) || !isValidString(description, 1, 1000) || !isValidNumber(price) || typeof isActive !== "boolean") {
+        if (!isValidString(id) || !isValidString(title, 1, 100) || !isValidString(description, 0, 1000) || !isValidNumber(price) || typeof isActive !== "boolean") {
             return NextResponse.json({ error: "Invalid input data" }, { status: 400 });
         }
 

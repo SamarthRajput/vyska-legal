@@ -99,12 +99,6 @@ export const adminNavItems = [
     icon: MessageSquareWarning,
   },
   {
-    title: "Appointment Type Management",
-    description: "Create, update, and manage appointment types.",
-    href: "/admin/appointment-types",
-    icon: Bookmark,
-  },
-  {
     title: "Transactions Logs",
     description: "View and manage all payment transactions made on the platform.",
     href: "/admin/transactions",
@@ -151,6 +145,11 @@ export const adminNavItems = [
         title: "Team Members",
         href: "/admin/team-members",
         icon: FileText,
+      },
+      {
+        title: "Appointment Types",
+        href: "/admin/appointment-types",
+        icon: Bookmark,
       },
     ]
   },
