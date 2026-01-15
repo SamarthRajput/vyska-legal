@@ -68,12 +68,12 @@ export const adminNavItems = [
     href: "/admin/users",
     icon: Users,
   },
-  {
-    title: "Team Members",
-    description: "Manage team member data that appears on the website.",
-    icon: FileText,
-    href: "/admin/team-members",
-  },
+  // {
+  //   title: "Team Members",
+  //   description: "Manage team member data that appears on the website.",
+  //   icon: FileText,
+  //   href: "/admin/team-members",
+  // },
   // {
   //   title: "Services Management",
   //   description: "Services provided by the firm.",
@@ -141,6 +141,16 @@ export const adminNavItems = [
         title: "Company Info",
         href: "/admin/company-info",
         icon: Settings,
+      },
+      {
+        title: "Services",
+        href: "/admin/services",
+        icon: Tags,
+      },
+      {
+        title: "Team Members",
+        href: "/admin/team-members",
+        icon: FileText,
       },
     ]
   },

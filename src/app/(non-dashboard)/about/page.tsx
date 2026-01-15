@@ -67,7 +67,7 @@ const About = () => {
                     <div className="bg-white rounded-xl shadow p-6 border border-gray-100">
                         <h2 className="text-xl font-semibold mb-2 text-blue-900">Our Mission</h2>
                         <p className="text-gray-700 leading-relaxed">
-                            To empower our clients by providing accessible, high-quality, and ethical legal solutions tailored to their unique needs. We are dedicated to upholding justice, fostering trust, and delivering effective outcomes through innovation, collaboration, and unwavering professional integrity.
+                            To empower our clients by providing accessible, high-quality, and ethical legal solutions tailored to their unique needs. We are dedicated to upholding justice, fostering trust, and delivering results through innovation, collaboration, and unwavering professional integrity.
                         </p>
                     </div>
                     <div className="bg-white rounded-xl shadow p-6 border border-gray-100">
@@ -77,12 +77,16 @@ const About = () => {
                         </p>
                     </div>
                     <div className="bg-white rounded-xl shadow p-6 border border-gray-100">
-                        <h2 className="text-xl font-semibold mb-2 text-blue-900">Our Values</h2>
-                        <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                            <li><span className="font-semibold italic">Integrity</span> – Upholding honesty, transparency, and ethical conduct in all professional interactions.</li>
-                            <li><span className="font-semibold italic">Client-Centricity</span> – Prioritizing the needs, objectives, and interests of every client through personalized and clear legal advice.</li>
-                            <li><span className="font-semibold italic">Excellence</span> – Striving for the highest standards of legal practice through continuous learning, research, and professional development.</li>
-                            <li><span className="font-semibold italic">Innovation</span> – Embracing technology and modern legal tools to enhance efficiency and service delivery.</li>
+                        <h2 className="text-xl font-semibold mb-2 text-blue-900">Our Core Values</h2>
+                        <ul className="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                            <li><span className="font-semibold italic">Integrity:</span> Upholding honesty & transparency.</li>
+                            <li><span className="font-semibold italic">Client-Centricity:</span> Prioritizing client needs & goals.</li>
+                            <li><span className="font-semibold italic">Excellence:</span> Striving for highest standards.</li>
+                            <li><span className="font-semibold italic">Collaboration:</span> Fostering teamwork.</li>
+                            <li><span className="font-semibold italic">Accountability:</span> Taking ownership of outcomes.</li>
+                            <li><span className="font-semibold italic">Innovation:</span> Embracing technology.</li>
+                            <li><span className="font-semibold italic">Respect:</span> Valuing diversity & inclusivity.</li>
+                            <li><span className="font-semibold italic">Social Responsibility:</span> Engaging in pro bono work.</li>
                         </ul>
                     </div>
                 </div>
@@ -90,42 +94,39 @@ const About = () => {
 
             <section className="mb-16">
                 <div className="bg-blue-50 rounded-xl p-8 border border-blue-100 shadow-sm">
-                    <h2 className="text-2xl font-bold text-blue-900 mb-4">Why Choose Us?</h2>
-                    <ul className="grid gap-4 md:grid-cols-2 list-none">
+                    <h2 className="text-2xl font-bold text-blue-900 mb-4">Unique Value Proposition</h2>
+                    <p className="mb-4 text-gray-700 italic">
+                        "Vyska Legal delivers modern, client-focused, and ethical legal solutions in Prayagraj and the NCR. Our experienced team combines deep legal expertise with personalized service, transparent communication, and innovative technology to empower clients, resolve complex challenges, and build lasting relationships."
+                    </p>
+                    <ul className="grid gap-4 md:grid-cols-2 list-none mt-6">
                         <li className="flex items-start gap-3">
                             <span className="text-blue-600 text-xl mt-1">✔️</span>
                             <span>
-                                <span className="font-semibold">Multi-disciplinary Legal Expertise:</span> Our team handles matters across corporate, civil, criminal, property, family, taxation, and technology law, enabling comprehensive legal support under one roof.
+                                <span className="font-semibold">Client-Centric Approach:</span> Tailoring solutions to each client's unique needs.
                             </span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-blue-600 text-xl mt-1">✔️</span>
                             <span>
-                                <span className="font-semibold">Courtroom & Advisory Experience:</span> We actively represent clients before District Courts, High Courts, tribunals, and appellate forums, providing end-to-end litigation and advisory services.
+                                <span className="font-semibold">Ethical Practice:</span>Strict adherence to Bar Council of India rules.
                             </span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-blue-600 text-xl mt-1">✔️</span>
                             <span>
-                                <span className="font-semibold">Client-Focused Approach:</span> Every matter is approached with a clear understanding of the client’s objectives, ensuring practical, tailored, and timely legal solutions.
+                                <span className="font-semibold">Expertise & Innovation:</span> Diverse expertise complemented by modern legal tech.
                             </span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-blue-600 text-xl mt-1">✔️</span>
                             <span>
-                                <span className="font-semibold">Transparent Processes:</span> From initial consultation to resolution, we emphasize clarity in communication, defined engagement terms, and ethical fee practices.
+                                <span className="font-semibold">Local Insight, National Reach:</span> Deep roots in Prayagraj with connections across major cities.
                             </span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-blue-600 text-xl mt-1">✔️</span>
                             <span>
-                                <span className="font-semibold">Research-Driven & Technology-Enabled:</span> Our work is supported by advanced legal research tools, structured case management systems, and secure communication platforms.
-                            </span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <span className="text-blue-600 text-xl mt-1">✔️</span>
-                            <span>
-                                <span className="font-semibold">Ethical & Professional Integrity:</span> We operate strictly in compliance with the Advocates Act, 1961 and Bar Council of India Rules, maintaining confidentiality, independence, and professional responsibility at all times.
+                                <span className="font-semibold">Social Responsibility:</span> Committed to pro bono work and community engagement.
                             </span>
                         </li>
                     </ul>
@@ -181,7 +182,7 @@ const About = () => {
                                             tabIndex={-1}
                                         >
                                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                                <path d="M19 0h-14c-2.76 0-5 2.24-5 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5v-14c0-2.76-2.24-5-5-5zm-11 19h-3v-10h3v10zm-1.5-11.27c-.97 0-1.75-.79-1.75-1.76s.78-1.76 1.75-1.76 1.75.79 1.75 1.76-.78 1.76-1.75 1.76zm15.5 11.27h-3v-5.6c0-1.34-.03-3.07-1.87-3.07-1.87 0-2.16 1.46-2.16 2.97v5.7h-3v-10h2.89v1.36h.04c.4-.76 1.38-1.56 2.85-1.56 3.05 0 3.61 2.01 3.61 4.62v5.58z"/>
+                                                <path d="M19 0h-14c-2.76 0-5 2.24-5 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5v-14c0-2.76-2.24-5-5-5zm-11 19h-3v-10h3v10zm-1.5-11.27c-.97 0-1.75-.79-1.75-1.76s.78-1.76 1.75-1.76 1.75.79 1.75 1.76-.78 1.76-1.75 1.76zm15.5 11.27h-3v-5.6c0-1.34-.03-3.07-1.87-3.07-1.87 0-2.16 1.46-2.16 2.97v5.7h-3v-10h2.89v1.36h.04c.4-.76 1.38-1.56 2.85-1.56 3.05 0 3.61 2.01 3.61 4.62v5.58z" />
                                             </svg>
                                             LinkedIn
                                         </a>

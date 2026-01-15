@@ -138,7 +138,7 @@ const IndividualBlogPageClient = ({ id }: { id: string }) => {
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                     <div className="flex items-center space-x-4">
                       <img
-                        src={blog.author.profilePicture || "/default-profile.png"}
+                        src={blog.author.profilePicture || "/default-profile.avif"}
                         alt={blog.author.name}
                         className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-white shadow-lg object-cover"
                       />
@@ -177,7 +177,7 @@ const IndividualBlogPageClient = ({ id }: { id: string }) => {
                     </h1>
                     <div className="flex items-center space-x-4">
                       <img
-                        src={blog.author.profilePicture || "/default-profile.png"}
+                        src={blog.author.profilePicture || "/default-profile.avif"}
                         alt={blog.author.name}
                         className="w-14 h-14 rounded-full border-2 border-gray-200 shadow-md object-cover"
                       />

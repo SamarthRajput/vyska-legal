@@ -30,9 +30,9 @@ export default function WhyVyskaExists({ companyStats }: { companyStats?: Compan
 
                         <div>
                             <p className="text-sm sm:text-base md:text-lg text-gray-700">
-                                Founded in New Delhi over 25 years ago,{' '}
+                                Incorporated as a Limited Liability Partnership (LLP) in April 2023,{' '}
                                 <span className="text-blue-600 font-semibold">Vyska Legal</span>{' '}
-                                has grown from a single practice into a trusted, full-service law firm serving clients across 6 cities.
+                                has grown into a distinguished full-service law firm with a strategic focus on Prayagraj and the NCR.
                             </p>
                         </div>
 

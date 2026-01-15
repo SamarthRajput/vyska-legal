@@ -4,7 +4,8 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { User, Menu, X, ChevronDown, ChevronRight } from "lucide-react";
+import { SignOutButton } from "@clerk/nextjs";
+import { User, Menu, X, ChevronDown, ChevronRight, LogOut } from "lucide-react";
 import { navItems, adminNavItems } from "./navItems";
 
 interface SidebarProps {
@@ -187,7 +188,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       {/* User Info */}
-      <div className="p-4 border-t border-slate-200">
+      <div className="p-4 border-t border-slate-200 space-y-2">
         <div className={cn(
           "flex items-center p-3 bg-slate-50 rounded-xl transition-all",
           isCollapsed && !isMobile ? "flex-col space-y-2" : "space-x-3"
@@ -219,6 +220,16 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
         </div>
+
+        <SignOutButton>
+          <button className={cn(
+            "w-full flex items-center p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors",
+            isCollapsed && !isMobile ? "justify-center" : "space-x-2"
+          )}>
+            <LogOut className="w-5 h-5" />
+            {(!isCollapsed || isMobile) && <span className="font-medium text-sm">Log Out</span>}
+          </button>
+        </SignOutButton>
       </div>
     </>
   );

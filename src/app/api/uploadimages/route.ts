@@ -8,8 +8,8 @@ import { prisma } from "@/lib/prisma";
 // POST - Upload image
 export async function POST(request: Request) {
   try {
-    const clerkUser = await syncUser();
-    if (!clerkUser?.id)
+    const user = await syncUser();
+    if (!user)
       return NextResponse.json({ error: "Unauthorized, please log in." }, { status: 401 });
 
     // Parse multipart/form-data
@@ -32,8 +32,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "File size must be less than 5MB." }, { status: 400 });
     }
 
-    const filename = file.name;
-
     // Upload to Cloudinary
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -55,14 +53,6 @@ export async function POST(request: Request) {
 
     const { url: imageUrl } = await uploadStream();
 
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: clerkUser.id },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json({ error: "User not found." }, { status: 404 });
-    }
-
     return NextResponse.json({
       message: "Image uploaded successfully.",
       url: imageUrl
@@ -78,23 +68,13 @@ export async function POST(request: Request) {
 // GET - Get all images uploaded by user (for their image library/gallery)
 export async function GET(request: Request) {
   try {
-    const clerkUser = await syncUser();
-    if (!clerkUser?.id)
+    const user = await syncUser();
+    if (!user)
       return NextResponse.json({ error: "Unauthorized, please log in." }, { status: 401 });
 
-    // Find user in DB
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: clerkUser.id },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json({ error: "User not found." }, { status: 404 });
-    }
-
-    // Get all blogs with thumbnails for this user
     const blogs = await prisma.blog.findMany({
       where: {
-        authorId: dbUser.id,
+        authorId: user.id,
         thumbnailUrl: { not: null }
       },
       select: {
@@ -117,8 +97,8 @@ export async function GET(request: Request) {
 // DELETE - Remove thumbnail from blog
 export async function DELETE(request: Request) {
   try {
-    const clerkUser = await syncUser();
-    if (!clerkUser?.id) {
+    const user = await syncUser();
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized, please log in." }, { status: 401 });
     }
 
@@ -128,19 +108,10 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Missing blog id." }, { status: 400 });
     }
 
-    // Find user in database
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: clerkUser.id },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json({ error: "User not found." }, { status: 404 });
-    }
-
     const blog = await prisma.blog.findFirst({
       where: {
         id: blogId,
-        authorId: dbUser.id,
+        authorId: user.id,
       },
     });
 

@@ -376,7 +376,7 @@ const ContactUsAdminPage = () => {
                                 </div>
                                 {selectedContact.repliedBy && (
                                     <div className="text-xs text-gray-600 mt-1 flex items-center gap-1">
-                                        <img src={selectedContact.repliedBy.profilePicture || '/default-profile.png'} alt="Profile" className="inline-block w-5 h-5 rounded-full mr-1 border" />
+                                        <img src={selectedContact.repliedBy.profilePicture || '/default-profile.avif'} alt="Profile" className="inline-block w-5 h-5 rounded-full mr-1 border" />
                                         <b>Replied By:</b> <span title={selectedContact.repliedBy.name}>{selectedContact.repliedBy.name}</span> (<span title={selectedContact.repliedBy.email}>{selectedContact.repliedBy.email}</span>) at <span title={new Date(selectedContact.updatedAt).toLocaleString()}>{new Date(selectedContact.updatedAt).toLocaleString()}</span>
                                     </div>
                                 )}

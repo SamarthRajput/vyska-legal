@@ -1,43 +1,17 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
+import { prisma } from '@/lib/prisma'
 
-export default function Services() {
-    const services = [
-        {
-            id: 1,
-            title: "Family Law services",
-            description: "Compassionate support for divorce, custody, and domestic matters."
-        },
-        {
-            id: 2,
-            title: "Corporate & business law",
-            description: "Strategic legal counsel for startups, SMEs, and enterprises."
-        },
-        {
-            id: 3,
-            title: "Documentation & legal drafting",
-            description: "Clear accurate legal documents tailored to your needs."
-        },
-        {
-            id: 4,
-            title: "Civil litigation",
-            description: "Assertive representation in property, contract and personal disputes."
-        },
-        {
-            id: 5,
-            title: "Criminal Defense",
-            description: "Protecting your rights with experienced legal defense."
-        },
-        {
-            id: 6,
-            title: "Consultation & advisory",
-            description: "One on one legal guidance for individuals and businesses."
-        }
-    ]
+export default async function Services() {
+    const services = await prisma.practiceArea.findMany({
+        where: { isActive: true },
+        orderBy: { order: 'asc' },
+        take: 6
+    });
 
     return (
-        <section 
+        <section
             className="py-12 sm:py-16 md:py-20 lg:py-24 xl:py-28 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 overflow-x-hidden"
             style={{
                 background: 'linear-gradient(180deg, #EAEFFF 0%, #AFC3FF 100%)'
@@ -45,13 +19,13 @@ export default function Services() {
         >
             <div className="max-w-7xl mx-auto">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-8 sm:mb-10 md:mb-12 lg:mb-16 leading-tight text-center">
-                    <span className="text-blue-700">Our areas of expertise</span> from urgent cases to long-term planning—we're here to help.
+                    <span className="text-blue-700">Practice Areas</span>
                 </h2>
 
                 <div className="hidden xl:grid xl:grid-cols-3 gap-8 items-stretch">
                     <div className="flex flex-col space-y-6">
                         {services.slice(0, 3).map((service) => (
-                            <div 
+                            <div
                                 key={service.id}
                                 className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-300 border-b-4 hover:shadow-lg transition-shadow flex-1"
                             >
@@ -80,8 +54,8 @@ export default function Services() {
                     </div>
 
                     <div className="flex flex-col space-y-6">
-                        {services.slice(3, 6).map((service) => (
-                            <div 
+                        {services.slice(3, 9).map((service) => (
+                            <div
                                 key={service.id}
                                 className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-300 border-b-4 hover:shadow-lg transition-shadow flex-1"
                             >
@@ -103,7 +77,7 @@ export default function Services() {
 
                 <div className="xl:hidden grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     {services.map((service) => (
-                        <div 
+                        <div
                             key={service.id}
                             className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 sm:p-6 border-2 border-blue-300 border-b-4 hover:shadow-lg transition-shadow"
                         >
@@ -123,8 +97,8 @@ export default function Services() {
                 </div>
 
                 <div className="text-right mt-6 sm:mt-8 md:mt-10">
-                    <Link 
-                        href="/services" 
+                    <Link
+                        href="/services"
                         className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 hover:text-blue-700 transition-colors inline-flex items-center gap-2"
                     >
                         View more...

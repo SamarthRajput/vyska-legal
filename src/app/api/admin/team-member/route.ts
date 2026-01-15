@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { name, role, biography, photoUrl } = await request.json();
+        const { name, role, biography, photoUrl, linkedin, twitter, instagram, facebook } = await request.json();
 
         if (!name || !role) {
             return NextResponse.json(
@@ -46,6 +46,10 @@ export async function POST(request: NextRequest) {
                 role,
                 biography,
                 photoUrl,
+                linkedin,
+                twitter,
+                instagram,
+                facebook,
                 createdById: user.id,
             },
         });
@@ -69,7 +73,7 @@ export async function PUT(request: NextRequest) {
                 { status: 403 }
             );
         }
-        const { id, name, role, biography, photoUrl } = await request.json();
+        const { id, name, role, biography, photoUrl, linkedin, twitter, instagram, facebook } = await request.json();
 
         if (!id) {
             return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
@@ -77,7 +81,7 @@ export async function PUT(request: NextRequest) {
 
         const updatedMember = await prisma.teamMember.update({
             where: { id },
-            data: { name, role, biography, photoUrl },
+            data: { name, role, biography, photoUrl, linkedin, twitter, instagram, facebook },
         });
 
         return NextResponse.json(updatedMember);

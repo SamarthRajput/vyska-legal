@@ -37,7 +37,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
         {/* User Info (no dropdown) */}
         <div className="hidden sm:flex items-center space-x-3">
           <img
-            src={loggedInUser.imageUrl || "/default-profile.png"}
+            src={loggedInUser.imageUrl || "/default-profile.avif"}
             alt={loggedInUser.name}
             className="w-10 h-10 rounded-full object-cover"
           />

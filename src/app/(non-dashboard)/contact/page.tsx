@@ -44,7 +44,7 @@ const ContactUsPage = async () => {
         </div>
       </div>
       
-      {companyInfo?.mapUrl && (
+      {/* {companyInfo?.mapUrl && (
         <div className="w-full max-w-5xl mt-8 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 h-[300px] md:h-[400px]">
           <iframe
             title="Vyska Legal Office Location"
@@ -58,7 +58,7 @@ const ContactUsPage = async () => {
             className="w-full h-full"
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 };

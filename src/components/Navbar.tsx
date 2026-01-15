@@ -12,6 +12,7 @@ export default function Navbar() {
     const navLinks = [
         { name: 'Home', href: '/' },
         { name: 'About', href: '/about' },
+        { name: 'Services', href: '/services', mobileOnly: true },
         { name: 'Research', href: '/research' },
         { name: 'Blog', href: '/blogs' },
         { name: 'Contact', href: '/contact' },
@@ -43,13 +44,13 @@ export default function Navbar() {
 
                     {/* Desktop Menu */}
                     <div className="hidden lg:flex items-center space-x-8">
-                        {navLinks.map((link) => (
+                        {navLinks.filter(l => !l.mobileOnly).map((link) => (
                             <Link
                                 key={link.name}
                                 href={link.href}
                                 className={`text-lg transition-colors ${isActive(link.href)
-                                        ? 'text-blue-600 font-semibold'
-                                        : 'text-gray-700 hover:text-blue-600'
+                                    ? 'text-blue-600 font-semibold'
+                                    : 'text-gray-700 hover:text-blue-600'
                                     }`}
                             >
                                 {link.name}
@@ -103,8 +104,8 @@ export default function Navbar() {
                             key={link.name}
                             href={link.href}
                             className={`block px-3 py-3 rounded-lg text-lg font-medium transition-colors ${isActive(link.href)
-                                    ? 'bg-blue-50 text-blue-600'
-                                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                                ? 'bg-blue-50 text-blue-600'
+                                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                                 }`}
                             onClick={() => setMenuOpen(false)}
                             role="menuitem"
