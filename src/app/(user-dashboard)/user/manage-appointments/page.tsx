@@ -16,7 +16,8 @@ interface Appointment {
   agenda: string | null;
   meetUrl: string | null;
   slotId: string;
-  noofrescheduled: number;
+  maxReschedules: number;
+  rescheduleCount: number;
   userId: string | null;
   slot: Slots;
   payment: AppointmentPayment | null;
@@ -275,13 +276,13 @@ const BookAppointments = () => {
 
   const handleReschedule = async (appointmentId: string) => {
     const appointment = appointments.find(a => a.id === appointmentId);
-    if (appointment && appointment.noofrescheduled > 2) {
-      toast.error("You have reached the maximum number of reschedules (2).");
+    if (appointment && appointment.rescheduleCount >= appointment.maxReschedules) {
+      toast.error(`You have reached the maximum number of reschedules (${appointment.maxReschedules}).`);
       return;
     }
     setRescheduleId(appointmentId);
     setShowRescheduleModal(true);
-    setRescheduleCount(appointment ? 2 - appointment.noofrescheduled : 0);
+    setRescheduleCount(appointment ? appointment.maxReschedules - appointment.rescheduleCount : 0);
     await fetchAvailableSlots();
   };
 
@@ -387,8 +388,8 @@ const BookAppointments = () => {
                 const canModify =
                   !past &&
                   (!payment || payment.status === "SUCCESS");
-                const canReschedule = canModify && appointment.noofrescheduled <= 2;
-                const reschedulesLeft = 2 - appointment.noofrescheduled;
+                const canReschedule = canModify && appointment.rescheduleCount < appointment.maxReschedules;
+                const reschedulesLeft = appointment.maxReschedules - appointment.rescheduleCount;
 
                 return (
                   <li
@@ -519,6 +520,12 @@ const BookAppointments = () => {
                       ) : (
                         <span className="text-red-700">No payment record</span>
                       )}
+
+                      {canModify && (
+                        <div className="mt-1 text-xs text-gray-600">
+                          Reschedules remaining: <span className="font-medium text-gray-800">{reschedulesLeft}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Actions */}
@@ -543,9 +550,9 @@ const BookAppointments = () => {
                             title={
                               canReschedule
                                 ? reschedulesLeft === 2
-                                  ? "You can reschedule this appointment up to 2 times."
+                                  ? `You can reschedule this appointment up to ${appointment.maxReschedules} times.`
                                   : `You can reschedule this appointment ${reschedulesLeft} more time${reschedulesLeft === 1 ? "" : "s"}.`
-                                : "You have reached the maximum number of reschedules (2)."
+                                : `You have reached the maximum number of reschedules (${appointment.maxReschedules}).`
                             }
                           >
                             Reschedule
@@ -587,10 +594,10 @@ const BookAppointments = () => {
               </div>
             )}
             <div className="mb-4 text-xs sm:text-sm text-blue-700 bg-blue-100 rounded px-2 sm:px-3 py-2 text-center">
-              {rescheduleCount === 2 && "You can reschedule this appointment up to 2 times."}
-              {rescheduleCount === 1 && "You can reschedule this appointment 1 more time."}
-              {rescheduleCount === 0 && (
-                <span className="text-red-600">You have reached the maximum number of reschedules (2).</span>
+              {rescheduleCount > 0 ? (
+                `You can reschedule this appointment ${rescheduleCount} more time${rescheduleCount === 1 ? "" : "s"}.`
+              ) : (
+                <span className="text-red-600">You have reached the maximum number of reschedules.</span>
               )}
             </div>
             {loading ? (
@@ -620,7 +627,7 @@ const BookAppointments = () => {
                       disabled={loading || rescheduleCount === 0}
                       title={
                         rescheduleCount === 0
-                          ? "You have reached the maximum number of reschedules (2)."
+                          ? "You have reached the maximum number of reschedules."
                           : "Select this slot"
                       }
                       style={rescheduleCount === 0 ? { cursor: "not-allowed" } : undefined}

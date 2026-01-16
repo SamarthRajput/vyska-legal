@@ -89,16 +89,21 @@ export async function PATCH(request: NextRequest) {
         if (!appointment) {
             return NextResponse.json({ error: "Appointment not found for the provided 'appointmentId'." }, { status: 404 });
         }
-        const currentRescheduleCount = appointment.noofrescheduled || 0;
-        if (decrementReschedule && currentRescheduleCount === 0) {
-            return NextResponse.json({ error: "Reschedule count is already zero; cannot decrement further." }, { status: 400 });
+        const currentMaxReschedules = appointment.maxReschedules || 2;
+        if (decrementReschedule) {
+            if (currentMaxReschedules <= 0) {
+                return NextResponse.json({ error: "Reschedule limit cannot be less than zero." }, { status: 400 });
+            }
+            if (currentMaxReschedules <= appointment.rescheduleCount) {
+                return NextResponse.json({ error: "Cannot decrease limit below the current usage count." }, { status: 400 });
+            }
         }
 
         const updatedAppointment = await prisma.appointment.update({
             where: { id: appointmentId },
             data: {
                 meetUrl: meetingUrl || appointment.meetUrl,
-                noofrescheduled: currentRescheduleCount + (incrementReschedule ? 1 : decrementReschedule ? -1 : 0),
+                maxReschedules: currentMaxReschedules + (incrementReschedule ? 1 : decrementReschedule ? -1 : 0),
             },
             include: {
                 slot: true,

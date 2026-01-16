@@ -22,12 +22,12 @@ export const navItems = [
     icon: LayoutDashboard,
     exact: true,
   },
-  {
-    title: "My Blogs",
-    description: "Manage and edit your blog posts all in one place.",
-    href: "/user/blogs",
-    icon: BookOpen,
-  },
+  // {
+  //   title: "My Blogs",
+  //   description: "Manage and edit your blog posts all in one place.",
+  //   href: "/user/blogs",
+  //   icon: BookOpen,
+  // },
   {
     title: "Manage Appointments",
     description: "Organize and manage your media files efficiently.",

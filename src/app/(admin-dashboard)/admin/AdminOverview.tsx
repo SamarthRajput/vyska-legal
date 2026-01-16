@@ -156,7 +156,8 @@ export interface AdminOverview {
                 status: AppointmentStatus;
                 agenda?: string | null;
                 meetUrl?: string | null;
-                noofrescheduled?: number;
+                maxReschedules?: number;
+                rescheduleCount?: number;
                 createdAt: string;
                 updatedAt: string;
                 slotId: string | null;

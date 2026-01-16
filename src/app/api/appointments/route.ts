@@ -121,9 +121,9 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: "You can only update your own appointments" }, { status: 403 });
         }
 
-        // Limit reschedules to 2 times
-        if (appointment.noofrescheduled >= 2) {
-            return NextResponse.json({ error: "Reschedule limit reached, you can only reschedule 2 times" }, { status: 400 });
+        // Limit reschedules to maxReschedules
+        if (appointment.rescheduleCount >= appointment.maxReschedules) {
+            return NextResponse.json({ error: `Reschedule limit reached, you can only reschedule ${appointment.maxReschedules} times` }, { status: 400 });
         }
 
         let updatedAppointment;
@@ -145,7 +145,7 @@ export async function PATCH(request: NextRequest) {
                     data: {
                         slotId: newSlotId,
                         status: "CONFIRMED",
-                        noofrescheduled: appointment.noofrescheduled + 1,
+                        rescheduleCount: appointment.rescheduleCount + 1,
                         updatedAt: new Date(),
                     },
                 }),

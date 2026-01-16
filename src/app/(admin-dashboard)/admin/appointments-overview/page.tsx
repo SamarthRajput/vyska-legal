@@ -63,7 +63,8 @@ export interface Appointment {
     status: "PENDING" | "CONFIRMED" | "CANCELLED";
     agenda?: string;
     meetUrl?: string;
-    noofrescheduled: number;
+    maxReschedules: number;
+    rescheduleCount: number;
     createdAt: string;
     updatedAt: string;
     slot: AppointmentSlot;
@@ -469,7 +470,7 @@ const AppointmentManagement = () => {
                                                 }>
                                                     {app.status}
                                                 </span>
-                                                {app.noofrescheduled > 0 && <div className="text-xs text-gray-500 mt-1">Rescheduled: {app.noofrescheduled}</div>}
+                                                {app.rescheduleCount > 0 && <div className="text-xs text-gray-500 mt-1">Rescheduled: {app.rescheduleCount}</div>}
                                             </td>
                                             <td className="px-4 py-3 text-sm">{formatDateTime(app.createdAt)}</td>
                                             <td className="px-4 py-3 text-sm">
@@ -501,7 +502,7 @@ const AppointmentManagement = () => {
                                         <div><span className="text-gray-500">Type:</span> {app.appointmentType?.title || '—'} {app.appointmentType?.price && <span className="text-gray-600">• {formatCurrency(app.appointmentType.price)}</span>}</div>
                                         <div><span className="text-gray-500">Payment:</span> {app.payment ? `${app.payment.status} (${formatCurrency(app.payment.amount, app.payment.currency)})` : 'No payment'}</div>
                                         <div><span className="text-gray-500">Created:</span> {formatDateTime(app.createdAt)}</div>
-                                        {app.noofrescheduled > 0 && <div className="text-gray-500">Reschedules left: {app.noofrescheduled}</div>}
+                                        {app.rescheduleCount > 0 && <div className="text-gray-500">Reschedules done: {app.rescheduleCount}</div>}
                                     </div>
 
                                     <div className="mt-3 flex gap-2">
@@ -632,32 +633,35 @@ const AppointmentManagement = () => {
                             </div>
 
                             <div>
-                                <strong>Reschedule count:</strong>
+                                <strong>Reschedule Limit:</strong>
                                 <div className="mt-1 flex items-center gap-2">
                                     <button
                                         onClick={() => {
-                                            if (selectedAppointment.noofrescheduled <= 0) {
-                                                toast.error('Reschedule count cannot be less than zero.');
+                                            if (selectedAppointment.maxReschedules <= selectedAppointment.rescheduleCount) {
+                                                toast.error('Cannot decrease limit below current usage.');
                                                 return;
                                             }
                                             selectedAppointment && updateAppointment(selectedAppointment.id, { decrementReschedule: true });
                                         }}
-                                        disabled={Boolean(selectedAppointment && rescheduleLoading[selectedAppointment.id]) || savingMeeting || selectedAppointment.noofrescheduled <= 0}
+                                        disabled={Boolean(selectedAppointment && rescheduleLoading[selectedAppointment.id]) || savingMeeting || selectedAppointment.maxReschedules <= selectedAppointment.rescheduleCount}
                                         className="px-2 py-1 bg-gray-100 rounded text-sm"
-                                        title="Decrement reschedule"
+                                        title="Decrease limit"
                                     >
                                         {selectedAppointment && rescheduleLoading[selectedAppointment.id] === 'dec' ? <Loader className="h-4 w-4 animate-spin" /> : '-'}
                                     </button>
-                                    <span className="text-xs text-gray-600">Current: {selectedAppointment.noofrescheduled}</span>
+                                    <span className="text-xs text-gray-600">Current: {selectedAppointment.rescheduleCount} / Max: {selectedAppointment.maxReschedules}</span>
                                     <button
                                         onClick={() => selectedAppointment && updateAppointment(selectedAppointment.id, { incrementReschedule: true })}
                                         disabled={Boolean(selectedAppointment && rescheduleLoading[selectedAppointment.id]) || savingMeeting}
                                         className="px-2 py-1 bg-gray-100 rounded text-sm"
-                                        title="Increment reschedule"
+                                        title="Increase limit"
                                     >
                                         {selectedAppointment && rescheduleLoading[selectedAppointment.id] === 'inc' ? <Loader className="h-4 w-4 animate-spin" /> : '+'}
                                     </button>
 
+                                </div>
+                                <div className="mt-1 text-xs text-gray-500 italic">
+                                    Note: You are modifying the <strong>maximum allowed</strong> reschedules for this user.
                                 </div>
                             </div>
 
@@ -678,7 +682,7 @@ const AppointmentManagement = () => {
                             <div className="flex gap-4 text-xs text-gray-500">
                                 <div>Created: {formatDateTime(selectedAppointment.createdAt)}</div>
                                 <div>Updated: {formatDateTime(selectedAppointment.updatedAt)}</div>
-                                <div>Reschedules left: {selectedAppointment.noofrescheduled}</div>
+                                <div>Reschedules done: {selectedAppointment.rescheduleCount}</div>
                             </div>
 
                             <details className="text-xs text-gray-600">
