@@ -1,6 +1,8 @@
 import { PrismaClient, UserRole, BlogStatus } from '@prisma/client'
 
 const prisma = new PrismaClient()
+// to seed content run this command
+// npx prisma db seed
 
 async function main() {
     console.log('Start seeding content...')

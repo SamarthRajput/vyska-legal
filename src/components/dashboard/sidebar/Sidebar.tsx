@@ -99,7 +99,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Nav Items */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const { href, icon: Icon, title, exact, children } = item as any;
           const active = isActive(href, exact) || (children && children.some((c: any) => isActive(c.href, c.exact)));
