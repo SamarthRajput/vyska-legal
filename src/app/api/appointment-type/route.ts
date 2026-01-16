@@ -40,13 +40,28 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        const { title, description, price, isActive } = await request.json();
-        if (!isValidString(title, 1, 100) || !isValidString(description, 0, 1000) || !isValidNumber(price) || typeof isActive !== "boolean") {
+        const { 
+            title, 
+            subTitle,
+            description, 
+            price, 
+            isActive 
+        } = await request.json();
+        if (!isValidString(title, 1, 100) || !isValidString(description, 1, 1000) || !isValidNumber(price) || typeof isActive !== "boolean") {
             return NextResponse.json({ error: "Invalid input data" }, { status: 400 });
+        }
+        if (subTitle !== undefined && subTitle !== null && !isValidString(subTitle, 1, 100)) {
+            return NextResponse.json({ error: "Invalid sub-appointment" }, { status: 400 });
         }
 
         const appointmentType = await prisma.appointmentType.create({
-            data: { title: title.trim(), description: description.trim(), price, isActive },
+            data: { 
+                title: title.trim(), 
+                subTitle: subTitle ? subTitle.trim() : null, 
+                description: description.trim(),
+                price, 
+                isActive 
+            },
         });
 
         return NextResponse.json({
@@ -66,14 +81,20 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        const { id, title, description, price, isActive } = await request.json();
-        if (!isValidString(id) || !isValidString(title, 1, 100) || !isValidString(description, 0, 1000) || !isValidNumber(price) || typeof isActive !== "boolean") {
+        const { id, title, subTitle, description, price, isActive } = await request.json();
+        if (!isValidString(id) || !isValidString(title, 1, 100) || !isValidString(description, 1, 1000) || !isValidNumber(price) || typeof isActive !== "boolean") {
             return NextResponse.json({ error: "Invalid input data" }, { status: 400 });
         }
 
         const appointmentType = await prisma.appointmentType.update({
             where: { id },
-            data: { title: title.trim(), description: description.trim(), price, isActive },
+            data: { 
+                title: title.trim(), 
+                subTitle: subTitle.trim(),
+                description: description.trim(), 
+                price, 
+                isActive 
+            },
         });
 
         return NextResponse.json({

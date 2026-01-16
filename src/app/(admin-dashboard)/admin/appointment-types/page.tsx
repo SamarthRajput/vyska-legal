@@ -24,89 +24,118 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface AppointmentType {
-    description: string | null;
     id: string;
     title: string;
+    subTitle: string | null; 
+    description: string | null;
     createdAt: string;
     updatedAt: string;
     price: number;
     isActive: boolean;
 }
 
-export default function AppointmentTypesPage() {
-    const [appointmentTypes, setAppointmentTypes] = useState<AppointmentType[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState<AppointmentType | null>(null);
-
-    // Form state
-    const [formData, setFormData] = useState({
-        title: "",
-        description: "",
-        price: "",
+const AppointmentTypes = () => {
+    const [appointmentTypes, setAppointmentTypes] = React.useState<AppointmentType[]>([]);
+    const [formData, setFormData] = React.useState({
+        id: '',
+        title: '',
+        subTitle: '', 
+        description: '',
+        price: '',
         isActive: true,
     });
-    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [loading, setLoading] = React.useState(false);
+    const [editingId, setEditingId] = React.useState<string | null>(null);
+    const [message, setMessage] = React.useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [formErrors, setFormErrors] = React.useState<Record<string, string>>({});
+    const [saving, setSaving] = React.useState(false);
+    const [deletingIds, setDeletingIds] = React.useState<Record<string, boolean>>({});
 
-    const fetchAppointmentTypes = async () => {
-        setLoading(true);
-        try {
-            // Using activeOnly=false to see all for admin
-            const response = await fetch('/api/appointment-type?activeOnly=false');
-            const data = await response.json();
-            if (data.success) {
-                const types = (data.appointmentTypes || []).map((a: any) => ({
-                    ...a,
-                    price: Math.round(Number(a.price ?? 0) * 100) / 100,
-                }));
-                setAppointmentTypes(types);
-            } else {
-                toast.error(data.error || 'Failed to load');
+    React.useEffect(() => {
+        async function fetchAppointmentTypes() {
+            setLoading(true);
+            try {
+                const response = await fetch('/api/appointment-type?activeOnly=false');
+                const data = await response.json();
+                if (data.success) {
+                    const types = (data.appointmentTypes || []).map((a: any) => ({
+                        ...a,
+                        price: Math.round(Number(a.price ?? 0) * 100) / 100,
+                    }));
+                    setAppointmentTypes(types);
+                } else {
+                    toast.error(data.error || 'Failed to load');
+                    setMessage({ type: 'error', text: data.error || 'Failed to load' });
+                }
+            } catch (error) {
+                toast.error('Server error while fetching Service Types');
+                setMessage({ type: 'error', text: 'Server error while fetching Service Types' });
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            toast.error('Server error while fetching appointment types');
-        } finally {
-            setLoading(false);
         }
-    };
-
-    useEffect(() => {
         fetchAppointmentTypes();
     }, []);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const target = e.target as HTMLInputElement;
+        const { name, value, type } = target;
+        setFormErrors((prev) => {
+            if (!prev[name]) return prev;
+            const copy = { ...prev };
+            delete copy[name];
+            return copy;
+        });
+        if (type === 'checkbox') {
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: (target as HTMLInputElement).checked,
+            }));
+            return;
+        }
+        if (name === 'price') {
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: value,
+            }));
+            return;
+        }
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: value,
+        }));
+    };
+
+    const handlePriceBlur = () => {
+        const raw = (formData.price || '').toString().replace(',', '.');
+        const parsed = parseFloat(raw || '0');
+        const rounded = isNaN(parsed) ? 0 : Math.round(parsed * 100) / 100;
+        setFormData((prev) => ({ ...prev, price: rounded.toFixed(2) }));
+    };
 
     const resetForm = () => {
         setEditingItem(null);
         setFormData({
-            title: "",
-            description: "",
-            price: "",
+            id: '',
+            title: '',
+            subTitle: '', 
+            description: '',
+            price: '',
             isActive: true,
         });
         setFormErrors({});
     };
 
-    const openCreate = () => {
-        resetForm();
-        setIsDialogOpen(true);
-    };
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setMessage(null);
 
-    const openEdit = (item: AppointmentType) => {
-        setEditingItem(item);
-        setFormData({
-            title: item.title,
-            description: item.description || "",
-            price: (Number(item.price || 0)).toFixed(2),
-            isActive: item.isActive,
-        });
-        setFormErrors({});
-        setIsDialogOpen(true);
-    };
-
-    const validateForm = () => {
         const errors: Record<string, string> = {};
         if (!formData.title || formData.title.trim().length === 0) {
             errors.title = 'Title is required';
+        }
+        if (!formData.subTitle || formData.subTitle.trim().length === 0) {
+            errors.subTitle = 'Sub-service type is required';
         }
         const rawPrice = (formData.price || '').toString().trim().replace(',', '.');
         if (rawPrice.length > 0) {
@@ -115,11 +144,6 @@ export default function AppointmentTypesPage() {
                 errors.price = 'Price must be a number';
             } else if (parsed < 0) {
                 errors.price = 'Price cannot be negative';
-            } else {
-                const parts = rawPrice.split('.');
-                if (parts[1] && parts[1].length > 2) {
-                    errors.price = 'Maximum two decimal places allowed';
-                }
             }
         }
         setFormErrors(errors);
@@ -141,7 +165,8 @@ export default function AppointmentTypesPage() {
 
             const payload: any = {
                 title: formData.title.trim(),
-                description: formData.description,
+                subTitle: formData.subTitle.trim(),
+                description: formData.description.trim() || null,
                 price: normalizedPrice,
                 isActive: Boolean(formData.isActive),
             };
@@ -155,23 +180,51 @@ export default function AppointmentTypesPage() {
             const data = await response.json();
 
             if (data.success) {
-                toast.success(isEdit ? "Appointment type updated" : "Appointment type created");
-                setIsDialogOpen(false);
-                fetchAppointmentTypes(); // Refresh list
+                const returned = {
+                    ...data.appointmentType,
+                    price: Math.round(Number(data.appointmentType?.price ?? 0) * 100) / 100,
+                };
+                if (isEdit) {
+                    setAppointmentTypes((prev) =>
+                        prev.map((a) => (a.id === returned.id ? returned : a))
+                    );
+                    setMessage({ type: 'success', text: 'Service Type updated' });
+                } else {
+                    setAppointmentTypes((prev) => [returned, ...prev]);
+                    setMessage({ type: 'success', text: 'Service Type created' });
+                }
+                resetForm();
             } else {
-                toast.error(data.error || 'Operation failed');
+                setMessage({ type: 'error', text: data.error || 'Operation failed' });
             }
         } catch (error) {
-            toast.error('Server error while saving');
+            setMessage({ type: 'error', text: 'Server error while saving' });
         } finally {
-            setSubmitting(false);
+            setSaving(false);
         }
     };
 
-    const handleDelete = async (id: string) => {
-        const ok = confirm('Are you sure you want to delete this appointment type? This will archive it.');
-        if (!ok) return;
+    const handleEdit = (item: AppointmentType) => {
+        setEditingId(item.id);
+        setFormData({
+            id: item.id,
+            title: item.title,
+            subTitle: item.subTitle || '',
+            description: item.description || '',
+            price: (Number(item.price || 0)).toFixed(2),
+            isActive: item.isActive,
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
+    const handleCancelEdit = () => {
+        resetForm();
+    };
+
+    const handleDelete = async (id: string) => {
+        const ok = confirm('Are you sure you want to delete this Service Type? This will archive it.');
+        if (!ok) return;
+        setDeletingIds((prev) => ({ ...prev, [id]: true }));
         try {
             const response = await fetch('/api/appointment-type', {
                 method: 'DELETE',
@@ -180,47 +233,31 @@ export default function AppointmentTypesPage() {
             });
             const data = await response.json();
             if (data.success) {
-                toast.success('Appointment type deleted');
-                fetchAppointmentTypes();
+                setAppointmentTypes((prev) => prev.filter((a) => a.id !== id));
+                setMessage({ type: 'success', text: 'Service Type deleted' });
             } else {
-                if (data.usedByBookings) {
-                    toast.error('Cannot delete: type used by bookings. Archive instead.');
-                } else {
-                    toast.error(data.error || 'Delete failed');
-                }
+                setMessage({ type: 'error', text: data.error || 'Delete failed' });
             }
         } catch (error) {
-            toast.error('Server error while deleting');
-        }
-    };
-
-    const handleToggleActive = async (item: AppointmentType) => {
-        try {
-            const payload = {
-                id: item.id,
-                title: item.title,
-                description: item.description,
-                price: item.price,
-                isActive: !item.isActive,
-            };
-
-            const response = await fetch('/api/appointment-type', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
+            setMessage({ type: 'error', text: 'Server error while deleting' });
+        } finally {
+            setDeletingIds((prev) => {
+                const copy = { ...prev };
+                delete copy[id];
+                return copy;
             });
-            const data = await response.json();
-            if (data.success) {
-                toast.success(`Appointment type ${!item.isActive ? 'activated' : 'archived'}`);
-                setAppointmentTypes(prev => prev.map(a => a.id === item.id ? { ...a, isActive: !item.isActive } : a));
-            } else {
-                toast.error(data.error || "Failed to update status");
-            }
-
-        } catch (error) {
-            toast.error("Failed to update status");
         }
     };
+
+    React.useEffect(() => {
+        let timer: number | undefined;
+        if (message) {
+            timer = window.setTimeout(() => setMessage(null), 4000);
+        }
+        return () => {
+            if (timer) window.clearTimeout(timer);
+        };
+    }, [message]);
 
     const formatPrice = (n: number) => {
         const num = Number(n ?? 0);
@@ -228,16 +265,27 @@ export default function AppointmentTypesPage() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Appointment Types</h1>
-                    <p className="text-gray-500 text-sm mt-1">Manage your service offerings and pricing</p>
+        <div className="p-4 sm:p-6">
+            <div className="max-w-7xl mx-auto">
+                {/* Message display */}
+                <div aria-live="polite" className="h-8">
+                    {message && (
+                        <div className={`mb-4 flex items-center gap-3 p-3 rounded transition-colors ${
+                            message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                        }`} role={message.type === 'success' ? 'status' : 'alert'}>
+                            {message.type === 'success' ? (
+                                <svg className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                            ) : (
+                                <svg className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9a1 1 0 112 0v4a1 1 0 11-2 0V9zm1-4a1.25 1.25 0 100 2.5A1.25 1.25 0 0010 5z" clipRule="evenodd" />
+                                </svg>
+                            )}
+                            <div className="text-sm">{message.text}</div>
+                        </div>
+                    )}
                 </div>
-                <Button onClick={openCreate}>
-                    <Plus className="mr-2 h-4 w-4" /> Add Type
-                </Button>
-            </div>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-md">
@@ -245,39 +293,50 @@ export default function AppointmentTypesPage() {
                         <DialogTitle>{editingItem ? "Edit Appointment Type" : "Create Appointment Type"}</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="title">Title <span className="text-red-500">*</span></Label>
-                            <Input
-                                id="title"
-                                value={formData.title}
-                                onChange={e => {
-                                    setFormData({ ...formData, title: e.target.value });
-                                    if (formErrors.title) setFormErrors({ ...formErrors, title: '' });
-                                }}
-                                required
-                                placeholder="e.g. Consultation"
-                            />
-                            {formErrors.title && <p className="text-xs text-red-500">{formErrors.title}</p>}
-                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
+                                <input
+                                    name="title"
+                                    value={formData.title}
+                                    onChange={handleInputChange}
+                                    className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                    placeholder="e.g. Consultation"
+                                    disabled={saving}
+                                />
+                                {formErrors.title && <div className="text-xs text-red-600 mt-1">{formErrors.title}</div>}
+                            </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="price">Price (INR)</Label>
-                            <Input
-                                id="price"
-                                value={formData.price}
-                                onChange={e => {
-                                    setFormData({ ...formData, price: e.target.value });
-                                    if (formErrors.price) setFormErrors({ ...formErrors, price: '' });
-                                }}
-                                onBlur={() => {
-                                    const raw = (formData.price || '').replace(',', '.');
-                                    const parsed = parseFloat(raw || '0');
-                                    const rounded = isNaN(parsed) ? 0 : Math.round(parsed * 100) / 100;
-                                    setFormData(prev => ({ ...prev, price: rounded.toFixed(2) }));
-                                }}
-                                placeholder="0.00"
-                            />
-                            {formErrors.price && <p className="text-xs text-red-500">{formErrors.price}</p>}
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Sub-Service Type</label>
+                                <input
+                                    name="subTitle"
+                                    value={formData.subTitle}
+                                    onChange={handleInputChange}
+                                    className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                    placeholder="e.g. Marriage Consultation, Car Consultation"
+                                    disabled={saving}
+                                />
+                                {formErrors.subTitle && <div className="text-xs text-red-600 mt-1">{formErrors.subTitle}</div>}
+                            </div>
+
+                            <div className="flex items-end">
+                                <div className="w-full">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Price (INR)</label>
+                                    <input
+                                        name="price"
+                                        type="text"
+                                        inputMode="decimal"
+                                        pattern="[0-9]*[.,]?[0-9]*"
+                                        value={formData.price}
+                                        onChange={handleInputChange}
+                                        onBlur={handlePriceBlur}
+                                        className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                        disabled={saving}
+                                    />
+                                    {formErrors.price && <div className="text-xs text-red-600 mt-1">{formErrors.price}</div>}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="space-y-2">
@@ -285,8 +344,11 @@ export default function AppointmentTypesPage() {
                             <Textarea
                                 id="description"
                                 value={formData.description}
-                                onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                placeholder="Short description..."
+                                onChange={handleInputChange}
+                                rows={3}
+                                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                placeholder="Short description for this Service Type"
+                                disabled={saving}
                             />
                         </div>
 
@@ -306,63 +368,143 @@ export default function AppointmentTypesPage() {
                             </Button>
                         </div>
                     </form>
-                </DialogContent>
-            </Dialog>
+                </div>
 
-            <div className="border rounded-lg">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Title</TableHead>
-                            <TableHead className="hidden md:table-cell">Description</TableHead>
-                            <TableHead>Price</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="text-center py-10">Loading...</TableCell>
-                            </TableRow>
-                        ) : appointmentTypes.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="text-center py-10">No appointment types found.</TableCell>
-                            </TableRow>
-                        ) : (
-                            appointmentTypes.map((item) => (
-                                <TableRow key={item.id}>
-                                    <TableCell className="font-medium">{item.title}</TableCell>
-                                    <TableCell className="hidden md:table-cell max-w-xs truncate" title={item.description || ""}>
-                                        {item.description || <span className="text-gray-400">—</span>}
-                                    </TableCell>
-                                    <TableCell>{formatPrice(item.price)}</TableCell>
-                                    <TableCell>
-                                        <Button
-                                            variant={item.isActive ? "default" : "secondary"}
-                                            size="sm"
-                                            className={`h-6 text-xs ${item.isActive ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400'}`}
-                                            onClick={() => handleToggleActive(item)}
-                                        >
-                                            {item.isActive ? "Active" : "Archived"}
-                                        </Button>
-                                    </TableCell>
-                                    <TableCell className="text-right space-x-2">
-                                        <Button variant="ghost" size="icon" onClick={() => openEdit(item)}>
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600" onClick={() => handleDelete(item.id)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-            <div className="mt-4 text-xs text-gray-500">
-                <strong>Note:</strong> Types used in bookings cannot be fully deleted; they will be archived instead.
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                    <div className="p-3 sm:p-4 border-b">
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm text-gray-600">List of service types</div>
+                            <div className="text-xs text-gray-500">Manage your offerings</div>
+                        </div>
+                    </div>
+
+                    {loading ? (
+                        <div className="p-3 sm:p-4">
+                            <div className="space-y-3">
+                                {/* small top-line spinner + hint */}
+                                <div className="flex items-center gap-3">
+                                    <svg className="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 11-8 8z"></path>
+                                    </svg>
+                                    <div className="text-sm text-gray-600">Loading appointment types…</div>
+                                </div>
+
+                                {/* skeleton table placeholder */}
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Title</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 hidden md:table-cell">Description</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Price</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
+                                                <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-100">
+                                            {Array.from({ length: 5 }).map((_, idx) => (
+                                                <tr key={idx} className="animate-pulse">
+                                                    <td className="px-4 py-3">
+                                                        <div className="h-4 bg-gray-200 rounded w-40 md:w-48" />
+                                                    </td>
+                                                    <td className="px-4 py-3 hidden md:table-cell">
+                                                        <div className="h-4 bg-gray-200 rounded w-56" />
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <div className="h-4 bg-gray-200 rounded w-20" />
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <div className="h-4 bg-gray-200 rounded w-20" />
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <div className="inline-flex items-center space-x-2">
+                                                            <div className="h-8 w-14 bg-gray-200 rounded" />
+                                                            <div className="h-8 w-14 bg-gray-200 rounded" />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    ) : appointmentTypes.length === 0 ? (
+                        <div className="p-4 sm:p-6 text-center text-gray-600">
+                            <div className="text-sm mb-2">No service types found.</div>
+                            <div className="text-xs text-gray-500">Create one using the form above.</div>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Service Type</th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 hidden md:table-cell">Description</th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Price</th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
+                                        <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-100">
+                                    {appointmentTypes.map((item) => (
+                                        <tr key={item.id}>
+                                            <td className="px-4 py-3">
+                                                <div className="font-medium text-gray-900">{item.title}</div>
+                                                {item.subTitle && (
+                                                    <div className="text-sm text-indigo-600 mt-0.5">
+                                                        → {item.subTitle}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-gray-600 hidden md:table-cell">
+                                                {item.description ? item.description : <span className="text-gray-400">—</span>}
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-gray-800">{formatPrice(item.price)}</td>
+                                            <td className="px-4 py-3 text-sm">
+                                                {item.isActive ? (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700">Active</span>
+                                                ) : (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-50 text-gray-600">Archived</span>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-right">
+                                                <div className="inline-flex items-center space-x-2">
+                                                    <button
+                                                        onClick={() => handleEdit(item)}
+                                                        className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                                                        disabled={saving}
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(item.id)}
+                                                        className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
+                                                        disabled={Boolean(deletingIds[item.id])}
+                                                    >
+                                                        {deletingIds[item.id] ? (
+                                                            <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 11-8 8z"></path>
+                                                            </svg>
+                                                        ) : 'Delete'}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                <div className="mt-3 sm:mt-4 max-w-7xl mx-auto">
+                    <div className="text-xs text-gray-600">
+                        <strong>Note for admins:</strong> If an Service Type is used in existing user bookings it cannot be deleted. Instead archive the Service Type (set it to inactive).
+                    </div>
+                </div>
             </div>
         </div>
     );

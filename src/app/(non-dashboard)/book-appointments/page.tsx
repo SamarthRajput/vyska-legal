@@ -28,6 +28,7 @@ interface AppointmentTypes {
     createdAt: Date;
     updatedAt: Date;
     title: string;
+    subTitle: string | null;
     description: string | null;
     price: number | { toNumber: () => number };
 }
@@ -143,8 +144,8 @@ export default function BookAppointmentsPage() {
                     setAppointmentType(data.appointmentTypes);
                 }
             } catch (error) {
-                toast.error("Failed to fetch appointment types");
-                console.error("Failed to fetch appointment types:", error);
+                toast.error("Failed to fetch Service Types");
+                console.error("Failed to fetch Service Types:", error);
             }
         };
         fetchAppointmentTypes();
@@ -168,7 +169,7 @@ export default function BookAppointmentsPage() {
 
     const handlePay = () => {
         if (!selectedAppointmentTypeId || !selectedSlotId) {
-            toast.error("Appointment type or slot is missing.");
+            toast.error("Service Type or slot is missing.");
             return;
         }
         setPaymentStatus("processing")
@@ -353,7 +354,7 @@ export default function BookAppointmentsPage() {
 
                             <div className="grid gap-2">
                                 <label htmlFor="appointmentType" className="text-sm font-medium">
-                                    Appointment Type
+                                    Service Type
                                 </label>
                                 <select
                                     id="appointmentType"
@@ -363,28 +364,20 @@ export default function BookAppointmentsPage() {
                                     onChange={(e) => setSelectedAppointmentTypeId(e.target.value)}
                                     required
                                     aria-required="true"
-                                    aria-label="Appointment Type"
-                                    title="Appointment Type"
+                                    aria-label="Service Type"
+                                    title="Service Type"
                                 >
                                     <option value="" disabled>
                                         {appointmentType && appointmentType.length > 0
-                                            ? "Select appointment type"
+                                            ? "Select Service Type"
                                             : "Loading types..."}
                                     </option>
                                     {appointmentType &&
                                         appointmentType.map((type) => (
-                                            <option
-                                                key={type.id}
-                                                value={type.id}
-                                                title={type.description || type.title}
-                                            >
+                                            <option key={type.id} value={type.id}>
                                                 {type.title}
-                                                {type.price ? "( ₹" : ""}
-                                                {typeof type.price === "object"
-                                                    ? type.price.toNumber()
-                                                    : type.price
-                                                }
-                                                {type.price ? ")" : ""}
+                                                {type.subTitle && ` → ${type.subTitle}`}
+                                                {type.price ? ` (₹${typeof type.price === "object" ? type.price.toNumber() : type.price})` : ""}
                                             </option>
                                         ))
                                     }
@@ -451,7 +444,7 @@ export default function BookAppointmentsPage() {
                                     <p className="text-xs text-muted-foreground" aria-live="polite">
                                         {!selectedSlotId
                                             ? "Select a time slot above to enable booking."
-                                            : "Select an appointment type to enable booking."
+                                            : "Select an Service Type to enable booking."
                                         }
                                     </p>
                                 )}
