@@ -61,6 +61,7 @@ export const metadata: Metadata = {
     shortcut: "/logo/favicon.ico",
     apple: "/logo/apple-touch-icon.png",
   },
+  manifest: "/logo/site.webmanifest",
   applicationName: "Vyska Legal",
   appleWebApp: {
     capable: true,
