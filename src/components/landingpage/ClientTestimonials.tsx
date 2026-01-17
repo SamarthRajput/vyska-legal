@@ -154,7 +154,7 @@ export default function ClientTestimonials({ testimonials = [] }: { testimonials
     }, [totalItems])
 
     return (
-        <section className="relative bg-gray-50 py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 md:px-8 lg:px-12 overflow-x-hidden">
+        <section className="relative bg-[#F3F3F3] py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 md:px-8 lg:px-12 overflow-x-hidden">
             <div className="max-w-7xl mx-auto">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center text-gray-900 mb-8 sm:mb-10 md:mb-12 lg:mb-16 leading-tight px-2">
                     Every Case. Every Voice. Every Victory — <br className="hidden sm:block" />

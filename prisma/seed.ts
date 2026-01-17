@@ -30,7 +30,7 @@ async function main() {
                 order: 1,
                 type: "fullBackground",
                 bgColor: "from-blue-900 via-blue-800 to-gray-900",
-                isActive: false
+                isActive: true
             },
             {
                 title: "When Everything's at Stake, We're",
@@ -42,7 +42,7 @@ async function main() {
                 order: 2,
                 type: "split",
                 bgColor: "from-slate-900 to-gray-800",
-                isActive: false
+                isActive: true
             },
             {
                 title: "Serving people with",
@@ -54,7 +54,7 @@ async function main() {
                 order: 3,
                 type: "split",
                 bgColor: "from-indigo-900 to-slate-900",
-                isActive: false
+                isActive: true
             },
             // NEW SLIDES (Active)
             {
@@ -67,7 +67,7 @@ async function main() {
                 order: 1,
                 type: "fullBackground",
                 bgColor: "from-blue-900 via-blue-800 to-gray-900",
-                isActive: true
+                isActive: false
             },
             {
                 title: "Justice, Trust, and",
@@ -79,7 +79,7 @@ async function main() {
                 order: 2,
                 type: "split",
                 bgColor: "from-slate-900 to-gray-800",
-                isActive: true
+                isActive: false
             }
         ]
     });
@@ -114,7 +114,7 @@ async function main() {
                 name: "Corporate Client",
                 caseType: "Corporate Restructuring",
                 message: "Vyska Legal provided clear, timely, and effective legal advice during our company’s restructuring. Their team was responsive, knowledgeable, and always acted in our best interests. We highly recommend their services.",
-                imageUrl: null,
+                imageUrl: '/testimonial2.jpg',
                 order: 1,
                 isActive: true
             },
@@ -130,7 +130,7 @@ async function main() {
                 name: "Real Estate Developer",
                 caseType: "Regulatory Dispute",
                 message: "The firm conducted comprehensive due diligence and represented us in arbitration. We achieved regulatory compliance and resolved disputes amicably thanks to Vyska Legal.",
-                imageUrl: null,
+                imageUrl: '/testimonial3.jpg',
                 order: 3,
                 isActive: true
             },
@@ -219,25 +219,25 @@ async function main() {
                 name: "Adv. Vibhu Garg",
                 role: "Managing Partner",
                 biography: "Leads the corporate and commercial division with 10 years of experience. Advises on business formation, compliance, M&A, and handles complex financial and criminal litigation.",
-                photoUrl: null
+                photoUrl: '/vibhu.png'
             },
             {
                 name: "Adv. Anjana Tiwari",
                 role: "Designated Partner",
                 biography: "Heads the family and civil law practice with over 10 years of experience. Expert in matrimonial, inheritance, and property disputes, known for equitable and timely resolutions.",
-                photoUrl: null
+                photoUrl: '/ajana.png'
             },
             {
                 name: "Adv. Yash Tiwari",
                 role: "Partner",
                 biography: "Oversees taxation, commercial, and financial law. Exceptional expertise in GST compliance, corporate taxation, and commercial advisory with 3 years of experience.",
-                photoUrl: null
+                photoUrl: '/yash.png'
             },
             {
                 name: "Adv. Vibhanshu Srivastava",
                 role: "Associate",
                 biography: "Specializes in IPR and consumer protection. Represents clients in consumer commissions and debt recovery tribunals.",
-                photoUrl: null
+                photoUrl: '/vibhanshu.png'
             },
             {
                 name: "Adv. Vivek Shukla",

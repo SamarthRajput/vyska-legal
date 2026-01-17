@@ -6,12 +6,11 @@ export default async function Footer() {
     const companyInfo = await prisma.companyInfo.findFirst();
 
     return (
-        <footer className="bg-gray-50 border-t-4 border-blue-600">
-            <div className="h-1 bg-blue-600"></div>
+        <footer className="bg-[#F3F3F3] ">
 
             <div className="bg-gray-50 py-12 md:py-16 lg:py-20 px-6 sm:px-8 md:px-12 lg:px-16">
                 <div className="max-w-7xl mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
                         <div>
                             <h3 className="text-2xl sm:text-3xl font-bold text-blue-700 mb-3">
                                 Vyska Legal
@@ -66,84 +65,85 @@ export default async function Footer() {
                                 )}
                             </div>
                         </div>
-
-                        <div>
-                            <h4 className="text-lg font-bold text-gray-900 mb-4">
-                                Quick Links
-                            </h4>
-                            <ul className="space-y-3">
-                                <li>
-                                    <Link href="/user" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                        User Dashboard
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/admin" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                        Admin Dashboard
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                        About us
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/blogs" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                        Blogs
-                                    </Link>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="text-lg font-bold text-gray-900 mb-4">
-                                Legal & compliance
-                            </h4>
-                            <ul className="space-y-3">
-                                <li>
-                                    <Link href="/disclaimer" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                        Disclaimer
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/privacy-policy" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                        Privacy policy
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/terms-services" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                        Terms & services
-                                    </Link>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="text-lg font-bold text-gray-900 mb-4">
-                                Get in touch
-                            </h4>
-                            <ul className="space-y-3">
-                                {companyInfo?.email && (
+                        <div className='grid grid-cols-2 sm:grid-cols-3 gap-8'>
+                            <div>
+                                <h4 className="text-lg font-bold text-gray-900 mb-4">
+                                    Quick Links
+                                </h4>
+                                <ul className="space-y-3">
                                     <li>
-                                        <a
-                                            href={`mailto:${companyInfo.email}`}
-                                            className="text-gray-700 hover:text-blue-600 transition-colors"
-                                        >
-                                            {companyInfo.email}
-                                        </a>
+                                        <Link href="/user" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                            User Dashboard
+                                        </Link>
                                     </li>
-                                )}
-                                {companyInfo?.phone && (
                                     <li>
-                                        <a
-                                            href={`tel:${companyInfo.phone}`}
-                                            className="text-gray-700 hover:text-blue-600 transition-colors"
-                                        >
-                                            {companyInfo.phone}
-                                        </a>
+                                        <Link href="/admin" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                            Admin Dashboard
+                                        </Link>
                                     </li>
-                                )}
-                            </ul>
+                                    <li>
+                                        <Link href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                            About us
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/blogs" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                            Blogs
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h4 className="text-lg font-bold text-gray-900 mb-4">
+                                    Legal & compliance
+                                </h4>
+                                <ul className="space-y-3">
+                                    <li>
+                                        <Link href="/disclaimer" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                            Disclaimer
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/privacy-policy" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                            Privacy policy
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/terms-services" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                            Terms & services
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h4 className="text-lg font-bold text-gray-900 mb-4">
+                                    Get in touch
+                                </h4>
+                                <ul className="space-y-3">
+                                    {companyInfo?.email && (
+                                        <li>
+                                            <a
+                                                href={`mailto:${companyInfo.email}`}
+                                                className="text-gray-700 hover:text-blue-600 transition-colors"
+                                            >
+                                                {companyInfo.email}
+                                            </a>
+                                        </li>
+                                    )}
+                                    {companyInfo?.phone && (
+                                        <li>
+                                            <a
+                                                href={`tel:${companyInfo.phone}`}
+                                                className="text-gray-700 hover:text-blue-600 transition-colors"
+                                            >
+                                                {companyInfo.phone}
+                                            </a>
+                                        </li>
+                                    )}
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -165,7 +165,7 @@ export default async function Footer() {
                 </div>
             )}
             
-            <div className="bg-gray-100 py-6 px-6 sm:px-8 md:px-12 lg:px-16">
+            <div className="bg-[#F0F4FF] py-6 px-6 sm:px-8 md:px-12 lg:px-16">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                         <div>
@@ -186,7 +186,7 @@ export default async function Footer() {
             </div>
 
 
-            <div className="h-2 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></div>
+            <div className="h-[24px] bg-[#224099]"></div>
         </footer>
     )
 }

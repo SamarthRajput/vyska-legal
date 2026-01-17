@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, CircleArrowRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 
 export default async function Services() {
@@ -18,23 +18,23 @@ export default async function Services() {
             }}
         >
             <div className="max-w-7xl mx-auto">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-8 sm:mb-10 md:mb-12 lg:mb-16 leading-tight text-center">
-                    <span className="text-blue-700">Practice Areas</span>
-                </h2>
+                <h3 className="mb-8 text-[32px] leading-[36px] sm:text-[28px] sm:leading-[42px] md:text-[32px] md:leading-[48px] font-lato">
+                    <span className="text-blue-700">Our areas of expertise</span><span> from urgent cases to long-term <br />planning—we’re here to help.</span>
+                </h3>
 
                 <div className="hidden xl:grid xl:grid-cols-3 gap-8 items-stretch">
                     <div className="flex flex-col space-y-6">
                         {services.slice(0, 3).map((service) => (
                             <div
                                 key={service.id}
-                                className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-300 border-b-4 hover:shadow-lg transition-shadow flex-1"
+                                className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-[#224099] border-b-3 hover:shadow-lg transition-shadow flex-1"
                             >
                                 <div className="flex items-start justify-between mb-3">
                                     <h3 className="text-lg lg:text-xl font-bold text-gray-900">
                                         {service.title}
                                     </h3>
-                                    <div className="bg-white rounded-full p-2 border border-gray-300">
-                                        <ArrowUpRight className="w-5 h-5 text-gray-700" />
+                                    <div className="-rotate-40">
+                                        <CircleArrowRight className="w-7 h-7 text-black " />
                                     </div>
                                 </div>
                                 <p className="text-gray-700 text-sm lg:text-base">
@@ -57,14 +57,14 @@ export default async function Services() {
                         {services.slice(3, 9).map((service) => (
                             <div
                                 key={service.id}
-                                className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-300 border-b-4 hover:shadow-lg transition-shadow flex-1"
+                                className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-[#224099] border-b-3 hover:shadow-lg transition-shadow flex-1"
                             >
                                 <div className="flex items-start justify-between mb-3">
                                     <h3 className="text-lg lg:text-xl font-bold text-gray-900">
                                         {service.title}
                                     </h3>
-                                    <div className="bg-white rounded-full p-2 border border-gray-300">
-                                        <ArrowUpRight className="w-5 h-5 text-gray-700" />
+                                    <div className="-rotate-40">
+                                       <CircleArrowRight className="w-7 h-7 text-black " />
                                     </div>
                                 </div>
                                 <p className="text-gray-700 text-sm lg:text-base">

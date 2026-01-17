@@ -31,15 +31,15 @@ export default function WhyVyskaExists({ companyStats }: { companyStats?: Compan
                         <div>
                             <p className="text-sm sm:text-base md:text-lg text-gray-700">
                                 Incorporated as a Limited Liability Partnership (LLP) in April 2023,{' '}
-                                <span className="text-blue-600 font-semibold">Vyska Legal</span>{' '}
+                                <span className="text-[#224099] font-semibold text-lg">Vyska Legal</span>{' '}
                                 has grown into a distinguished full-service law firm with a strategic focus on Prayagraj and the NCR.
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 sm:gap-6 md:gap-8 pt-4 sm:pt-6">
+                        <div className="grid grid-cols-4 gap-4 sm:gap-6 md:gap-8 pt-4 sm:pt-6">
                             {stats.map((stat, index) => (
                                 <div key={index}>
-                                    <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-blue-600 mb-1 sm:mb-2">
+                                    <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#224099] mb-1 sm:mb-2">
                                         {stat.value}
                                     </div>
                                     <div className="text-xs sm:text-sm md:text-base text-gray-700">

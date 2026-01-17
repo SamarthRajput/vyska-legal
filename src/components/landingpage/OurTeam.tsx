@@ -67,7 +67,7 @@ export default function MeetOurTeam() {
                                 }}
                             >
                                 <div className="flex flex-col items-center pt-8 px-5">
-                                    <div className={`${member.imageSize} relative rounded-full overflow-hidden mb-6 border-4 border-white shadow-xl`}>
+                                    <div className={`${member.imageSize} relative rounded-full overflow-hidden mb-6 shadow-xl`}>
                                         <Image
                                             src={member.image}
                                             alt={member.name}
