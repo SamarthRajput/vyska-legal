@@ -14,37 +14,43 @@ interface Testimonial {
 
 const TestimonialCard = ({ testimonial, isMobile = false }: { testimonial: Testimonial, isMobile?: boolean }) => (
     <div
-        className={`relative rounded-2xl sm:rounded-3xl overflow-visible flex flex-col ${isMobile ? 'w-[85vw] sm:w-[60vw] flex-shrink-0 snap-center shadow-lg' : 'h-full shadow-lg'}`}
-        style={{ backgroundColor: '#F0F4FF' }}
+        className={`relative rounded-3xl mt-10 flex flex-col ${isMobile ? 'w-[85vw] sm:w-[60vw] flex-shrink-0 snap-center' : 'h-full'}`}
+        style={{ backgroundColor: '#F0F4FF',
+            overflow: 'visible'
+         }}
     >
-        <div className="absolute right-2 sm:right-2 md:right-2 z-10">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 relative rounded-full overflow-hidden border-3 sm:border-4 border-white shadow-xl sm:shadow-2xl">
-                <Image
-                    src={testimonial.imageUrl || '/default-profile.avif'}
-                    alt={testimonial.name}
-                    fill
-                    className="object-cover"
-                />
+        <div className="absolute right-3 sm:right-6 -top-10 z-10">
+            <div className="w-[92px] h-[91px] relative">
+                <div className="absolute inset-0 rounded-full" style={{ backgroundColor: '#E4EBFF' }}></div>
+                <div className="absolute inset-[6px] rounded-full overflow-hidden" style={{ backgroundColor: '#DDE3F7' }}>
+                    <Image
+                        src={testimonial.imageUrl || '/default-profile.avif'}
+                        alt={testimonial.name}
+                        fill
+                        className="object-cover"
+                    />
+                </div>
             </div>
         </div>
         <div
-            className="relative px-4 sm:px-5 md:px-6 py-4 sm:py-5 rounded-t-2xl sm:rounded-t-3xl"
+            className="relative h-[49px] flex items-center rounded-t-3xl"
             style={{
                 backgroundColor: '#224099',
-                clipPath: 'polygon(0 0, 85% 0, 95% 100%, 0 100%)'
+                width: '80.5%'
             }}
         >
-            <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-1">
-                {testimonial.name} -
-            </h3>
-            <p className="text-xs sm:text-sm text-white/90">
-                {testimonial.caseType}
-            </p>
+            <div className="flex flex-col gap-1 pl-[34px]">
+                <h3 className="text-base font-normal text-[#F3F3F3] leading-[19px]">
+                    {testimonial.name} -
+                </h3>
+                <p className="text-[10px] font-normal text-[#F3F3F3] leading-[12px]">
+                    {testimonial.caseType}
+                </p>
+            </div>
         </div>
 
-
-        <div className="p-4 sm:p-5 md:p-6 lg:p-8 pt-16 sm:pt-18 md:pt-20 lg:pt-24 flex-1">
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-900 leading-relaxed">
+        <div className="px-[34px] py-8 flex items-center">
+            <p className="text-xl font-medium text-[#1E1E1E] leading-[30px]" style={{ fontFamily: 'Lato' }}>
                 {testimonial.message}
             </p>
         </div>

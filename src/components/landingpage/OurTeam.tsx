@@ -36,8 +36,8 @@ export default function MeetOurTeam() {
                         <p className="text-base sm:text-lg text-gray-300 max-w-md mx-auto lg:mx-0 leading-relaxed">
                             The people behind your protection, your progress, and your peace of mind.
                         </p>
-                        <div className="flex items-center justify-center lg:justify-start gap-3">
-                            <div className="w-20 h-[2px] bg-white"></div>
+                        <div className="hidden lg:flex items-center justify-start relative pt-10">
+                            <div className="w-140 h-[5px] bg-white"></div>
                             <svg
                                 className="w-8 h-8"
                                 fill="currentColor"
@@ -45,6 +45,14 @@ export default function MeetOurTeam() {
                             >
                                 <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z" />
                             </svg>
+                            <div className="absolute -top-[33px] right-0 w-24 h-24">
+                                    <Image
+                                        src="/handshake.png"
+                                        alt="Handshake"
+                                        fill
+                                        className="object-contain"
+                                    />
+                            </div>
                         </div>
                     </div>
 

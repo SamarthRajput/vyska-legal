@@ -59,7 +59,7 @@ export default function WhyVyskaExists({ companyStats }: { companyStats?: Compan
                         }}
                     >
                         <video
-                            className="object-cover"
+                            className="object-cover max-w-none "
                             autoPlay
                             loop
                             muted
@@ -73,7 +73,7 @@ export default function WhyVyskaExists({ companyStats }: { companyStats?: Compan
 
                     <div className="lg:hidden h-full">
                         <video
-                            className="w-full h-full object-cover"
+                            className="object-fill h-full w-full"
                             autoPlay
                             loop
                             muted
